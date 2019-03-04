@@ -34,9 +34,9 @@ public void OnTakeDamage( int victim, int attacker, int inflictor, float damage,
 		GetClientEyePosition(attacker, pos);
 		
 		float dist = GetVectorDistance(pos, damagePosition);
-		
+
 		Format(str_damage, sizeof(str_damage), "%d", RoundFloat(damage));
-		Format(str_size, sizeof(str_size), "%.0f", Logarithm(damage) * 4.0 * (dist / 512.0) );
+		Format(str_size, sizeof(str_size), "%.0f", Logarithm(damage) * 4.0 * Math_Max(1.0, dist/256.0) );
 		
 		int parent = CreateEntityByName("hegrenade_projectile");
 		DispatchKeyValue(parent, "OnUser1", "!self,KillHierarchy,,1.0,-1");
