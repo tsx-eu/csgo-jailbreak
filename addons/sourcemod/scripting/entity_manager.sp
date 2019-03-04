@@ -86,7 +86,7 @@ public Action Cmd_AdminDelete(int client, int args) {
 	}
 	
 	int uniqId = GetEntProp(entity, Prop_Data, "m_iHammerID");
-	AcceptEntityInput(entity, "Kill");
+	AcceptEntityInput(entity, "KillHierarchy");
 	
 	char sql[1024], map[128];
 	GetCurrentMap(map, sizeof(map));
@@ -98,7 +98,7 @@ public Action Cmd_AdminDelete(int client, int args) {
 public Action Cmd_AdminClear(int client, int args) {	
 	char sql[1024], map[128];
 	GetCurrentMap(map, sizeof(map));
-	Format(sql, sizeof(sql), "DELETE FROM `map_entity` WHERE `map_entity`='%s';", map);
+	Format(sql, sizeof(sql), "DELETE FROM `map_entity` WHERE `map`='%s';", map);
 	
 	SQL_TQuery(g_hBDD, SQL_QueryCallBack, sql);
 	return Plugin_Handled;
@@ -117,7 +117,8 @@ public bool IsValidProp(int entity) {
 	if( !HasEntProp(entity, Prop_Data, "m_iHammerID") )
 		return false;
 	
-	// TODO: Ajouter d'autres restriction ?
+	if( GetEntProp(entity, Prop_Data, "m_iHammerID") == 0 ) // pas de hammer id = prop admin?
+		return false;
 	
 	return true;
 }
