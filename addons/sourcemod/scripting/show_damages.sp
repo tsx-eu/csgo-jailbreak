@@ -28,12 +28,20 @@ public void OnTakeDamage( int victim, int attacker, int inflictor, float damage,
 	static char str_damage[12], str_size[12];
 	
 	if( attacker > 0 && attacker < MaxClients ) {
+		float ang[3], vel[3], pos[3];
+		
+		GetClientEyeAngles(attacker, ang);
+		GetClientEyePosition(attacker, pos);
+		
+		float dist = GetVectorDistance(pos, damagePosition);
+		
 		Format(str_damage, sizeof(str_damage), "%d", RoundFloat(damage));
-		Format(str_size, sizeof(str_size), "%.0f", Logarithm(damage) * 4.0);
+		Format(str_size, sizeof(str_size), "%.0f", Logarithm(damage) * 4.0 * (dist / 512.0) );
 		
 		int parent = CreateEntityByName("hegrenade_projectile");
 		DispatchKeyValue(parent, "OnUser1", "!self,KillHierarchy,,1.0,-1");
 		DispatchSpawn(parent);
+		
 		Entity_SetSolidType(parent, SOLID_VPHYSICS);
 		Entity_SetCollisionGroup(parent, COLLISION_GROUP_DEBRIS);	
 		Entity_SetSolidFlags(parent, FSOLID_TRIGGER);
@@ -49,8 +57,7 @@ public void OnTakeDamage( int victim, int attacker, int inflictor, float damage,
 		AcceptEntityInput(sub, "SetParent", parent);
 		AcceptEntityInput(parent, "FireUser1");
 		
-		float ang[3], vel[3];
-		GetClientEyeAngles(attacker, ang);
+		
 		Entity_GetAbsVelocity(victim, vel);
 		vel[0] += Math_GetRandomFloat(-64.0, 64.0);
 		vel[1] += Math_GetRandomFloat(-64.0, 64.0);
