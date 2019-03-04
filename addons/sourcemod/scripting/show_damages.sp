@@ -34,7 +34,8 @@ public void OnTakeDamage( int victim, int attacker, int inflictor, float damage,
 		int parent = CreateEntityByName("hegrenade_projectile");
 		DispatchKeyValue(parent, "OnUser1", "!self,KillHierarchy,,1.0,-1");
 		DispatchSpawn(parent);
-		Entity_SetSolidType(parent, SOLID_NONE);
+		Entity_SetSolidType(parent, SOLID_VPHYSICS);
+		Entity_SetCollisionGroup(parent, COLLISION_GROUP_DEBRIS);	
 		Entity_SetSolidFlags(parent, FSOLID_TRIGGER);
 		SetEntityRenderMode(parent, RENDER_NONE);
 		
