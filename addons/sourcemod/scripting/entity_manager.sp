@@ -21,6 +21,8 @@ public void OnPluginStart() {
 	
 	RegAdminCmd("sm_entity_delete", Cmd_AdminDelete, ADMFLAG_ROOT);
 	RegAdminCmd("sm_entity_remove", Cmd_AdminDelete, ADMFLAG_ROOT);
+	
+	RegAdminCmd("sm_entity_clear", Cmd_AdminClear, ADMFLAG_ROOT);
 }
 
 public void OnMapStart() {
@@ -89,6 +91,14 @@ public Action Cmd_AdminDelete(int client, int args) {
 	char sql[1024], map[128];
 	GetCurrentMap(map, sizeof(map));
 	Format(sql, sizeof(sql), "INSERT INTO `map_entity` (`id`, `map`, `entity`) VALUES (NULL, '%s', '%d');", map, uniqId);
+	
+	SQL_TQuery(g_hBDD, SQL_QueryCallBack, sql);
+	return Plugin_Handled;
+}
+public Action Cmd_AdminClear(int client, int args) {	
+	char sql[1024], map[128];
+	GetCurrentMap(map, sizeof(map));
+	Format(sql, sizeof(sql), "DELETE FROM `map_entity` WHERE `map_entity`='%s';", map);
 	
 	SQL_TQuery(g_hBDD, SQL_QueryCallBack, sql);
 	return Plugin_Handled;
