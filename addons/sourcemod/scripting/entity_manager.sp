@@ -48,6 +48,9 @@ public void LoadMapData(Handle owner, Handle hQuery, const char[] error, any non
 	}
 	
 	for (int j = MaxClients; j < MAX_ENTITY; j++) {
+		if( !IsValidProp(j) )
+			continue;
+		
 		int uniqId = GetEntProp(j, Prop_Data, "m_iHammerID");
 		
 		for (int i = count-1; i >= 0; i--) {
@@ -97,7 +100,7 @@ public bool IsValidProp(int entity) {
 	if( entity < MaxClients )
 		return false;
 	
-	if( HasEntProp(entity, Prop_Data, "m_iHammerID") )
+	if( !HasEntProp(entity, Prop_Data, "m_iHammerID") )
 		return false;
 	
 	// TODO: Ajouter d'autres restriction ?
