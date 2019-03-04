@@ -99,6 +99,10 @@ public Action Cmd_AdminDelete(int client, int args) {
 public bool IsValidProp(int entity) {
 	if( entity < MaxClients )
 		return false;
+	if( !IsValidEdict(entity) )
+		return false;
+	if( !IsValidEntity(entity) )
+		return false;
 	
 	if( !HasEntProp(entity, Prop_Data, "m_iHammerID") )
 		return false;
