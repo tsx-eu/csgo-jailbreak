@@ -50,7 +50,7 @@ public void LoadMapData(Handle owner, Handle hQuery, const char[] error, any non
 	for (int j = MaxClients; j < MAX_ENTITY; j++) {
 		int uniqId = GetEntProp(j, Prop_Data, "m_iHammerID");
 		
-		for (int i = count-1; i < 0; i--) {
+		for (int i = count-1; i >= 0; i--) {
 			if( entity[i] == uniqId ) {
 				count--;
 				AcceptEntityInput(j, "KillHierarchy");
