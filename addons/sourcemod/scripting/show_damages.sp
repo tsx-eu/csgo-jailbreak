@@ -6,6 +6,9 @@
 #include <smlib>
 
 #pragma newdecls required
+#define MAX_ENTITIES 2048
+
+int g_iOwner[MAX_ENTITIES+1];
 
 public Plugin myinfo = {
 	name = "Show damages",
@@ -23,7 +26,14 @@ public void OnPluginStart() {
 public void OnClientPostAdminCheck(int client) {
 	SDKHook(client, SDKHook_OnTakeDamagePost, OnTakeDamage);
 }
-
+public void OnEntityCreated(int entity, const char[] classname) {
+	if( entity >= 0 && entity < MAX_ENTITIES )
+		g_iOwner[entity] = 0;
+}
+public void OnEntityDestroyed(int entity) {
+	if( entity >= 0 && entity < MAX_ENTITIES )
+		g_iOwner[entity] = 0;
+}
 public void OnTakeDamage( int victim, int attacker, int inflictor, float damage, int damagetype, int weapon, const float damageForce[3], const float damagePosition[3]) {
 	static char str_damage[12], str_size[12];
 	
@@ -57,7 +67,6 @@ public void OnTakeDamage( int victim, int attacker, int inflictor, float damage,
 		AcceptEntityInput(sub, "SetParent", parent);
 		AcceptEntityInput(parent, "FireUser1");
 		
-		
 		Entity_GetAbsVelocity(victim, vel);
 		vel[0] += Math_GetRandomFloat(-64.0, 64.0);
 		vel[1] += Math_GetRandomFloat(-64.0, 64.0);
@@ -66,9 +75,19 @@ public void OnTakeDamage( int victim, int attacker, int inflictor, float damage,
 		
 		SetEntityHealth(victim, 1000);
 		
+		g_iOwner[parent] = g_iOwner[sub] = attacker;		
+		
 		SDKHook(parent, SDKHook_Touch, OnTouch);
+		SDKHook(parent, SDKHook_SetTransmit, OnSetTransmit);
+		SDKHook(sub, SDKHook_SetTransmit, OnSetTransmit);
 	}
 }
+public Action OnSetTransmit(int entity, int client) {
+	if( g_iOwner[entity] == client )
+		return Plugin_Continue;
+	return Plugin_Handled;
+}
+
 public void OnTouch(int entity, int touched) {
 	AcceptEntityInput(entity, "KillHierarchy");
 }
