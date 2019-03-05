@@ -34,27 +34,27 @@ public void OnEntityDestroyed(int entity) {
 	if( entity >= 0 && entity < MAX_ENTITIES )
 		g_iOwner[entity] = 0;
 }
-public void OnTakeDamage( int victim, int attacker, int inflictor, float damage, int damagetype, int weapon, const float damageForce[3], const float damagePosition[3]) {
+public void OnTakeDamage( int victim, int attacker, int inflictor, float damage, int damagetype, int weapon, const float damageForce[3], const float origin[3]) {
 	static char str_damage[12], str_size[12];
 	
 	if( attacker > 0 && attacker < MaxClients ) {
-		float ang[3], vel[3], pos[3];
+		float ang[3], vel[3], pos[3], dir[3];
 		
 		GetClientEyeAngles(attacker, ang);
 		GetClientEyePosition(attacker, pos);
 		
-		float dist = GetVectorDistance(pos, damagePosition);
+		float dist = GetVectorDistance(pos, origin);
+		float r = Math_Min(1.0, dist / 256.0);
 
 		Format(str_damage, sizeof(str_damage), "%d", RoundFloat(damage));
-		Format(str_size, sizeof(str_size), "%.0f", Logarithm(damage) * 4.0 * Math_Max(1.0, dist/256.0) );
+		Format(str_size, sizeof(str_size), "%.0f", Logarithm(damage) * 4.0 * r );
 		
 		int parent = CreateEntityByName("hegrenade_projectile");
 		DispatchKeyValue(parent, "OnUser1", "!self,KillHierarchy,,1.0,-1");
 		DispatchSpawn(parent);
 		
 		Entity_SetSolidType(parent, SOLID_VPHYSICS);
-		Entity_SetCollisionGroup(parent, COLLISION_GROUP_DEBRIS);	
-		Entity_SetSolidFlags(parent, FSOLID_TRIGGER);
+		Entity_SetCollisionGroup(parent, COLLISION_GROUP_DEBRIS_TRIGGER);	
 		SetEntityRenderMode(parent, RENDER_NONE);
 		
 		int sub = CreateEntityByName("point_worldtext");
@@ -67,15 +67,18 @@ public void OnTakeDamage( int victim, int attacker, int inflictor, float damage,
 		AcceptEntityInput(sub, "SetParent", parent);
 		AcceptEntityInput(parent, "FireUser1");
 		
+		SubtractVectors(pos, origin, dir);
+		NormalizeVector(dir, dir);
+		ScaleVector(dir, 64.0);
+		
 		Entity_GetAbsVelocity(victim, vel);
-		vel[0] += Math_GetRandomFloat(-64.0, 64.0);
-		vel[1] += Math_GetRandomFloat(-64.0, 64.0);
+		AddVectors(vel, dir, vel);
+		vel[0] += GetRandomFloat(-32.0, 32.0);
+		vel[1] += GetRandomFloat(-32.0, 32.0);
 		vel[2] += 128.0;
-		TeleportEntity(parent, damagePosition, ang, vel);
+		TeleportEntity(parent, origin, ang, vel);
 		
-		SetEntityHealth(victim, 1000);
-		
-		g_iOwner[parent] = g_iOwner[sub] = attacker;		
+		g_iOwner[parent] = g_iOwner[sub] = attacker;
 		
 		SDKHook(parent, SDKHook_Touch, OnTouch);
 		SDKHook(parent, SDKHook_SetTransmit, OnSetTransmit);
