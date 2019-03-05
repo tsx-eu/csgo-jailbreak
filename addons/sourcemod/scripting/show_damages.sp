@@ -34,11 +34,21 @@ public void OnEntityDestroyed(int entity) {
 	if( entity >= 0 && entity < MAX_ENTITIES )
 		g_iOwner[entity] = 0;
 }
-public void OnTakeDamage( int victim, int attacker, int inflictor, float damage, int damagetype, int weapon, const float damageForce[3], const float origin[3]) {
+public void OnTakeDamage( int victim, int attacker, int inflictor, float damage, int damagetype, int weapon, const float damageForce[3], const float damageOrigin[3]) {
 	static char str_damage[12], str_size[12];
 	
-	if( attacker > 0 && attacker < MaxClients ) {
-		float ang[3], vel[3], pos[3], dir[3];
+	if( attacker > 0 && attacker < MaxClients && damage > 0.0 ) {
+		float ang[3], vel[3], pos[3], dir[3], origin[3];
+		
+		origin = damageOrigin;
+		
+		if(weapon == -1 && damagetype == DMG_BLAST ) // HE Grenade
+			GetClientEyePosition(victim, origin);
+		
+		if(weapon == -1 && damagetype == DMG_BURN ) { // Molotov
+			GetClientAbsOrigin(victim, origin);
+			origin[2] += 16.0;
+		}
 		
 		GetClientEyeAngles(attacker, ang);
 		GetClientEyePosition(attacker, pos);
@@ -84,6 +94,8 @@ public void OnTakeDamage( int victim, int attacker, int inflictor, float damage,
 		SDKHook(parent, SDKHook_SetTransmit, OnSetTransmit);
 		SDKHook(sub, SDKHook_SetTransmit, OnSetTransmit);
 	}
+	
+	return Plugin_Continue;
 }
 public Action OnSetTransmit(int entity, int client) {
 	if( g_iOwner[entity] == client )
