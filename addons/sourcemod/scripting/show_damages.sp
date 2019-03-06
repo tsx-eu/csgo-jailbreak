@@ -4,11 +4,15 @@
 #include <sdktools>
 #include <sdkhooks>
 #include <smlib>
+#include <csgocolors>
+#include <gift>
 
 #pragma newdecls required
 #define MAX_ENTITIES 2048
 
+bool g_bHasGift[65];
 int g_iOwner[MAX_ENTITIES+1];
+int g_iGift = -1;
 
 public Plugin myinfo = {
 	name = "Show damages",
@@ -19,9 +23,27 @@ public Plugin myinfo = {
 };
 
 public void OnPluginStart() {
+	HookEvent("round_start", 		OnRoundStart, 			EventHookMode_Post);
 	for (int i = 1; i <= MaxClients; i++)
 		if( IsClientInGame(i) )
 			OnClientPostAdminCheck(i);
+}
+public Action OnRoundStart(Handle ev, const char[] name, bool dontBroadcast) {
+	for (int i = 0; i < MaxClients; i++)
+		g_bHasGift[i] = false;
+}
+
+public void Gift_OnGiftStart() {
+	g_iGift = Gift_RegisterNewGift("ShowDamages", "ShowDamages", false, true, 100.0, -1, ADMFLAG_CUSTOM1|ADMFLAG_ROOT);
+}
+public Action Gift_OnRandomGift(int client, int gift) {
+	if(gift != g_iGift)
+		return Plugin_Handled;
+	
+	g_bHasGift[client] = true;
+	CPrintToChat(client, "{lightgreen}%s {green}Vous pouvez maintenant voir quels sont vos dégats!", PREFIX);
+
+	return Plugin_Handled;
 }
 public void OnClientPostAdminCheck(int client) {
 	SDKHook(client, SDKHook_OnTakeDamagePost, OnTakeDamage);
@@ -37,14 +59,15 @@ public void OnEntityDestroyed(int entity) {
 public void OnTakeDamage( int victim, int attacker, int inflictor, float damage, int damagetype, int weapon, const float damageForce[3], const float damageOrigin[3]) {
 	static char str_damage[12], str_size[12];
 	
-	if( attacker > 0 && attacker < MaxClients && damage > 0.0 ) {
+	if( g_bHasGift[attacker] && attacker > 0 && attacker < MaxClients && damage > 0.0 ) {
 		float ang[3], vel[3], pos[3], dir[3], origin[3];
 		
 		origin = damageOrigin;
 		
 		if(weapon == -1 && damagetype == DMG_BLAST ) // HE Grenade
 			GetClientEyePosition(victim, origin);
-		
+		if( damagetype & DMG_SLASH )				// CUT
+			GetClientEyePosition(victim, origin);		
 		if(weapon == -1 && damagetype == DMG_BURN ) { // Molotov
 			GetClientAbsOrigin(victim, origin);
 			origin[2] += 16.0;
@@ -55,54 +78,54 @@ public void OnTakeDamage( int victim, int attacker, int inflictor, float damage,
 		
 		float dist = GetVectorDistance(pos, origin);
 		float r = Math_Min(1.0, dist / 256.0);
+		int health = GetClientHealth(victim);
 
 		Format(str_damage, sizeof(str_damage), "%d", RoundFloat(damage));
 		Format(str_size, sizeof(str_size), "%.0f", Logarithm(damage) * 4.0 * r );
 		
-		int parent = CreateEntityByName("hegrenade_projectile");
-		DispatchKeyValue(parent, "OnUser1", "!self,KillHierarchy,,1.0,-1");
-		DispatchSpawn(parent);
-		
-		Entity_SetSolidType(parent, SOLID_VPHYSICS);
-		Entity_SetCollisionGroup(parent, COLLISION_GROUP_DEBRIS_TRIGGER);	
-		SetEntityRenderMode(parent, RENDER_NONE);
-		
 		int sub = CreateEntityByName("point_worldtext");
+		DispatchKeyValue(sub, "OnUser1", "!self,KillHierarchy,,1.0,-1");
 		DispatchKeyValue(sub, "message", str_damage);
 		DispatchKeyValue(sub, "textsize", str_size);
-		DispatchKeyValue(sub, "color", "255 0 0");
+		
+		if( health <= 25 )
+			DispatchKeyValue(sub, "color", "255 0 0");
+		else if( health <= 50 )
+			DispatchKeyValue(sub, "color", "255 255 0");
+		else
+			DispatchKeyValue(sub, "color", "0 255 0");
+		
 		DispatchSpawn(sub);
 		
-		SetVariantString("!activator");
-		AcceptEntityInput(sub, "SetParent", parent);
-		AcceptEntityInput(parent, "FireUser1");
-		
 		SubtractVectors(pos, origin, dir);
-		NormalizeVector(dir, dir);
-		ScaleVector(dir, 64.0);
+		GetVectorAngles(dir, ang);
+		ang[0] = ang[2] = 0.0;
+		dir[0] = 16.0;
+		dir[1] = GetRandomFloat(-8.0, 8.0);
+		dir[2] = GetRandomFloat(-8.0, 8.0);
 		
-		Entity_GetAbsVelocity(victim, vel);
-		AddVectors(vel, dir, vel);
-		vel[0] += GetRandomFloat(-32.0, 32.0);
-		vel[1] += GetRandomFloat(-32.0, 32.0);
-		vel[2] += 128.0;
-		TeleportEntity(parent, origin, ang, vel);
+		Math_RotateVector(dir, ang, vel);
+		AddVectors(origin, vel, origin);	
 		
-		g_iOwner[parent] = g_iOwner[sub] = attacker;
+		ang[1] += 180.0;
+		TeleportEntity(sub, origin, ang, NULL_VECTOR);
 		
-		SDKHook(parent, SDKHook_Touch, OnTouch);
-		SDKHook(parent, SDKHook_SetTransmit, OnSetTransmit);
+		g_iOwner[sub] = attacker;
+		
+		AcceptEntityInput(sub, "FireUser1");
+		SetFlags(sub);
 		SDKHook(sub, SDKHook_SetTransmit, OnSetTransmit);
 	}
 	
-	return Plugin_Continue;
+	return;
 }
 public Action OnSetTransmit(int entity, int client) {
+	SetFlags(entity);
 	if( g_iOwner[entity] == client )
 		return Plugin_Continue;
 	return Plugin_Handled;
 }
-
-public void OnTouch(int entity, int touched) {
-	AcceptEntityInput(entity, "KillHierarchy");
+public void SetFlags(int entity) {
+	if (GetEdictFlags(entity) & FL_EDICT_ALWAYS) 
+		SetEdictFlags(entity, (GetEdictFlags(entity) ^ FL_EDICT_ALWAYS));
 }
