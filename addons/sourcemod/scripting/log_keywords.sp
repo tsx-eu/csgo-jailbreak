@@ -43,7 +43,7 @@ public Action Command_Say(int client, int args) {
 	if( g_hKeyWords != null ) {
 		for (int i = 0; i < g_hKeyWords.Length; i++) {
 			g_hKeyWords.GetString(i, words, sizeof(words));
-			if( StrContains(line, words) != -1 ) {
+			if( StrContains(line, words, false) != -1 ) {
 				ReportPlayer(client, words, line);
 				break;
 			}
