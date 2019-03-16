@@ -22,7 +22,14 @@ public void OnPluginStart() {
 	g_hCvarBunnyHop = CreateConVar("sm_warmup_bunnyhop", "1");
 	g_hCvarPlayerRatio = CreateConVar("sm_warmup_ratio", "0.6");
 	
+	HookConVarChange(g_hCvarBunnyHop, OnConVarChange);
+	
 	RegConsoleCmd("sm_warmup", 	Cmd_Warmup);
+}
+public void OnConVarChange(Handle cvar, const char[] oldVal, const char[] newVal) {
+	if( g_hCvarBunnyHop == cvar && StringToInt(oldVal) == 1 && StringToInt(newVal) == 0 && g_bEnable ) {
+		ServerCommand("sv_autobunnyhopping 0; sv_enablebunnyhopping 0");
+	}
 }
 public void OnMapStart() {
 	g_bEnable = false;
@@ -125,7 +132,7 @@ void WARMUP_Disable() {
 	ServerCommand("sm_hosties_lr 0");
 	ServerCommand("mp_ignore_round_win_conditions 0");
 	ServerCommand("mp_respawn_on_death_ct 0; mp_respawn_on_death_t 0");
-	if( GetConVarBool(g_hCvarBunnyHop) ) // TODO: Pose un problème. Quid si un admin change la valeur pendant un warmup ? Ca va laisser le bunny activer.
+	if( GetConVarBool(g_hCvarBunnyHop) )
 		ServerCommand("sv_autobunnyhopping 0; sv_enablebunnyhopping 0");
 	
 	ServerCommand("mp_restartgame 1");
