@@ -25,6 +25,8 @@ public void OnPluginStart() {
 	HookConVarChange(g_hCvarBunnyHop, OnConVarChange);
 	
 	RegConsoleCmd("sm_warmup", 	Cmd_Warmup);
+	
+	AutoExecConfig();
 }
 public void OnConVarChange(Handle cvar, const char[] oldVal, const char[] newVal) {
 	if( g_hCvarBunnyHop == cvar && StringToInt(oldVal) == 1 && StringToInt(newVal) == 0 && g_bEnable ) {
