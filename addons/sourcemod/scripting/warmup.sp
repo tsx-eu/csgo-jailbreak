@@ -38,29 +38,26 @@ public Action Cmd_Warmup(int client, int args) {
 	if( IsVoteInProgress() || !IsNewVoteAllowed() )
 		return Plugin_Handled;
 	
+	Menu menu = null;
+	
 	if( g_bEnable == true ) {
-		Menu menu = new Menu(Handle_VoteMenu);
+		menu = new Menu(Handle_VoteMenu);
 		menu.SetTitle("Voulez-vous désactiver le warmup?");
-		
-		menu.AddItem("0", "Non");
-		menu.AddItem("1", "Oui");
-		
-		menu.ExitButton = false;
 		menu.VoteResultCallback = Handle_VoteResults_DISABLE;
-		VoteMenuToAll(menu, 25);
 	}
 	else if( g_bEnable == false && WARMUP_CanBeEnabled() ) {
-		Menu menu = new Menu(Handle_VoteMenu);
+		menu = new Menu(Handle_VoteMenu);
 		menu.SetTitle("Voulez-vous activer le warmup?");
-		
+		menu.VoteResultCallback = Handle_VoteResults_ENABLE;
+	}
+	
+	if( menu != null ) {
 		menu.AddItem("0", "Non");
 		menu.AddItem("1", "Oui");
 		
 		menu.ExitButton = false;
-		menu.VoteResultCallback = Handle_VoteResults_ENABLE;
 		VoteMenuToAll(menu, 25);
 	}
-	
 	
 	return Plugin_Handled;
 }
@@ -73,7 +70,11 @@ public void Handle_VoteResults_ENABLE(Menu menu, int num_votes, int num_clients,
 	float ratio = item_info[0][VOTEINFO_ITEM_VOTES] / float(item_info[1][VOTEINFO_ITEM_VOTES]);
 	
 	if( item_info[0][VOTEINFO_ITEM_INDEX] == 1 && ratio >= GetConVarFloat(g_hCvarPlayerRatio) && WARMUP_CanBeEnabled() ) {
+		g_bPlayerWantedDisable = false;
 		WARMUP_Enable();
+	}
+	else {
+		CPrintToChatAll("{lightgreen}[ {default}WARMUP {lightgreen}] Le vote a échoué!");
 	}
 }
 public void Handle_VoteResults_DISABLE(Menu menu, int num_votes, int num_clients, const int[][] client_info,  int num_items, const int[][] item_info) {
@@ -82,6 +83,9 @@ public void Handle_VoteResults_DISABLE(Menu menu, int num_votes, int num_clients
 	if( item_info[0][VOTEINFO_ITEM_INDEX] == 1 && ratio >= GetConVarFloat(g_hCvarPlayerRatio) ) {
 		WARMUP_Disable();
 		g_bPlayerWantedDisable = true;
+	}
+	else {
+		CPrintToChatAll("{lightgreen}[ {default}WARMUP {lightgreen}] Le vote a échoué!");
 	}
 }
 
