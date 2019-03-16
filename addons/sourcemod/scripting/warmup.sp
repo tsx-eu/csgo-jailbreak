@@ -110,7 +110,7 @@ void WARMUP_Enable() {
 	CPrintToChatAll("{lightgreen}[ {default}WARMUP {lightgreen}]           {default}Début{lightgreen} du WARMUP !");
 	CPrintToChatAll("{lightgreen}[ {default}WARMUP {lightgreen}]========================================");
 	
-	ServerCommand("sm_hosties_lr 1");
+	ServerCommand("sm_hosties_lr 0");
 	ServerCommand("mp_ignore_round_win_conditions 1");
 	ServerCommand("mp_respawn_on_death_ct 1; mp_respawn_on_death_t 1"); 
 	ServerCommand("mp_respawnwavetime_ct 1; mp_respawnwavetime_t 1");
@@ -129,7 +129,7 @@ void WARMUP_Disable() {
 	CPrintToChatAll("{lightgreen}[ {default}WARMUP {lightgreen}]           {default}Fin{lightgreen} du WARMUP !");
 	CPrintToChatAll("{lightgreen}[ {default}WARMUP {lightgreen}]========================================");
 	
-	ServerCommand("sm_hosties_lr 0");
+	ServerCommand("sm_hosties_lr 1");
 	ServerCommand("mp_ignore_round_win_conditions 0");
 	ServerCommand("mp_respawn_on_death_ct 0; mp_respawn_on_death_t 0");
 	if( GetConVarBool(g_hCvarBunnyHop) )
