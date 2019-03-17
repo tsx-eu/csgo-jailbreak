@@ -50,13 +50,16 @@ public void OnPlayerThink(int client) {
 	}
 	
 	int wpnid = GetEntPropEnt(client, Prop_Data, "m_hActiveWeapon");
-	bool reloading = view_as<bool>(GetEntProp(wpnid, Prop_Data, "m_bInReload"));
 	
-	if( !reloading && previous[client] ) {
-		OnReload(client);
+	if( wpnid > 0 ) {
+		bool reloading = view_as<bool>(GetEntProp(wpnid, Prop_Data, "m_bInReload"));
+		
+		if( !reloading && previous[client] ) {
+			OnReload(client);
+		}
+		
+		previous[client] = reloading;
 	}
-	
-	previous[client] = reloading;
 }
 public void OnReload(int client) {	
 	int wpnid = GetEntPropEnt(client, Prop_Data, "m_hActiveWeapon");
