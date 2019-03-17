@@ -59,7 +59,7 @@ public void OnEntityDestroyed(int entity) {
 public void OnTakeDamage( int victim, int attacker, int inflictor, float damage, int damagetype, int weapon, const float damageForce[3], const float damageOrigin[3]) {
 	static char str_damage[12], str_size[12];
 	
-	if( g_bHasGift[attacker] && attacker > 0 && attacker < MaxClients && damage > 0.0 ) {
+	if( attacker > 0 && attacker < MaxClients && g_bHasGift[attacker] && damage > 0.0 ) {
 		float ang[3], vel[3], pos[3], dir[3], origin[3];
 		
 		origin = damageOrigin;
