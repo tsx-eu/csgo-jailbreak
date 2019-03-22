@@ -16,6 +16,7 @@ public Plugin myinfo = {
 
 bool g_bEnable = false, g_bPlayerWantedDisable = false;
 Handle g_hCvarPlayerCount, g_hCvarPlayerRatio, g_hCvarBunnyHop;
+bool g_bFirstSpawner[65];
 
 public void OnPluginStart() {
 	g_hCvarPlayerCount = CreateConVar("sm_warmup_playercount", "5");
@@ -23,6 +24,7 @@ public void OnPluginStart() {
 	g_hCvarPlayerRatio = CreateConVar("sm_warmup_ratio", "0.6");
 	
 	HookConVarChange(g_hCvarBunnyHop, OnConVarChange);
+	HookEvent("player_spawn", 		EventSpawn, 		EventHookMode_Post);
 	
 	RegConsoleCmd("sm_warmup", 	Cmd_Warmup);
 	
@@ -42,6 +44,18 @@ public void OnMapStart() {
 public void OnClientPostAdminCheck(int client) {
 	if( !WARMUP_CanBeEnabled() )
 		WARMUP_Disable();
+	g_bFirstSpawner[client] = true;
+}
+public Action EventSpawn(Handle ev, const char[] name, bool broadcast) {
+	int client = GetClientOfUserId(GetEventInt(ev, "userid"));
+	
+	if( g_bFirstSpawner[client] ) {
+		g_bFirstSpawner[client] = false;
+		
+		if( g_bEnable != true ) {
+			CPrintToChatAll("{lightgreen}[ {default}WARMUP {lightgreen}] Le warmup est {default}actif{lightgreen}!");
+		}
+	}
 }
 public Action Cmd_Warmup(int client, int args) {
 	if( IsVoteInProgress() || !IsNewVoteAllowed() )
