@@ -15,13 +15,14 @@ public Plugin myinfo = {
 };
 
 bool g_bEnable = false, g_bPlayerWantedDisable = false;
-Handle g_hCvarPlayerCount, g_hCvarPlayerRatio, g_hCvarBunnyHop;
+Handle g_hCvarPlayerCount, g_hCvarPlayerRatio, g_hCvarBunnyHop, g_hCvarAdvertTime;
 bool g_bFirstSpawner[65];
 
 public void OnPluginStart() {
 	g_hCvarPlayerCount = CreateConVar("sm_warmup_playercount", "5");
 	g_hCvarBunnyHop = CreateConVar("sm_warmup_bunnyhop", "1");
 	g_hCvarPlayerRatio = CreateConVar("sm_warmup_ratio", "0.6");
+	g_hCvarAdvertTime = CreateConVar("sm_warmup_advert_time", "120");
 	
 	HookConVarChange(g_hCvarBunnyHop, OnConVarChange);
 	HookEvent("player_spawn", 		EventSpawn, 		EventHookMode_Post);
@@ -40,6 +41,15 @@ public void OnMapStart() {
 	g_bPlayerWantedDisable = false;
 	if( WARMUP_CanBeEnabled() )
 		WARMUP_Enable();
+	
+	CreateTimer(GetConVarFloat(g_hCvarAdvertTime), TIMER_Advert, 0, TIMER_FLAG_NO_MAPCHANGE);
+}
+public Action TIMER_Advert(Handle timer, any none) {
+	if( g_bEnable != true ) {
+		CPrintToChatAll("{lightgreen}[ {default}WARMUP {lightgreen}] Le warmup est {default}actif{lightgreen}, tapez {default}!warmup{lightgreen} pour le désactiver.");
+	}
+	
+	CreateTimer(GetConVarFloat(g_hCvarAdvertTime), TIMER_Advert, 0, TIMER_FLAG_NO_MAPCHANGE);
 }
 public void OnClientPostAdminCheck(int client) {
 	if( !WARMUP_CanBeEnabled() )
