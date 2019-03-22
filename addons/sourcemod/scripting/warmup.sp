@@ -45,7 +45,7 @@ public void OnMapStart() {
 	CreateTimer(GetConVarFloat(g_hCvarAdvertTime), TIMER_Advert, 0, TIMER_FLAG_NO_MAPCHANGE);
 }
 public Action TIMER_Advert(Handle timer, any none) {
-	if( g_bEnable != true ) {
+	if( g_bEnable == true ) {
 		CPrintToChatAll("{lightgreen}[ {default}WARMUP {lightgreen}] Le warmup est {default}actif{lightgreen}, tapez {default}!warmup{lightgreen} pour le désactiver.");
 	}
 	
