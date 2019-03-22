@@ -3,6 +3,7 @@
 #include <sourcemod>
 #include <sdktools>
 #include <csgocolors>
+#include <cstrike>
 
 #pragma newdecls required
 
@@ -54,16 +55,23 @@ public Action TIMER_Advert(Handle timer, any none) {
 public void OnClientPostAdminCheck(int client) {
 	if( !WARMUP_CanBeEnabled() )
 		WARMUP_Disable();
+}
+public void OnClientPutInServer(int client) {
 	g_bFirstSpawner[client] = true;
+}
+public void OnClientDisconnect(int client) {
+	g_bFirstSpawner[client] = false;
 }
 public Action EventSpawn(Handle ev, const char[] name, bool broadcast) {
 	int client = GetClientOfUserId(GetEventInt(ev, "userid"));
+	int team = GetClientTeam(client);
 	
-	if( g_bFirstSpawner[client] ) {
+	PrintToChat(client, "spawn");
+	if( g_bFirstSpawner[client] && (team == CS_TEAM_CT || team == CS_TEAM_T) ) {
 		g_bFirstSpawner[client] = false;
 		
 		if( g_bEnable == true ) {
-			CPrintToChatAll("{lightgreen}[ {default}WARMUP {lightgreen}] Le warmup est {default}actif{lightgreen}!");
+			CPrintToChat(client, "{lightgreen}[ {default}WARMUP {lightgreen}] Le warmup est {default}actif{lightgreen}!");
 		}
 	}
 }

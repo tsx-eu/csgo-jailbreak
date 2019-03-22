@@ -28,6 +28,7 @@
 		"userid"		"short"   	// user ID who died			
 		"attacker"		"short"	 	// user ID who killed
 		"assister"		"short"	 	// user ID who assisted in the kill
+		"assistedflash"		"bool"		// assister helped with a flash
 		"weapon"		"string" 	// weapon name killer used 
 		"weapon_itemid"	"string"	// inventory item id of weapon killer used
 		"weapon_fauxitemid"	"string"	// faux item id of weapon killer used
@@ -271,6 +272,14 @@
 		"defindex"	"long"
 	}
 
+	"item_pickup_failed"
+	{
+		"userid"	"short"
+		"item"		"string"
+		"reason"	"short"
+		"limit"		"short"
+	}
+
 	"item_remove"
 	{
 		"userid"	"short"
@@ -392,6 +401,7 @@
 		"message"	"string"	// end round message 
 		"legacy"	"byte"		// server-generated legacy value
 		"player_count"	"short"		// total number of players alive at the end of round, used for statistics gathering, computed on the server in the event client is in replay when receiving this message
+		"nomusic"	"byte"		// if set, don't play round end music, because action is still on-going
 	}
 
 	"grenade_bounce"
@@ -691,6 +701,7 @@
 		"userid"		"short"
 		"reason"		"short"
 		"musickitmvps"	"long"
+		"nomusic"	"byte"
 	}
 	
 	"player_decal"
@@ -823,6 +834,11 @@
 		"userid"	"short"	 	// user ID who received the c4
 	}
 
+	"player_become_ghost"
+	{
+		"userid"	"short"	 	// user ID who received the c4
+	}
+
 	"gg_reset_round_start_sounds"
 	{
 		"userid"	"short"	 	// user ID who should have round start sounds reset
@@ -903,7 +919,9 @@
 
 	"nextlevel_changed"				// a game event, name may be 32 characters long
 	{
-		"nextlevel"	"string" 	// weapon name killer used 
+		"nextlevel"		"string"
+		"mapgroup"		"string"
+		"skirmishmode"	"string"
 	}
 
 	"seasoncoin_levelup"
@@ -922,4 +940,97 @@
 	"start_halftime"
 	{
 	}
+
+	"ammo_refill"
+	{
+		"userid"	"short"
+		"success"	"bool"
+	}
+
+	"parachute_pickup"
+	{
+		"userid"		"short"
+	}
+
+	"parachute_deploy"
+	{
+		"userid"		"short"
+	}
+
+	"dronegun_attack"
+	{
+		"userid"		"short"
+	}
+
+	"drone_dispatched"
+	{
+		"userid"		"short"
+		"priority"		"short"
+		"drone_dispatched"	"bool"
+	}
+
+	"loot_crate_visible"
+	{
+		"userid"		"short"		// player entindex
+		"subject"		"short"		// crate entindex
+		"type"			"string"	// type of crate (metal, wood, or paradrop)
+	}
+
+	"loot_crate_opened"
+	{
+		"userid"		"short"		// player entindex
+		"type"			"string"	// type of crate (metal, wood, or paradrop)
+	}
+
+	"open_crate_instr"
+	{
+		"userid"		"short"		// player entindex
+		"subject"		"short"		// crate entindex
+		"type"			"string"	// type of crate (metal, wood, or paradrop)
+	}
+
+	"smoke_beacon_paradrop"
+	{
+		"userid"		"short"
+		"paradrop"		"short"
+	}
+
+	"survival_paradrop_spawn"
+	{
+		"entityid"		"short"
+	}
+
+	"survival_paradrop_break"
+	{
+		"entityid"		"short"
+	}
+
+	"drone_cargo_detached"
+	{
+		"userid"		"short"
+		"cargo"			"short"
+		"delivered"		"bool"
+	}
+	
+	"choppers_incoming_warning"
+	{
+		"global" "bool"
+	}
+
+	"firstbombs_incoming_warning"
+	{
+		"global" "bool"
+	}
+
+	"dz_item_interaction"
+	{
+		"userid"		"short"		// player entindex
+		"subject"		"short"		// crate entindex
+		"type"			"string"	// type of crate (metal, wood, or paradrop)
+	}
+
+	"snowball_hit_player_face"
+	{
+		"userid"		"short"		// player userid
+	}	
 }

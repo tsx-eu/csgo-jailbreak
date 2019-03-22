@@ -1,4 +1,4 @@
-// Dump of all classes for "csgo" as at 2018/06/03
+// Dump of all classes for "csgo" as at 2019/03/22
 //
 
 CFireSmoke - _firesmoke
@@ -40,6 +40,7 @@ CBaseEntity - assault_rallypoint
 CBaseAnimating - baseprojectile
 CBeam - beam
 CBeamSpotlight - beam_spotlight
+CBreachChargeProjectile - breachcharge_projectile
 CFEPlayerDecal - cfe_player_decal
 CChicken - chicken
 CColorCorrection - color_correction
@@ -56,8 +57,14 @@ CAI_BaseNPC - cycler_blender
 CBaseFlex - cycler_flex
 CWeaponCycler - cycler_weapon
 CAI_BaseNPC - cycler_wreckage
+CDangerZoneController - dangerzone_controller
+CDangerZone - dangerzone_entity
 CDecoyProjectile - decoy_projectile
+CDrone - drone
+CDronegun - dronegun
 CDynamicProp - dynamic_prop
+CPropDoorRotating - dz_door
+CSnowballPile - ent_snowball_pile
 CBaseEntity - entity_blocker
 CEntityFlame - entityflame
 CEnvAmbientLight - env_ambient_light
@@ -86,6 +93,7 @@ CBaseEntity - env_firesensor
 CBaseEntity - env_firesource
 CFogController - env_fog_controller
 CBaseEntity - env_funnel
+CEnvGasCanister - env_gascanister
 CBaseEntity - env_global
 CSprite - env_glow
 CBaseEntity - env_gunfire
@@ -197,6 +205,8 @@ CFuncReflectiveGlass - func_reflective_glass
 CBaseButton - func_rot_button
 CFuncRotating - func_rotating
 CFuncSmokeVolume - func_smokevolume
+CBRC4Target - func_survival_c4_target
+CBaseTrigger - func_tablet_blocker
 CBaseEntity - func_tank
 CBaseEntity - func_tankairboatgun
 CBaseEntity - func_tankapcrocket
@@ -226,6 +236,7 @@ CBaseEntity - game_player_team
 CRagdollManager - game_ragdoll_manager
 CBaseEntity - game_round_end
 CBaseEntity - game_score
+CBaseEntity - game_survival_logic
 CBaseEntity - game_text
 CBaseEntity - game_ui
 CBaseEntity - game_weapon_manager
@@ -234,6 +245,7 @@ CAI_BaseNPC - generic_actor
 CBaseAnimating - gib
 CBaseEntity - gibshooter
 CBaseEntity - global_chatter
+CGrassBurn - grassburn
 CBaseGrenade - grenade
 CBaseEntity - hammer_updateignorelist
 CBaseEntity - handle_dummy
@@ -251,6 +263,7 @@ CBaseEntity - info_constraint_anchor
 CBaseEntity - info_deathmatch_spawn
 CBaseEntity - info_enemy_terrorist_spawn
 CBaseEntity - info_game_event_proxy
+CBaseEntity - info_gascanister_launchpoint
 CBaseEntity - info_hint
 CBaseEntity - info_hostage_rescue_zone_hint
 CHostage - info_hostage_spawn
@@ -258,6 +271,7 @@ CBaseEntity - info_intermission
 CInfoLadderDismount - info_ladder_dismount
 CBaseEntity - info_landmark
 CBaseEntity - info_map_parameters
+CInfoMapRegion - info_map_region
 CBaseEntity - info_mass_center
 CBaseEntity - info_node
 CBaseEntity - info_node_air
@@ -286,6 +300,7 @@ CBaseEntity - info_view_parameters
 CBaseEntity - infodecal
 CSceneEntity - instanced_scripted_scene
 CEconEntity - item_assaultsuit
+CItemCash - item_cash
 CDynamicProp - item_coop_coin
 CEconEntity - item_cutters
 CEconEntity - item_defuser
@@ -342,6 +357,7 @@ CBaseEntity - multisource
 CAI_BaseNPC - npc_furniture
 CAI_BaseNPC - npc_heardanger
 CAI_BaseNPC - npc_vehicledriver
+CParadropChopper - paradrop_chopper
 CBaseEntity - path_corner
 CBaseEntity - path_corner_crash
 CBaseEntity - path_track
@@ -369,6 +385,7 @@ CPhysicsProp - physics_prop
 CRagdollProp - physics_prop_ragdoll
 CStatueProp - physics_prop_statue
 CPlantedC4 - planted_c4
+CPlantedC4 - planted_c4_survival
 CPlantedC4 - planted_c4_training
 CCSPlayer - player
 CBaseEntity - player_loadsaved
@@ -384,6 +401,10 @@ CBaseEntity - point_clientcommand
 CPointCommentaryNode - point_commentary_node
 CSprite - point_commentary_viewpoint
 CBaseEntity - point_devshot_camera
+CBaseEntity - point_dz_dronegun
+CBaseEntity - point_dz_parachute
+CBaseEntity - point_dz_weaponspawn
+CBaseEntity - point_dz_weaponspawn_group
 CBaseEntity - point_enable_motion_fixup
 CBaseEntity - point_entity_finder
 CBaseEntity - point_gamestats_counter
@@ -407,6 +428,8 @@ CBaseEntity - point_viewproxy
 CPointWorldText - point_worldtext
 CPostProcessController - postprocess_controller
 CPredictedViewModel - predicted_viewmodel
+CPhysPropAmmoBox - prop_ammo_box_generic
+CPropCounter - prop_counter
 CPropDoorRotating - prop_door_rotating
 CDynamicProp - prop_dynamic
 CDynamicProp - prop_dynamic_glow
@@ -414,6 +437,10 @@ CDynamicProp - prop_dynamic_ornament
 CDynamicProp - prop_dynamic_override
 CPhysicsProp - prop_exploding_barrel
 CProp_Hallucination - prop_hallucination
+CPhysPropLootCrate - prop_loot_crate
+CPhysPropLootCrate - prop_metal_crate
+CPhysPropLootCrate - prop_money_crate
+CPhysPropLootCrate - prop_paradrop_crate
 CPhysicsProp - prop_physics
 CPhysicsPropMultiplayer - prop_physics_multiplayer
 CPhysicsProp - prop_physics_override
@@ -424,6 +451,15 @@ CPhysicsProp - prop_sphere
 CBaseFlex - prop_talker
 CBaseAnimating - prop_vehicle
 CPropVehicleDriveable - prop_vehicle_driveable
+CPhysPropWeaponUpgrade - prop_weapon_upgrade_armor
+CPhysPropWeaponUpgrade - prop_weapon_upgrade_armor_helmet
+CPhysPropWeaponUpgrade - prop_weapon_upgrade_chute
+CPhysPropWeaponUpgrade - prop_weapon_upgrade_contractkill
+CPhysPropWeaponUpgrade - prop_weapon_upgrade_helmet
+CPhysPropWeaponUpgrade - prop_weapon_upgrade_tablet_droneintel
+CPhysPropWeaponUpgrade - prop_weapon_upgrade_tablet_highres
+CPhysPropWeaponUpgrade - prop_weapon_upgrade_tablet_zoneintel
+CPhysPropRadarJammer - radar_jammer
 CBaseAnimating - raggib
 CBaseEntity - rope_anchor
 CBaseEntity - scene_manager
@@ -437,10 +473,12 @@ CBaseAnimating - simple_physics_prop
 CBaseEntity - sky_camera
 CBaseEntity - skybox_swapper
 CSmokeGrenadeProjectile - smokegrenade_projectile
+CSnowballProjectile - snowball_projectile
 CBaseEntity - soundent
 CBaseEntity - spark_shower
 CSpotlightEnd - spotlight_end
 CSunlightShadowControl - sunlight_shadow_control
+CSurvivalSpawnChopper - survival_spawn_chopper
 CSensorGrenadeProjectile - tagrenade_projectile
 CBaseEntity - tanktrain_ai
 CBaseEntity - tanktrain_aitarget
@@ -470,10 +508,12 @@ CTriggerPlayerMovement - trigger_playermovement
 CBaseTrigger - trigger_proximity
 CBaseTrigger - trigger_push
 CBaseTrigger - trigger_remove
+CBaseTrigger - trigger_safemoneygather
 CBaseTrigger - trigger_serverragdoll
 CBaseTrigger - trigger_softbarrier
 CTriggerSoundOperator - trigger_soundoperator
 CBaseTrigger - trigger_soundscape
+CBaseTrigger - trigger_survival_playarea
 CBaseTrigger - trigger_teleport
 CBaseTrigger - trigger_togglesave
 CBaseTrigger - trigger_tonemap
@@ -494,6 +534,7 @@ CWeaponAug - weapon_aug
 CWeaponAWP - weapon_awp
 CBaseCSGrenade - weapon_basecsgrenade
 CWeaponBizon - weapon_bizon
+CBreachCharge - weapon_breachcharge
 CC4 - weapon_c4
 CWeaponCSBase - weapon_cs_base
 CWeaponCSBaseGun - weapon_csbase_gun
@@ -501,6 +542,7 @@ CDEagle - weapon_deagle
 CDecoyGrenade - weapon_decoy
 CWeaponElite - weapon_elite
 CWeaponFamas - weapon_famas
+CFists - weapon_fists
 CWeaponFiveSeven - weapon_fiveseven
 CFlashbang - weapon_flashbang
 CWeaponG3SG1 - weapon_g3sg1
@@ -518,6 +560,7 @@ CWeaponM3 - weapon_m3
 CWeaponM4A1 - weapon_m4a1
 CWeaponMAC10 - weapon_mac10
 CWeaponMag7 - weapon_mag7
+CMelee - weapon_melee
 CMolotovGrenade - weapon_molotov
 CWeaponMP5Navy - weapon_mp5navy
 CWeaponMP7 - weapon_mp7
@@ -535,7 +578,9 @@ CWeaponSG550 - weapon_sg550
 CWeaponSG552 - weapon_sg552
 CWeaponSG556 - weapon_sg556
 CSmokeGrenade - weapon_smokegrenade
+CSnowball - weapon_snowball
 CWeaponSSG08 - weapon_ssg08
+CTablet - weapon_tablet
 CSensorGrenade - weapon_tagrenade
 CWeaponTaser - weapon_taser
 CWeaponTec9 - weapon_tec9
