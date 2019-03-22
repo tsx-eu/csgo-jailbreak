@@ -62,7 +62,7 @@ public Action EventSpawn(Handle ev, const char[] name, bool broadcast) {
 	if( g_bFirstSpawner[client] ) {
 		g_bFirstSpawner[client] = false;
 		
-		if( g_bEnable != true ) {
+		if( g_bEnable == true ) {
 			CPrintToChatAll("{lightgreen}[ {default}WARMUP {lightgreen}] Le warmup est {default}actif{lightgreen}!");
 		}
 	}
