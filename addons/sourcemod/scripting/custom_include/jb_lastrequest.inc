@@ -33,6 +33,10 @@ stock bool DV_CAN_Min3CT(int client) {
 	
 	return (cpt>=3);
 }
+stock bool DV_CAN_VIP(int client) {
+	return view_as<bool>(GetUserFlagBits(client) & ADMFLAG_CUSTOM1);
+}
+
 stock void DV_StripWeapon(int client, bool drop = false) {
 	int wepIdx = -1;
 	for( int i = 0; i < 5; i++ ) {
