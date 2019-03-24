@@ -27,6 +27,8 @@ public void JB_OnPluginReady() {
 	JB_CreateLastRequest("Deagle explosif", 	JB_SHOULD_SELECT_CT | JB_RUN_UNTIL_END,		DV_CAN_Always, DV_DEAGLE_EXPL);
 	JB_CreateLastRequest("Lancé de deagle", 	JB_SHOULD_SELECT_CT | JB_RUN_UNTIL_END,		DV_CAN_Always, DV_DEAGLE_THROW);
 	JB_CreateLastRequest("Bataille de grenade", JB_SHOULD_SELECT_CT | JB_RUN_UNTIL_END,		DV_CAN_Always, DV_FUMI,  		DV_FUMI_END);
+	
+	JB_CreateLastRequest("Rebélion", 			JB_DEFAULT, 								DV_CAN_Min3CT, DV_REBELION);
 }
 public void OnMapStart() {
 	g_cLaser = PrecacheModel("materials/sprites/laserbeam.vmt", true);
@@ -243,3 +245,6 @@ public void DV_FUMI_END(int client, int target) {
 	g_hMain = null;
 }
 // ----------------------------------------------------------------------------
+public void DV_REBELION(int client, int target) {
+	GivePlayerItem(client, "weapon_negev");
+}
