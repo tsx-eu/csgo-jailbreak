@@ -8,6 +8,9 @@
 
 #pragma newdecls required
 
+#include <jb_lastrequest>
+
+
 public Plugin myinfo = {
 	name = "Last Request",
 	author = "KoSSoLaX",
@@ -16,17 +19,13 @@ public Plugin myinfo = {
 	url = "zaretti.be"
 };
 
-#define MOD_TAG				"[REBEL-CORP]"
-#define MAX_LR				32
-#define JB_SHOULD_SELECT_CT	(1<<0)
-#define JB_RUN_UNTIL_END	(2<<0)
-
+#define MAX_PLAYERS 65
 int g_iStackCount = 0;
 
 char g_cStackName[MAX_LR][128];
 Function g_fStackCondition[MAX_LR], g_fStackStart[MAX_LR], g_fStackEnd[MAX_LR];
 int g_bStackFlag[MAX_LR];
-
+Handle g_hPluginReady = INVALID_HANDLE;
 bool g_bDoingDV, g_bDoingUntilRoundEnd;
 
 
@@ -34,59 +33,58 @@ public void OnPluginStart() {
 	RegConsoleCmd("sm_dv", 			cmd_DV);
 	RegConsoleCmd("sm_lr", 			cmd_DV);
 	RegConsoleCmd("sm_lastrequest", cmd_DV);
+	
+	
+	Call_StartForward(g_hPluginReady);
+	Call_Finish();
 }
+// -------------------------------------------------------------------------------------------------------------------------------
 public Action cmd_DV(int client, int args) {
 	if( GetClientTeam(client) != CS_TEAM_T || !IsPlayerAlive(client) || DV_CAN() == -1 ) {
-		CPrintToChat(client, "%s Vous n'avez {red}pas{default} le droit d'utiliser le !dv maintenant.", MOD_TAG);
+		CPrintToChat(client, MOD_TAG ... "Vous n'avez {red}pas{default} le droit d'utiliser le " ... MOD_TAG_START ... "!dv" ... MOD_TAG_END ... " maintenant.");
 		return Plugin_Handled;
 	}
 	
 	displayDV(client);
 	return Plugin_Handled;
 }
-public void displayDV(int client) {
+void displayDV(int client) {
 	static char tmp[8];
 	
-	Handle menu = CreateMenu(menuDV);
-	SetMenuTitle(menu, "Choisissez votre dernière volonté");
-	
+	Menu menu = new Menu(menuDV);
+	menu.SetTitle("Choisissez votre dernière volonté");
 	
 	for (int i = 0; i < g_iStackCount; i++) {
-		
 		Format(tmp, sizeof(tmp), "%d", i);
 		
 		bool can;
-		Call_StartFunction(INVALID_HANDLE, g_fStackCondition[i]);
-		Call_PushCell(client);
-		Call_Finish(can);
+		if( g_fStackCondition[i] == INVALID_FUNCTION ) {
+			can = true;
+		}
+		else {
+			Call_StartFunction(INVALID_HANDLE, g_fStackCondition[i]);
+			Call_PushCell(client);
+			Call_Finish(can);
+		}
 		
-		AddMenuItem(menu, tmp, g_cStackName[i], can ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
+		menu.AddItem(tmp, g_cStackName[i], can ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
 	}
 	
-	SetMenuExitButton(menu, false);
-	DisplayMenu(menu, client, MENU_TIME_FOREVER);
+	menu.ExitButton = false;
+	menu.Display(client, MENU_TIME_FOREVER);
 	
 	PrintHintTextToAll("%N\nchoisis sa dernière volonté", client);
-	
 	EmitSoundToAllAny("ui/bonus_alert_start.wav");
 }
 public int menuDV(Handle menu, MenuAction action, int client, int params) {
 	if( action == MenuAction_Select ) {
-		char options[64];
+		char options[64], tmp[2][64];
 		GetMenuItem(menu, params, options, sizeof(options));
 		int id = StringToInt(options);
-		
-		g_bDoingDV = true;
-		g_bDoingUntilRoundEnd = view_as<bool>(g_bStackFlag[id] & JB_RUN_UNTIL_END);
-		
-		PrintHintTextToAll("Dernière volonté:\n%s", g_cStackName[id]);
-		CPrintToChat(client, "%s {blue}%N{default} a choisis sa dernière volontée: {green}%s{default}.", MOD_TAG, client,  g_cStackName[id]);
 		
 		if( g_bStackFlag[id] & JB_SHOULD_SELECT_CT ) {
 			Handle menu2 = CreateMenu(menuDVchoose);
 			SetMenuTitle(menu2, "Choisissez un CT");
-			
-			char tmp[2][64];
 			
 			for (int i = 1; i <= MaxClients; i++) {
 				if( IsClientInGame(i) && IsPlayerAlive(i) && GetClientTeam(i) == CS_TEAM_CT ) {
@@ -102,10 +100,7 @@ public int menuDV(Handle menu, MenuAction action, int client, int params) {
 			DisplayMenu(menu2, client, MENU_TIME_FOREVER);
 		}
 		else {			
-			Call_StartFunction(INVALID_HANDLE, g_fStackStart[id]);
-			Call_PushCell(client);
-			Call_PushCell(-1);
-			Call_Finish();
+			DV_Start(id, client);
 		}
 	}
 	else if( action == MenuAction_End ) {
@@ -119,24 +114,17 @@ public int menuDVchoose(Handle menu, MenuAction action, int client, int params) 
 		GetMenuItem(menu, params, options, sizeof(options));
 		ExplodeString(options, " ", data, sizeof(data), sizeof(data[]));
 		
-		int id = StringToInt(data[0]);
-		int target = StringToInt(data[1]);
+		int targets[MAX_PLAYERS];
+		targets[0] = StringToInt(data[1]);
 		
-		CPrintToChatAllEx(client, "%s {teamcolor}%N{default} a choisis de faire sa DV {green}%s{default} contre {lightblue}%N{default}.", MOD_TAG, client, options, target);
-		g_bDoingDV = true;
-		g_bDoingUntilRoundEnd = view_as<bool>(g_bStackFlag[id] & JB_RUN_UNTIL_END);
-		
-		
-		Call_StartFunction(INVALID_HANDLE, g_fStackStart[id]);
-		Call_PushCell(client);
-		Call_PushCell(target);
-		Call_Finish();
+		DV_Start(StringToInt(data[0]), client, targets, 1);		
 	}
 	else if( action == MenuAction_End ) {
 		CloseHandle(menu);
 	}
 }
-public int DV_CAN() {
+// -------------------------------------------------------------------------------------------------------------------------------
+int DV_CAN() {
 	if( g_bDoingDV )
 		return -1;
 	
@@ -158,24 +146,65 @@ public int DV_CAN() {
 	
 	return found;
 }
+int DV_Start(int id, int client, int targets[MAX_PLAYERS] = {0, ...}, int targetCount = 0) {
+	PrintHintTextToAll("Dernière volonté:\n%s", g_cStackName[id]);
+		
+	if( targetCount > 0 )
+		CPrintToChatAllEx(client, MOD_TAG ... "{teamcolor}%N{default} a choisis de faire sa DV " ... MOD_TAG_START ... "%s" ... MOD_TAG_END ... " contre " ... MOD_TAG_START ... "%N" ... MOD_TAG_END ... ".", client, g_cStackName[id], targets[0]);
+	else
+		CPrintToChat(client, MOD_TAG ... "{blue}%N{default} a choisis sa dernière volontée: " ... MOD_TAG_START ... "%s" ... MOD_TAG_END ... ".", client,  g_cStackName[id]);
+	
+	g_bDoingDV = true;
+	g_bDoingUntilRoundEnd = view_as<bool>(g_bStackFlag[id] & JB_RUN_UNTIL_END);
+	
+	if( g_fStackStart[id] != INVALID_FUNCTION ) {
+		Call_StartFunction(INVALID_HANDLE, g_fStackStart[id]);
+		Call_PushCell(client);
+		Call_PushArray(targets, targetCount);
+		Call_PushCell(targetCount);
+		Call_Finish();
+		
+		Call_StartFunction(INVALID_HANDLE, g_fStackStart[id]);
+		Call_PushCell(client);
+		Call_PushCell(targets[0]);
+		Call_Finish();
+	}
+}
+int DV_Stop(int id, int client, int targets[MAX_PLAYERS] = {0, ...}, int targetCount = 0) {
+	
+	CPrintToChatAll("%s La {blue}DV{default} est terminée.", MOD_TAG);
+	
+	g_bDoingDV = false;
+	g_bDoingUntilRoundEnd = false;
+	
+	if( g_fStackStop[id] != INVALID_FUNCTION ) {
+		Call_StartFunction(INVALID_HANDLE, g_fStackStop[id]);
+		Call_PushCell(client);
+		Call_PushArray(targets, targetCount);
+		Call_PushCell(targetCount);
+		Call_Finish();
+		
+		Call_StartFunction(INVALID_HANDLE, g_fStackStop[id]);
+		Call_PushCell(client);
+		Call_PushCell(targets[0]);
+		Call_Finish();
+	}
+}
+
+// -------------------------------------------------------------------------------------------------------------------------------
 public APLRes AskPluginLoad2(Handle hPlugin, bool isAfterMapLoaded, char[] error, int err_max) {
 	RegPluginLibrary("JB_LastRequest");
 	
 	CreateNative("JB_CreateLastRequest", Native_JB_CreateLastRequest);
+	g_hPluginReady = CreateGlobalForward("JB_OnPluginReady", ET_Ignore);
 }
 public int Native_JB_CreateLastRequest(Handle plugin, int numParams) {
 
 	GetNativeString(1, g_cStackName[g_iStackCount], sizeof(g_cStackName[]));
-	g_fStackCondition[g_iStackCount] = GetNativeFunction(2);
-	g_fStackStart[g_iStackCount] = GetNativeFunction(3);
-	g_fStackEnd[g_iStackCount] = GetNativeFunction(4);
-	g_bStackFlag[g_iStackCount] = GetNativeCell(5);
+	g_bStackFlag[g_iStackCount] = GetNativeCell(2);
+	g_fStackCondition[g_iStackCount] = GetNativeFunction(3);
+	g_fStackStart[g_iStackCount] = GetNativeFunction(4);
+	g_fStackEnd[g_iStackCount] = GetNativeFunction(5);
 	
 	return g_iStackCount++;
 }
-
-
-// JB_CreateLastRequest("Roulette",			DV_Condition,	DV_Debut,	DV_Fin, FLAG);
-// JB_CreateLastRequest("Roulette",			DV_Condition,	DV_Debut,	DV_Fin, JB_SHOULD_SELECT_CT);
-// JB_CreateLastRequest("Roulette",			DV_Condition,	DV_Debut,	DV_Fin, JB_RUN_UNTIL_END);
-// JB_CreateLastRequest("Roulette",			DV_Condition,	DV_Debut,	DV_Fin, JB_SHOULD_SELECT_CT|JB_RUN_UNTIL_END);
