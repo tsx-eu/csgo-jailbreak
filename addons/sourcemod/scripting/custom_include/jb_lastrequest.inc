@@ -6,20 +6,25 @@
 
 #define MAX_LR				32
 
-#define JB_DEFAULT			0
-#define JB_SHOULD_SELECT_CT	(1<<0)
-#define JB_RUN_UNTIL_END	(1<<1)
-#define JB_FUTUR_FLAG		(1<<2)
+#define JB_SHOULD_SELECT_CT		(1<<0)
+#define JB_RUN_UNTIL_DEAD		(1<<1)
+#define JB_MULTIPLE_T			(1<<2)
+#define JB_MULTIPLE_CT			(1<<3)
+#define JB_DEFAULT				JB_RUN_UNTIL_DEAD
+#define JB_SELECT_CT_UNTIL_DEAD	JB_SHOULD_SELECT_CT|JB_RUN_UNTIL_DEAD
 
 forward void JB_OnPluginReady();
 native int JB_CreateLastRequest(const char name[128], int flags = JB_DEFAULT, JB_Condition condition = INVALID_FUNCTION, JB_Event start = INVALID_FUNCTION, JB_Event end = INVALID_FUNCTION);
 
 typeset JB_Condition {
 	function bool(int client);
+	function bool(int[] client, int clientCount);
 }
-typeset JB_Event { // TODO: Checker comment gérer deux types différents de retour, sinon tempis :'(
+typeset JB_Event {
 	function void(int client, int target);
 	function void(int client, int[] targets, int targetCount);
+	function void(int[] client, int clientCount, int target);
+	function void(int[] client, int clientCount, int[] targets, int targetCount);
 }
 
 stock bool DV_CAN_Always(int client) {

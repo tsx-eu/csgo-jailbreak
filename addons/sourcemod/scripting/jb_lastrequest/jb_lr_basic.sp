@@ -16,19 +16,19 @@ int g_iDeagleDATA[4];
 Handle g_hMain = INVALID_HANDLE;
 
 public void JB_OnPluginReady() {
-	JB_CreateLastRequest("Roulette", 			JB_SHOULD_SELECT_CT | JB_RUN_UNTIL_END, 	DV_CAN_Always, DV_Roulette);
-	JB_CreateLastRequest("Brochette", 			JB_DEFAULT, 								DV_CAN_Min3CT, DV_Brochette);
+	JB_CreateLastRequest("Roulette", 			JB_SELECT_CT_UNTIL_DEAD, 	DV_CAN_Always, DV_Roulette);
+	JB_CreateLastRequest("Brochette", 			JB_DEFAULT, 				DV_CAN_Min3CT, DV_Brochette);
 	
-	JB_CreateLastRequest("Cut 100HP", 			JB_SHOULD_SELECT_CT | JB_RUN_UNTIL_END, 	DV_CAN_Always, DV_CUT100);
-	JB_CreateLastRequest("Cut 1HP", 			JB_SHOULD_SELECT_CT | JB_RUN_UNTIL_END, 	DV_CAN_Always, DV_CUT1);
-	JB_CreateLastRequest("Cut Slide 100HP", 	JB_SHOULD_SELECT_CT | JB_RUN_UNTIL_END, 	DV_CAN_Always, DV_CUTSLIDE100,  DV_CUTSLIDE_END);
-	JB_CreateLastRequest("Cut Slide 1HP", 		JB_SHOULD_SELECT_CT | JB_RUN_UNTIL_END, 	DV_CAN_Always, DV_CUTSLIDE1,  	DV_CUTSLIDE_END);
+	JB_CreateLastRequest("Cut 100HP", 			JB_SELECT_CT_UNTIL_DEAD, 	DV_CAN_Always, DV_CUT100);
+	JB_CreateLastRequest("Cut 1HP", 			JB_SELECT_CT_UNTIL_DEAD, 	DV_CAN_Always, DV_CUT1);
+	JB_CreateLastRequest("Cut Slide 100HP", 	JB_SELECT_CT_UNTIL_DEAD, 	DV_CAN_Always, DV_CUTSLIDE100,  DV_CUTSLIDE_END);
+	JB_CreateLastRequest("Cut Slide 1HP", 		JB_SELECT_CT_UNTIL_DEAD, 	DV_CAN_Always, DV_CUTSLIDE1,  	DV_CUTSLIDE_END);
 	
-	JB_CreateLastRequest("Deagle explosif", 	JB_SHOULD_SELECT_CT | JB_RUN_UNTIL_END,		DV_CAN_Always, DV_DEAGLE_EXPL);
-	JB_CreateLastRequest("Lancé de deagle", 	JB_SHOULD_SELECT_CT | JB_RUN_UNTIL_END,		DV_CAN_Always, DV_DEAGLE_THROW);
-	JB_CreateLastRequest("Bataille de grenade", JB_SHOULD_SELECT_CT | JB_RUN_UNTIL_END,		DV_CAN_Always, DV_FUMI,  		DV_FUMI_END);
+	JB_CreateLastRequest("Deagle explosif", 	JB_SELECT_CT_UNTIL_DEAD,	DV_CAN_Always, DV_DEAGLE_EXPL);
+	JB_CreateLastRequest("Lancé de deagle", 	JB_SELECT_CT_UNTIL_DEAD,	DV_CAN_Always, DV_DEAGLE_THROW);
+	JB_CreateLastRequest("Bataille de grenade", JB_SELECT_CT_UNTIL_DEAD,	DV_CAN_Always, DV_FUMI,  		DV_FUMI_END);
 	
-	JB_CreateLastRequest("Rebélion", 			JB_DEFAULT, 								DV_CAN_Min3CT, DV_REBELION);
+	JB_CreateLastRequest("Rebélion", 			JB_DEFAULT, 				DV_CAN_Min3CT, DV_REBELION);
 }
 public void OnMapStart() {
 	g_cLaser = PrecacheModel("materials/sprites/laserbeam.vmt", true);

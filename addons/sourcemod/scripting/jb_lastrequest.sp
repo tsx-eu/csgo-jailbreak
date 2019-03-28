@@ -24,9 +24,10 @@ int g_iStackCount = 0;
 
 char g_cStackName[MAX_LR][128];
 Function g_fStackCondition[MAX_LR], g_fStackStart[MAX_LR], g_fStackEnd[MAX_LR];
+Handle g_hStackPlugin[MAX_LR];
 int g_bStackFlag[MAX_LR];
 Handle g_hPluginReady = INVALID_HANDLE;
-bool g_bDoingDV, g_bDoingUntilRoundEnd;
+bool g_bDoingDV, g_bDoingUntilDead;
 
 
 public void OnPluginStart() {
@@ -34,6 +35,13 @@ public void OnPluginStart() {
 	RegConsoleCmd("sm_lr", 			cmd_DV);
 	RegConsoleCmd("sm_lastrequest", cmd_DV);
 	
+	g_iStackCount = 0;
+
+	Call_StartForward(g_hPluginReady);
+	Call_Finish();
+}
+public void OnMapStart() {
+	g_iStackCount = 0;
 	
 	Call_StartForward(g_hPluginReady);
 	Call_Finish();
@@ -54,6 +62,10 @@ void displayDV(int client) {
 	Menu menu = new Menu(menuDV);
 	menu.SetTitle("Choisissez votre dernière volonté");
 	
+	int clients[MAX_PLAYERS];
+	clients[0] = client;
+	int clientCount = 1;
+	
 	for (int i = 0; i < g_iStackCount; i++) {
 		Format(tmp, sizeof(tmp), "%d", i);
 		
@@ -62,9 +74,17 @@ void displayDV(int client) {
 			can = true;
 		}
 		else {
-			Call_StartFunction(INVALID_HANDLE, g_fStackCondition[i]);
-			Call_PushCell(client);
+			
+			Call_StartFunction(g_hStackPlugin[i], g_fStackCondition[i]);
+			if( g_bStackFlag[i] & JB_MULTIPLE_T ) {
+				Call_PushArray(clients, clientCount);
+				Call_PushCell(clientCount);
+			}
+			else {
+				Call_PushCell(clients[0]);
+			}
 			Call_Finish(can);
+			
 		}
 		
 		menu.AddItem(tmp, g_cStackName[i], can ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
@@ -99,8 +119,10 @@ public int menuDV(Handle menu, MenuAction action, int client, int params) {
 			SetMenuExitButton(menu2, false);
 			DisplayMenu(menu2, client, MENU_TIME_FOREVER);
 		}
-		else {			
-			DV_Start(id, client);
+		else {
+			int clients[MAX_PLAYERS];
+			clients[0] = client;
+			DV_Start(id, clients, 1);
 		}
 	}
 	else if( action == MenuAction_End ) {
@@ -114,10 +136,12 @@ public int menuDVchoose(Handle menu, MenuAction action, int client, int params) 
 		GetMenuItem(menu, params, options, sizeof(options));
 		ExplodeString(options, " ", data, sizeof(data), sizeof(data[]));
 		
-		int targets[MAX_PLAYERS];
+		int clients[MAX_PLAYERS], targets[MAX_PLAYERS];
+		clients[0] = client;
 		targets[0] = StringToInt(data[1]);
 		
-		DV_Start(StringToInt(data[0]), client, targets, 1);		
+		
+		DV_Start(StringToInt(data[0]), clients, 1, targets, 1);		
 	}
 	else if( action == MenuAction_End ) {
 		CloseHandle(menu);
@@ -146,51 +170,51 @@ int DV_CAN() {
 	
 	return found;
 }
-int DV_Start(int id, int client, int targets[MAX_PLAYERS] = {0, ...}, int targetCount = 0) {
+int DV_Start(int id, int clients[MAX_PLAYERS] = {0, ...}, int clientCount, int targets[MAX_PLAYERS] = {0, ...}, int targetCount = 0) {
 	PrintHintTextToAll("Dernière volonté:\n%s", g_cStackName[id]);
 		
 	if( targetCount > 0 )
-		CPrintToChatAllEx(client, MOD_TAG ... "{teamcolor}%N{default} a choisis de faire sa DV " ... MOD_TAG_START ... "%s" ... MOD_TAG_END ... " contre " ... MOD_TAG_START ... "%N" ... MOD_TAG_END ... ".", client, g_cStackName[id], targets[0]);
+		CPrintToChatAll(MOD_TAG ... "{teamcolor}%N{default} a choisis de faire sa DV " ... MOD_TAG_START ... "%s" ... MOD_TAG_END ... " contre " ... MOD_TAG_START ... "%N" ... MOD_TAG_END ... ".", clients[0], g_cStackName[id], targets[0]);
 	else
-		CPrintToChat(client, MOD_TAG ... "{blue}%N{default} a choisis sa dernière volontée: " ... MOD_TAG_START ... "%s" ... MOD_TAG_END ... ".", client,  g_cStackName[id]);
+		CPrintToChatAll(MOD_TAG ... "{blue}%N{default} a choisis sa dernière volontée: " ... MOD_TAG_START ... "%s" ... MOD_TAG_END ... ".", clients[0],  g_cStackName[id]);
 	
 	g_bDoingDV = true;
-	g_bDoingUntilRoundEnd = view_as<bool>(g_bStackFlag[id] & JB_RUN_UNTIL_END);
+	g_bDoingUntilDead = view_as<bool>(g_bStackFlag[id] & JB_RUN_UNTIL_DEAD);
 	
-	if( g_fStackStart[id] != INVALID_FUNCTION ) {
-		Call_StartFunction(INVALID_HANDLE, g_fStackStart[id]);
-		Call_PushCell(client);
-		Call_PushArray(targets, targetCount);
-		Call_PushCell(targetCount);
-		Call_Finish();
-		
-		Call_StartFunction(INVALID_HANDLE, g_fStackStart[id]);
-		Call_PushCell(client);
-		Call_PushCell(targets[0]);
-		Call_Finish();
-	}
+	if( g_fStackStart[id] != INVALID_FUNCTION )
+		DV_Call(id, g_fStackStart[id], clients, clientCount, targets, targetCount);
 }
-int DV_Stop(int id, int client, int targets[MAX_PLAYERS] = {0, ...}, int targetCount = 0) {
+int DV_Stop(int id, int clients[MAX_PLAYERS] = {0, ...}, int clientCount, int targets[MAX_PLAYERS] = {0, ...}, int targetCount = 0) {
 	
 	CPrintToChatAll("%s La {blue}DV{default} est terminée.", MOD_TAG);
 	
 	g_bDoingDV = false;
-	g_bDoingUntilRoundEnd = false;
+	g_bDoingUntilDead = false;
 	
-	if( g_fStackStop[id] != INVALID_FUNCTION ) {
-		Call_StartFunction(INVALID_HANDLE, g_fStackStop[id]);
-		Call_PushCell(client);
+	if( g_fStackStop[id] != INVALID_FUNCTION )
+		DV_Call(id, g_fStackStop[id], clients, clientCount, targets, targetCount);
+}
+void DV_Call(int id, Function func, int clients[MAX_PLAYERS] = {0, ...}, int clientCount, int targets[MAX_PLAYERS] = {0, ...}, int targetCount = 0) {
+	
+	Call_StartFunction(g_hStackPlugin[id], func);
+	
+	if( g_bStackFlag[id] & JB_MULTIPLE_T ) {
+		Call_PushArray(clients, clientCount);
+		Call_PushCell(clientCount);
+	}
+	else {
+		Call_PushCell(clients[0]);
+	}
+	
+	if( g_bStackFlag[id] & JB_MULTIPLE_CT ) {
 		Call_PushArray(targets, targetCount);
 		Call_PushCell(targetCount);
-		Call_Finish();
-		
-		Call_StartFunction(INVALID_HANDLE, g_fStackStop[id]);
-		Call_PushCell(client);
-		Call_PushCell(targets[0]);
-		Call_Finish();
 	}
+	else {
+		Call_PushCell(targets[0]);
+	}
+	Call_Finish();
 }
-
 // -------------------------------------------------------------------------------------------------------------------------------
 public APLRes AskPluginLoad2(Handle hPlugin, bool isAfterMapLoaded, char[] error, int err_max) {
 	RegPluginLibrary("JB_LastRequest");
@@ -200,6 +224,7 @@ public APLRes AskPluginLoad2(Handle hPlugin, bool isAfterMapLoaded, char[] error
 }
 public int Native_JB_CreateLastRequest(Handle plugin, int numParams) {
 
+	g_hStackPlugin[g_iStackCount] = plugin;
 	GetNativeString(1, g_cStackName[g_iStackCount], sizeof(g_cStackName[]));
 	g_bStackFlag[g_iStackCount] = GetNativeCell(2);
 	g_fStackCondition[g_iStackCount] = GetNativeFunction(3);
