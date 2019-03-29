@@ -18,7 +18,7 @@ Handle g_hMain = INVALID_HANDLE;
 public void JB_OnPluginReady() {
 	JB_CreateLastRequest("Roulette", 			JB_SELECT_CT_UNTIL_DEAD, 	DV_CAN_Always, DV_Roulette);
 	JB_CreateLastRequest("Brochette", 			JB_DEFAULT, 				DV_CAN_Min3CT, DV_Brochette);
-	
+	/*
 	JB_CreateLastRequest("Cut 100HP", 			JB_SELECT_CT_UNTIL_DEAD, 	DV_CAN_Always, DV_CUT100);
 	JB_CreateLastRequest("Cut 1HP", 			JB_SELECT_CT_UNTIL_DEAD, 	DV_CAN_Always, DV_CUT1);
 	JB_CreateLastRequest("Cut Slide 100HP", 	JB_SELECT_CT_UNTIL_DEAD, 	DV_CAN_Always, DV_CUTSLIDE100,  DV_CUTSLIDE_END);
@@ -29,6 +29,7 @@ public void JB_OnPluginReady() {
 	JB_CreateLastRequest("Bataille de grenade", JB_SELECT_CT_UNTIL_DEAD,	DV_CAN_Always, DV_FUMI,  		DV_FUMI_END);
 	
 	JB_CreateLastRequest("Rebélion", 			JB_DEFAULT, 				DV_CAN_Min3CT, DV_REBELION);
+	*/
 }
 public void OnMapStart() {
 	g_cLaser = PrecacheModel("materials/sprites/laserbeam.vmt", true);
