@@ -8,13 +8,12 @@
 
 #define JB_SHOULD_SELECT_CT		(1<<0)
 #define JB_RUN_UNTIL_DEAD		(1<<1)
-#define JB_MULTIPLE_T			(1<<2)
-#define JB_MULTIPLE_CT			(1<<3)
 #define JB_DEFAULT				JB_RUN_UNTIL_DEAD
 #define JB_SELECT_CT_UNTIL_DEAD	JB_SHOULD_SELECT_CT|JB_RUN_UNTIL_DEAD
 
 forward void JB_OnPluginReady();
 native int JB_CreateLastRequest(const char name[128], int flags = JB_DEFAULT, JB_Condition condition = INVALID_FUNCTION, JB_Event start = INVALID_FUNCTION, JB_Event end = INVALID_FUNCTION);
+native int JB_SetTeamCount(int id, int team, int count);
 
 typeset JB_Condition {
 	function bool(int client);
