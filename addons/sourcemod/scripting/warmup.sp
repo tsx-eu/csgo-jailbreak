@@ -151,7 +151,7 @@ void WARMUP_Enable() {
 	if( GetConVarBool(g_hCvarBunnyHop) )
 		ServerCommand("sv_autobunnyhopping 1; sv_enablebunnyhopping 1");
 	
-	ServerCommand("mp_restartgame 1");
+	CS_TerminateRound(1.0, CSRoundEnd_Draw);
 	
 	g_bEnable = true;
 }
@@ -169,7 +169,7 @@ void WARMUP_Disable() {
 	if( GetConVarBool(g_hCvarBunnyHop) )
 		ServerCommand("sv_autobunnyhopping 0; sv_enablebunnyhopping 0");
 	
-	ServerCommand("mp_restartgame 1");
+	CS_TerminateRound(1.0, CSRoundEnd_Draw);
 	
 	g_bEnable = false;
 }
