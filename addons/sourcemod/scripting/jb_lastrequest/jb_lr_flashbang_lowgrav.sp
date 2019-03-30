@@ -2,7 +2,6 @@
 
 #include <sourcemod>
 #include <sdktools>
-#include <sdkhooks>
 #include <smlib>
 #include <smart-menu>
 
