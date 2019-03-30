@@ -2,6 +2,7 @@
 
 #include <sourcemod>
 #include <sdktools>
+#include <sdkhooks>
 #include <csgocolors>
 #include <emitsoundany>
 #include <cstrike>
@@ -9,7 +10,6 @@
 #pragma newdecls required
 
 #include <jb_lastrequest>
-
 
 public Plugin myinfo = {
 	name = "Last Request",
@@ -19,7 +19,6 @@ public Plugin myinfo = {
 	url = "zaretti.be"
 };
 
-#define MAX_PLAYERS 65
 int g_iStackCount = 0;
 
 char g_cStackName[MAX_LR][128];
@@ -30,7 +29,10 @@ Handle g_hPluginReady = INVALID_HANDLE, g_hCvar = INVALID_HANDLE;
 bool g_bPluginEnabled;
 
 int g_iDoingDV = -1;
-int g_iClients[MAX_PLAYERS], g_iClientCount, g_iTargets[MAX_PLAYERS], g_iTargetCount;
+int g_iCurrentClients[MAX_PLAYERS], g_iCurrentClientCount, g_iCurrentTargets[MAX_PLAYERS], g_iCurrentTargetCount;
+int g_iInitialClients[MAX_PLAYERS], g_iInitialClientCount, g_iInitialTargets[MAX_PLAYERS], g_iInitialTargetCount;
+
+int g_cLaser;
 
 public void OnPluginStart() {
 	g_hCvar = CreateConVar("sm_hosties_lr", "1");
@@ -41,9 +43,14 @@ public void OnPluginStart() {
 	RegConsoleCmd("sm_lr", 			cmd_DV);
 	RegConsoleCmd("sm_lastrequest", cmd_DV);
 	
+	RegAdminCmd("sm_cancellr", 		cmd_AdminCancel,	ADMFLAG_KICK);
+	
+	
 	HookEvent("player_death", 		EventDeath, 		EventHookMode_Pre);
 	HookEvent("round_start",		EventRoundStart,	EventHookMode_Post);
 	HookEvent("round_end",			EventRoundEnd,		EventHookMode_Post);
+	
+	CreateTimer(1.0, EventSecondElapsed, TIMER_REPEAT);
 }
 public void OnConVarChange(Handle cvar, const char[] oldVal, const char[] newVal) {
 	if( cvar == g_hCvar ) {
@@ -52,19 +59,40 @@ public void OnConVarChange(Handle cvar, const char[] oldVal, const char[] newVal
 }
 public void OnMapStart() {
 	g_iStackCount = 0;
-	g_iStackCount = g_iClientCount = g_iTargetCount = 0;
+	g_iStackCount = g_iCurrentClientCount = g_iCurrentTargetCount = 0;
 	g_iDoingDV = -1;
+	
+	g_cLaser = PrecacheModel("materials/sprites/laserbeam.vmt", true);
 	
 	Call_StartForward(g_hPluginReady);
 	Call_Finish();
 }
+public void OnClientPostAdminCheck(int client) {
+	SDKHook(client, SDKHook_OnTakeDamage, EventTakeDamage);
+}
+public void OnClientDisconnect(int client) {
+	if( g_iDoingDV == -1 )
+		return;
+	
+	bool endOfDV = DV_RemoveClientFromTeam(client, true);
+	
+	if( endOfDV )
+		DV_Stop(g_iDoingDV);
+}
+// -------------------------------------------------------------------------------------------------------------------------------
 public Action EventDeath(Handle ev, const char[] name, bool broadcast) {
+	if( g_iDoingDV == -1 )
+		return;
+	
 	int client = GetClientOfUserId(GetEventInt(ev, "userid"));
-	OnClientDisconnect(client);
+	bool endOfDV = DV_RemoveClientFromTeam(client, false);
+	
+	if( endOfDV )
+		DV_Stop(g_iDoingDV);
 }
 public Action EventRoundStart(Handle ev, const char[] name, bool  bd) {
 	if( g_iDoingDV >= 0 ) { // Comment c'est possible ?
-		g_iStackCount = g_iClientCount = g_iTargetCount = 0;
+		g_iStackCount = g_iCurrentClientCount = g_iCurrentTargetCount = 0;
 		g_iDoingDV = -1;
 		
 		PrintToChatAll("WARNING - Please report the following issue:");
@@ -75,48 +103,57 @@ public Action EventRoundEnd(Handle ev, const char[] name, bool  bd) {
 	if( g_iDoingDV >= 0 )
 		DV_Stop(g_iDoingDV);
 }
-public void OnClientDisconnect(int client) {
+public Action EventTakeDamage(int victim, int& attacker, int& inflictor, float& damage, int& damagetype, int& weapon, float damageForce[3], float damagePosition[3]) {
 	if( g_iDoingDV == -1 )
-		return;
+		return Plugin_Continue;
+	if( !(g_iStackFlag[g_iDoingDV] & JB_SHOULD_SELECT_CT) )
+		return Plugin_Continue;
 	
-	int team = GetClientTeam(client);
-	bool endOfDV = false;
+	bool victimInDV = DV_IsClientInsideTeam(victim);
+	bool attackerInDV = DV_IsClientInsideTeam(attacker);
 	
-	// TODO: Factoriser:
-	if( team == CS_TEAM_CT && g_iStackFlag[g_iDoingDV] & (JB_SHOULD_SELECT_CT|JB_RUN_UNTIL_DEAD) ) {
-		for (int i = 0; i < g_iTargetCount; i++) {
-			if( g_iTargets[i] == client ) {
+	if( !(victimInDV && attackerInDV) )
+		return Plugin_Stop;
+	
+	return Plugin_Continue;
+}
+public Action EventSecondElapsed(Handle timer, any none) {
+	float src[3], dst[3];
+	int client, target;
+	
+	if( g_iStackFlag[g_iDoingDV] & JB_BEACON ) {
+		for (int i = 0; i < g_iCurrentClientCount; i++) {
+			client = g_iCurrentClients[i];
+			GetClientAbsOrigin(client, src);
+			src[2] += 16.0;
+			
+			for (int j = 0; j < g_iCurrentTargetCount; j++) {
+				target = g_iCurrentTargets[j];
+				GetClientAbsOrigin(target, dst);
+				dst[2] += 16.0;
 				
-				for (int j = i+1; j < g_iTargetCount; j++)
-					g_iTargets[j - 1] = g_iTargets[j];
-				g_iTargetCount--;
-				
-				break;
+				if( GetVectorDistance(src, dst) > MAX_DISTANCE*MAX_DISTANCE ) {
+					TE_SetupBeamRingPoint(src, 32.0, 128.0, g_cLaser, g_cLaser, 0, 12, 1.0, 16.0, 0.0, { 255, 0, 0, 200 }, 0, 0);
+					TE_SendToAll();
+					TE_SetupBeamRingPoint(dst, 32.0, 128.0, g_cLaser, g_cLaser, 0, 12, 1.0, 16.0, 0.0, { 0, 0, 255, 200 }, 0, 0);
+					TE_SendToAll();
+					
+					TE_SetupBeamPoints(src, dst, g_cLaser, g_cLaser, 0, 12, 1.0, 16.0, 16.0, 0, 0.0, { 255, 255, 255, 0 }, 0);
+					TE_SendToAll();					
+				}
 			}
 		}
-		
-		if( g_iTargetCount <= 0 )
-			endOfDV = true;
 	}
-	if( team == CS_TEAM_T ) {
-		for (int i = 0; i < g_iClientCount; i++) {
-			if( g_iClients[i] == client ) {
-				
-				for (int j = i+1; j < g_iClientCount; j++)
-					g_iClients[j - 1] = g_iClients[j];
-				g_iClientCount--;
-				
-				break;
-			}
-		}
-		if( g_iClientCount <= 0 )
-			endOfDV = true;
-	}
-	
-	if( endOfDV )
-		DV_Stop(g_iDoingDV);
 }
 // -------------------------------------------------------------------------------------------------------------------------------
+public Action cmd_AdminCancel(int client, int args) {
+	if( g_iDoingDV >= 0 ) {
+		g_iCurrentClientCount = g_iCurrentTargetCount = 0;
+		g_iDoingDV = -1;	
+	}
+	
+	return Plugin_Handled;
+}
 public Action cmd_DV(int client, int args) {
 	if( GetClientTeam(client) != CS_TEAM_T || !IsPlayerAlive(client) || DV_CanBeStarted() == -1 ) {
 		CPrintToChat(client, MOD_TAG ... "Vous n'avez {red}pas{default} le droit d'utiliser le " ... MOD_TAG_START ... "!dv" ... MOD_TAG_END ... " maintenant.");
@@ -132,9 +169,9 @@ void displayDV(int client) {
 	Menu menu = new Menu(menuDV);
 	menu.SetTitle("Choisissez votre dernière volonté\n");
 	
-	g_iClients[0] = client;
-	g_iClientCount = 1;
-	g_iTargetCount = 0;
+	g_iCurrentClients[0] = client;
+	g_iCurrentClientCount = 1;
+	g_iCurrentTargetCount = 0;
 	
 	int targetCount = DV_CountTeam(CS_TEAM_CT);
 	
@@ -153,11 +190,11 @@ void displayDV(int client) {
 			
 			Call_StartFunction(g_hStackPlugin[i], g_fStackCondition[i]);
 			if( g_iStackTeam[i][CS_TEAM_T] > 1 ) {
-				Call_PushArray(g_iClients, g_iClientCount);
-				Call_PushCell(g_iClientCount);
+				Call_PushArray(g_iCurrentClients, g_iCurrentClientCount);
+				Call_PushCell(g_iCurrentClientCount);
 			}
 			else
-				Call_PushCell(g_iClients[0]);
+				Call_PushCell(g_iCurrentClients[0]);
 			Call_Finish(can);
 			
 		}
@@ -187,7 +224,7 @@ void displayDV_SelectCT(int id, int client) {
 			
 		int skip = false;
 		for (int j = 0; j < g_iStackTeam[id][CS_TEAM_CT]; j++) {
-			if( g_iTargets[j] == i ) {
+			if( g_iCurrentTargets[j] == i ) {
 				skip = true;
 				break;
 			}
@@ -205,7 +242,7 @@ void displayDV_SelectCT(int id, int client) {
 	menu.ExitButton = false;
 	menu.Display(client, MENU_TIME_FOREVER);
 }
-public int menuDV(Handle menu, MenuAction action, int client, int params) {
+public int menuDV(Menu menu, MenuAction action, int client, int params) {
 	static char options[64];
 	if( action == MenuAction_Select ) {
 		GetMenuItem(menu, params, options, sizeof(options));
@@ -223,17 +260,17 @@ public int menuDV(Handle menu, MenuAction action, int client, int params) {
 	}
 	return;
 }
-public int menuDVchooseCT(Handle menu, MenuAction action, int client, int params) {
+public int menuDVchooseCT(Menu menu, MenuAction action, int client, int params) {
 	static char options[64], data[2][16];
 	if( action == MenuAction_Select ) {
 		GetMenuItem(menu, params, options, sizeof(options));
 		ExplodeString(options, " ", data, sizeof(data), sizeof(data[]));
 		
 		int id = StringToInt(data[0]);
-		g_iTargets[g_iTargetCount] = StringToInt(data[1]);
-		g_iTargetCount++;
+		g_iCurrentTargets[g_iCurrentTargetCount] = StringToInt(data[1]);
+		g_iCurrentTargetCount++;
 		
-		if( g_iTargetCount >= g_iStackTeam[id][CS_TEAM_CT] )
+		if( g_iCurrentTargetCount >= g_iStackTeam[id][CS_TEAM_CT] )
 			DV_Start(id);
 		else
 			displayDV_SelectCT(id, client);
@@ -244,6 +281,56 @@ public int menuDVchooseCT(Handle menu, MenuAction action, int client, int params
 	}
 }
 // -------------------------------------------------------------------------------------------------------------------------------
+bool DV_RemoveClientFromTeam(int client, bool disconnect) {
+	bool endOfDV = false;
+	int team = GetClientTeam(client);
+
+	if( team == CS_TEAM_CT && g_iStackFlag[g_iDoingDV] & (JB_SHOULD_SELECT_CT|JB_RUN_UNTIL_DEAD) ) {
+		DV_RemoveFromStack(client, g_iCurrentTargets, g_iCurrentTargetCount);
+		if( disconnect )
+			DV_RemoveFromStack(client, g_iInitialTargets, g_iInitialTargetCount);
+		
+		if( g_iCurrentTargetCount <= 0 )
+			endOfDV = true;
+	}
+	if( team == CS_TEAM_T ) {
+		DV_RemoveFromStack(client, g_iCurrentClients, g_iCurrentClientCount);
+		if( disconnect )
+			DV_RemoveFromStack(client, g_iInitialClients, g_iInitialClientCount);
+		
+		if( g_iCurrentClientCount <= 0 )
+			endOfDV = true;
+	}
+	
+	return endOfDV;
+}
+bool DV_RemoveFromStack(int client, int[] stack, int count) {
+	for (int i = 0; i < count; i++) {
+		if( stack[i] == client ) {
+			
+			for (int j = i+1; j < count; j++)
+				stack[j - 1] = stack[j];
+			count--;
+			
+			break;
+		}
+	}
+}
+bool DV_IsClientInsideTeam(int client) {
+	int team = GetClientTeam(client);
+	if( team == CS_TEAM_CT ) {
+		for (int i = 0; i < g_iCurrentTargetCount; i++)
+			if( g_iCurrentTargets[i] == client )
+				return true;
+	}
+	else if( team == CS_TEAM_T ) {
+		for (int i = 0; i < g_iCurrentClientCount; i++)
+			if( g_iCurrentClients[i] == client )
+				return true;
+	}
+	
+	return false;
+}
 int DV_CanBeStarted() {
 	if( !g_bPluginEnabled )
 		return -1;
@@ -277,44 +364,49 @@ int DV_CountTeam(int team) {
 	}
 	return t;
 }
+// -------------------------------------------------------------------------------------------------------------------------------
 int DV_Start(int id) {
 	PrintHintTextToAll("Dernière volonté:\n%s", g_cStackName[id]);
 		
-	if( g_iTargetCount > 0 )
-		CPrintToChatAll(MOD_TAG ... "{teamcolor}%N{default} a choisis de faire sa DV " ... MOD_TAG_START ... "%s" ... MOD_TAG_END ... " contre " ... MOD_TAG_START ... "%N" ... MOD_TAG_END ... ".", g_iClients[0], g_cStackName[id], g_iTargets[0]);
+	if( g_iCurrentTargetCount > 0 )
+		CPrintToChatAll(MOD_TAG ... "{teamcolor}%N{default} a choisis de faire sa DV " ... MOD_TAG_START ... "%s" ... MOD_TAG_END ... " contre " ... MOD_TAG_START ... "%N" ... MOD_TAG_END ... ".", g_iCurrentClients[0], g_cStackName[id], g_iCurrentTargets[0]);
 	else
-		CPrintToChatAll(MOD_TAG ... "{blue}%N{default} a choisis sa dernière volontée: " ... MOD_TAG_START ... "%s" ... MOD_TAG_END ... ".", g_iClients[0],  g_cStackName[id]);
+		CPrintToChatAll(MOD_TAG ... "{blue}%N{default} a choisis sa dernière volontée: " ... MOD_TAG_START ... "%s" ... MOD_TAG_END ... ".", g_iCurrentClients[0],  g_cStackName[id]);
 	
 	g_iDoingDV = id;
+	g_iInitialClients = g_iCurrentClients;
+	g_iInitialClientCount = g_iCurrentClientCount;
+	g_iInitialTargets = g_iCurrentTargets;
+	g_iInitialTargetCount = g_iCurrentTargetCount;
 	
 	if( g_fStackStart[id] != INVALID_FUNCTION )
 		DV_Call(id, g_fStackStart[id]);	
-	
 }
+
 int DV_Stop(int id) {
 	CPrintToChatAll("%s La {blue}DV{default} est terminée.", MOD_TAG);
 	
 	if( g_fStackEnd[id] != INVALID_FUNCTION )
 		DV_Call(id, g_fStackEnd[id]);
 	
-	g_iClientCount = g_iTargetCount = 0;
+	g_iCurrentClientCount = g_iCurrentTargetCount = 0;
 	g_iDoingDV = -1;
 }
 void DV_Call(int id, Function func) {
 	Call_StartFunction(g_hStackPlugin[id], func);
 	if( g_iStackTeam[id][CS_TEAM_T] > 1 ) {
-		Call_PushArray(g_iClients, g_iClientCount);
-		Call_PushCell(g_iClientCount);
+		Call_PushArray(g_iInitialClients, g_iInitialClientCount);
+		Call_PushCell(g_iInitialClientCount);
 	}
 	else if( g_iStackTeam[id][CS_TEAM_T] == 1 )
-		Call_PushCell(g_iClients[0]);
+		Call_PushCell(g_iInitialClientCount > 0 ? g_iInitialClients[0] : 0 );
 	
 	if( g_iStackTeam[id][CS_TEAM_CT] > 1 ) {
-		Call_PushArray(g_iTargets, g_iTargetCount);
-		Call_PushCell(g_iTargetCount);
+		Call_PushArray(g_iInitialTargets, g_iInitialTargetCount);
+		Call_PushCell(g_iInitialTargetCount);
 	}
 	else if( g_iStackTeam[id][CS_TEAM_CT] == 1 )
-		Call_PushCell(g_iTargets[0]);
+		Call_PushCell(g_iInitialTargetCount > 0 ? g_iInitialTargets[0] : 0);
 	Call_Finish();
 }
 // -------------------------------------------------------------------------------------------------------------------------------
