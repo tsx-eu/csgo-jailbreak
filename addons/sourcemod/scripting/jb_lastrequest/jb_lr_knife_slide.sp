@@ -65,7 +65,6 @@ public int selectWeapon(SmartMenu menu, MenuAction action, int client, int param
 public void DV_Stop(int client, int target) {
 	ServerCommand("sv_airaccelerate %d;sv_gravity %d", g_iAirAccelerate, g_iGravity);
 	
-	
 	if( client > 0 )
 		Entity_SetCollisionGroup(client, COLLISION_GROUP_PLAYER);
 	if( target > 0 )
