@@ -17,6 +17,10 @@ int g_iDeagleDATA[4];
 public void JB_OnPluginReady() {
 	JB_CreateLastRequest("Deagle explosif", 	JB_SELECT_CT_UNTIL_DEAD|JB_BEACON|JB_NODAMAGE, DV_CAN_Always, DV_Start);
 }
+public void OnMapStart() {
+	g_cLaser = PrecacheModel("materials/sprites/laserbeam.vmt", true);
+}
+
 public void DV_Start(int client, int target) {
 	DV_StripWeapon(client, false);
 	DV_StripWeapon(target, false);
