@@ -12,7 +12,8 @@
 #define JB_SHOULD_SELECT_T		(1<<1)			// Not implemented, yet.
 #define JB_RUN_UNTIL_DEAD		(1<<2)
 #define JB_RUN_UNTIL_ROUND_END	(1<<3)
-#define JB_BEACON				(1<<10)			// Not implemented, yet.
+#define JB_BEACON				(1<<10)
+#define JB_NODAMAGE				(1<<11)
 
 #define JB_DEFAULT				JB_RUN_UNTIL_DEAD
 #define JB_SELECT_CT_UNTIL_DEAD	JB_SHOULD_SELECT_CT|JB_RUN_UNTIL_DEAD

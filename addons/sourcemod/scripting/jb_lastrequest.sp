@@ -112,8 +112,14 @@ public Action EventTakeDamage(int victim, int& attacker, int& inflictor, float& 
 	bool victimInDV = DV_IsClientInsideTeam(victim);
 	bool attackerInDV = DV_IsClientInsideTeam(attacker);
 	
-	if( !(victimInDV && attackerInDV) )
+	
+	if( victimInDV && attackerInDV ) {
+		if( !(g_iStackFlag[g_iDoingDV] & JB_NODAMAGE) )
+			return Plugin_Stop;
+	}
+	else {
 		return Plugin_Stop;
+	}
 	
 	return Plugin_Continue;
 }
