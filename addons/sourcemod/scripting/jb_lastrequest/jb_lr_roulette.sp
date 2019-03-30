@@ -3,9 +3,6 @@
 #include <sourcemod>
 #include <sdktools>
 #include <sdkhooks>
-#include <smlib>
-#include <cstrike>
-#include <emitsoundany>
 #include <smart-menu>
 
 #pragma newdecls required

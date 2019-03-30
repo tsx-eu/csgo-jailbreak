@@ -3,9 +3,6 @@
 #include <sourcemod>
 #include <sdktools>
 #include <sdkhooks>
-#include <smlib>
-#include <cstrike>
-#include <emitsoundany>
 #include <smart-menu>
 
 #pragma newdecls required
@@ -15,7 +12,7 @@
 Handle g_hMain = INVALID_HANDLE;
 
 public void JB_OnPluginReady() {
-	JB_CreateLastRequest("Bataille de flashbang", 	JB_SELECT_CT_UNTIL_DEAD|JB_BEACON, DV_CAN_Always, DV_Start, DV_Stop);
+	JB_CreateLastRequest("Combat de flashbang", 	JB_SELECT_CT_UNTIL_DEAD|JB_BEACON, DV_CAN_Always, DV_Start, DV_Stop);
 }
 public void DV_Start(int client, int target) {
 	SetEntityHealth(client, 1);
