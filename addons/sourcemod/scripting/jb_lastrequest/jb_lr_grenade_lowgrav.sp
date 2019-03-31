@@ -13,7 +13,7 @@ int g_iAirAccelerate, g_iGravity;
 Handle g_hMain = INVALID_HANDLE;
 
 public void JB_OnPluginReady() {
-	JB_CreateLastRequest("Combat de grenade", 	JB_SELECT_CT_UNTIL_DEAD|JB_BEACON, DV_CAN_Always, DV_Start);
+	JB_CreateLastRequest("Combat de grenade", 	JB_SELECT_CT_UNTIL_DEAD|JB_BEACON, DV_CAN_Always, DV_Start, DV_Stop);
 }
 public void DV_Start(int client, int target) {
 	g_iAirAccelerate = GetConVarInt(FindConVar("sv_airaccelerate"));

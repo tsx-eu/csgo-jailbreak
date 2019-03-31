@@ -16,12 +16,13 @@ int g_iDeagleDATA[4];
 
 
 public void OnPluginStart() {
+	g_iDeagleDATA[0] = g_iDeagleDATA[1] = g_iDeagleDATA[2] = g_iDeagleDATA[3] = -1;
 	for (int i = 1; i <= MaxClients; i++) 
 		if( IsClientInGame(i) )
 			SDKHook(i, SDKHook_WeaponCanUse, cb_DVDEAGLEEXPLO);
 }
 public void JB_OnPluginReady() {
-	JB_CreateLastRequest("Deagle explosif", 	JB_SELECT_CT_UNTIL_DEAD|JB_BEACON|JB_NODAMAGE, DV_CAN_Always, DV_Start);
+	JB_CreateLastRequest("Deagle explosif", 	JB_SELECT_CT_UNTIL_DEAD|JB_BEACON|JB_NODAMAGE, DV_CAN_Always, DV_Start, DV_Stop);
 }
 public void OnMapStart() {
 	g_cLaser = PrecacheModel("materials/sprites/laserbeam.vmt", true);
@@ -43,6 +44,9 @@ public void DV_Start(int client, int target) {
 	g_iDeagleDATA[3] = client;
 	
 	CreateTimer(0.1, DV_DeagleExplosif_TASK, timeLeft);
+}
+public void DV_Stop(int client, int target) {
+	g_iDeagleDATA[0] = g_iDeagleDATA[1] = g_iDeagleDATA[2] = g_iDeagleDATA[3] = -1;
 }
 public Action cb_DVDEAGLEEXPLO(int client, int wepID) {
 	if( g_iDeagleDATA[2] == wepID && (client==g_iDeagleDATA[0] || client == g_iDeagleDATA[1]) )
