@@ -26,7 +26,8 @@ char g_cStackName[MAX_LR][128];
 Function g_fStackCondition[MAX_LR], g_fStackStart[MAX_LR], g_fStackEnd[MAX_LR];
 Handle g_hStackPlugin[MAX_LR];
 int g_iStackFlag[MAX_LR], g_iStackTeam[MAX_LR][4]; // CS_TEAM_T == 2 CS_TEAM_CT == 3 
-Handle g_hPluginReady = INVALID_HANDLE, g_hCvar = INVALID_HANDLE;
+Handle g_hPluginReady = INVALID_HANDLE, g_hOnStartLR = INVALID_HANDLE, g_hOnStopLR = INVALID_HANDLE;
+Handle g_hCvar = INVALID_HANDLE;
 bool g_bPluginEnabled;
 
 int g_iDoingDV = -1;
@@ -446,13 +447,23 @@ int DV_Start(int id) {
 	
 	DV_CleanTeams();
 	if( g_fStackStart[id] != INVALID_FUNCTION )
-		DV_Call(id, g_fStackStart[id]);	
+		DV_Call(id, g_fStackStart[id]);
+	
+	Call_StartForward(g_hOnStartLR);
+	Call_PushCell(g_iInitialClients[0]);
+	Call_PushCell(g_iInitialTargets[0]);	
+	Call_Finish();
 }
 int DV_Stop(int id) {
 	CPrintToChatAll("%s La {blue}DV{default} est terminée.", MOD_TAG);
 	
 	if( g_fStackEnd[id] != INVALID_FUNCTION )
 		DV_Call(id, g_fStackEnd[id]);
+	
+	Call_StartForward(g_hOnStopLR);
+	Call_PushCell(g_iInitialClients[0]);
+	Call_PushCell(g_iInitialTargets[0]);	
+	Call_Finish();
 	
 	DV_CleanTeams();
 	g_iInitialTargetCount = g_iInitialClientCount = g_iCurrentClientCount = g_iCurrentTargetCount = 0;
@@ -485,6 +496,8 @@ public APLRes AskPluginLoad2(Handle hPlugin, bool isAfterMapLoaded, char[] error
 	CreateNative("JB_End", Native_JB_End);
 	
 	g_hPluginReady = CreateGlobalForward("JB_OnPluginReady", ET_Ignore);
+	g_hOnStartLR = CreateGlobalForward("OnStartLR", ET_Ignore);
+	g_hOnStopLR = CreateGlobalForward("OnStopLR", ET_Ignore);
 }
 public int Native_JB_CreateLastRequest(Handle plugin, int numParams) {
 

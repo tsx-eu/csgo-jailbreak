@@ -19,6 +19,9 @@
 #define JB_SELECT_CT_UNTIL_DEAD	JB_SHOULD_SELECT_CT|JB_RUN_UNTIL_DEAD
 
 forward void JB_OnPluginReady();
+forward void OnStartLR(int terro, int ct, int lr);
+forward void OnStopLR(int terro, int ct, int lr);
+
 native int JB_CreateLastRequest(const char name[128], int flags = JB_DEFAULT, JB_Condition condition = INVALID_FUNCTION, JB_Event start = INVALID_FUNCTION, JB_Event end = INVALID_FUNCTION);
 native int JB_SetTeamCount(int id, int team, int count);
 native void JB_End();
