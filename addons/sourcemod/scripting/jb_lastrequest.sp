@@ -162,7 +162,6 @@ public Action EventSecondElapsed(Handle timer, any none) {
 	
 	return Plugin_Continue;
 }
-
 // -------------------------------------------------------------------------------------------------------------------------------
 public Action cmd_AdminCancel(int client, int args) {
 	if( g_iDoingDV >= 0 )
@@ -239,7 +238,7 @@ void displayDV_SelectCT(int id, int client) {
 			continue;
 			
 		int skip = false;
-		for (int j = 0; j < g_iStackTeam[id][CS_TEAM_CT]; j++) {
+		for (int j = 0; j < g_iCurrentTargetCount; j++) {
 			if( g_iCurrentTargets[j] == i ) {
 				skip = true;
 				break;
@@ -496,8 +495,8 @@ public APLRes AskPluginLoad2(Handle hPlugin, bool isAfterMapLoaded, char[] error
 	CreateNative("JB_End", Native_JB_End);
 	
 	g_hPluginReady = CreateGlobalForward("JB_OnPluginReady", ET_Ignore);
-	g_hOnStartLR = CreateGlobalForward("OnStartLR", ET_Ignore);
-	g_hOnStopLR = CreateGlobalForward("OnStopLR", ET_Ignore);
+	g_hOnStartLR = CreateGlobalForward("OnStartLR", ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
+	g_hOnStopLR = CreateGlobalForward("OnStopLR", ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
 }
 public int Native_JB_CreateLastRequest(Handle plugin, int numParams) {
 
