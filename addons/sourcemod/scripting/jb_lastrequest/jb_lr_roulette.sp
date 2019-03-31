@@ -47,6 +47,7 @@ public int selectWeapon(SmartMenu menu, MenuAction action, int client, int param
 		g_iClient = client;
 		g_iTarget = target;
 		SetEntProp(g_iWeaponId, Prop_Send, "m_iClip1", 1);
+		SetEntProp(g_iWeaponId, Prop_Send, "m_iPrimaryReserveAmmoCount", 0);
 	}
 	else if( action == MenuAction_End ) {
 		CloseHandle(menu);
@@ -58,15 +59,18 @@ public Action EventPlayerShot(Handle ev, const char[] name, bool  bd) {
 	if( client == g_iClient || client == g_iTarget ) {
 		int wpnid = Client_GetActiveWeapon(client);
 		
-		if( wpnid == g_iWeaponId ) {
-			int target = client == g_iClient ? g_iTarget : g_iClient;
-			Client_DetachWeapon(client, g_iWeaponId);
-			Client_EquipWeapon(target, g_iWeaponId, true);
-			SetEntProp(g_iWeaponId, Prop_Send, "m_iClip1", 1);
-		}
+		if( wpnid == g_iWeaponId )
+			CreateTimer(0.1, SwitchDeagleTeam, client);
 	}
 }
 
+public Action SwitchDeagleTeam(Handle timer, any client) {
+	int target = client == g_iClient ? g_iTarget : g_iClient;
+	RemovePlayerItem(client, g_iWeaponId);
+	EquipPlayerWeapon(target, g_iWeaponId);
+	SetEntProp(g_iWeaponId, Prop_Send, "m_iClip1", 1);
+	SetEntProp(g_iWeaponId, Prop_Send, "m_iPrimaryReserveAmmoCount", 0);
+}
 public void DV_Stop(int client, int target) {
 	g_iWeaponId = g_iClient = g_iTarget = -1;
 }
