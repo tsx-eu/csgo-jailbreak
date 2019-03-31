@@ -8,38 +8,43 @@
 #pragma newdecls required
 
 #include <jb_lastrequest>
-int g_cLaser;
-
+int g_cLaser, g_wpnClient, g_wpnTarget;
 public void JB_OnPluginReady() {
-	JB_CreateLastRequest("Lancé de deagle", 	JB_SELECT_CT_UNTIL_DEAD|JB_BEACON, DV_CAN_Always, DV_Start);
+	JB_CreateLastRequest("Lancé de deagle", 	JB_SELECT_CT_UNTIL_DEAD|JB_BEACON, DV_CAN_Always, DV_Start, DV_Stop);
 }
 public void OnMapStart() {
 	g_cLaser = PrecacheModel("materials/sprites/laserbeam.vmt", true);
 }
 
 public void DV_Start(int client, int target) {
-	int wpnClient = Client_GiveWeaponAndAmmo(client, "weapon_deagle", true, 0, 0, 0, 0);
-	int wpnTarget = Client_GiveWeaponAndAmmo(target, "weapon_deagle", true, 0, 0, 0, 0);
+	g_wpnClient = EntIndexToEntRef(Client_GiveWeaponAndAmmo(client, "weapon_deagle", true, 0, 0, 0, 0));
+	g_wpnTarget = EntIndexToEntRef(Client_GiveWeaponAndAmmo(target, "weapon_deagle", true, 0, 0, 0, 0));
 	
-	SetEntityRenderMode(wpnClient, RENDER_TRANSCOLOR);
-	SetEntityRenderMode(wpnTarget, RENDER_TRANSCOLOR);
+	SetEntityRenderMode(g_wpnClient, RENDER_TRANSCOLOR);
+	SetEntityRenderMode(g_wpnTarget, RENDER_TRANSCOLOR);
 	
-	SetEntityRenderColor(wpnClient, 255, 0, 0, 200);
-	SetEntityRenderColor(wpnTarget, 0, 0, 255, 200);
+	SetEntityRenderColor(g_wpnClient, 255, 0, 0, 200);
+	SetEntityRenderColor(g_wpnTarget, 0, 0, 255, 200);
 	
-	CreateTimer(0.01, DV_DeagleThrow_Task, EntIndexToEntRef(wpnClient) );
-	CreateTimer(0.01, DV_DeagleThrow_Task, EntIndexToEntRef(wpnTarget) );
+	CreateTimer(0.01, DV_DeagleThrow_Task, g_wpnClient );
+	CreateTimer(0.01, DV_DeagleThrow_Task, g_wpnTarget );
 }
 
 public Action DV_DeagleThrow_Task(Handle timer, any entity) {
 	static float lastPos[2049][3];
+	static int offset = -1;	
 	
 	entity = EntRefToEntIndex(entity);
 	if( entity < 0 )
 		return Plugin_Handled;
-		
+	
+	if( offset <= 0 )
+		offset = GetEntSendPropOffs(entity, "m_clrRender", true);
+	
 	int color[4];
-	Entity_GetRenderColor(entity, color);
+	for(int i=0; i<=3; i++)
+		color[i] = GetEntData(entity, offset+i, 1);
+	
 	TE_SetupBeamFollow(entity, g_cLaser, g_cLaser, 0.5, 0.5, 0.5, 1, color);
 	TE_SendToAll();
 	
@@ -50,8 +55,6 @@ public Action DV_DeagleThrow_Task(Handle timer, any entity) {
 		if( GetVectorDistance(vecStart, lastPos[entity]) <= 0.0) {
 			Entity_GetAbsOrigin(entity, vecEnd);
 			vecEnd[2] += 64.0;
-			
-			color[3] = 255;
 		
 			TE_SetupBeamPoints(vecStart, vecEnd, g_cLaser, g_cLaser, 0, 30, 60.0, 0.5, 0.5, 1, 0.0, color, 0);
 			TE_SendToAll();
@@ -66,4 +69,10 @@ public Action DV_DeagleThrow_Task(Handle timer, any entity) {
 	
 	CreateTimer(0.01, DV_DeagleThrow_Task, EntIndexToEntRef(entity) );
 	return Plugin_Handled;
+}
+
+
+public void DV_Stop(int client, int target) {
+	AcceptEntityInput(g_wpnClient, "Kill");
+	AcceptEntityInput(g_wpnTarget, "Kill");
 }
