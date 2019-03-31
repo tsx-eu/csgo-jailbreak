@@ -379,6 +379,17 @@ int DV_CountTeam(int team) {
 	}
 	return t;
 }
+void DV_CleanTeams() {
+	for (int i = 0; i < g_iCurrentClientCount; i++)
+		DV_CleanClient(g_iCurrentClients[i]);
+	
+	for (int j = 0; j < g_iCurrentTargetCount; j++)
+		DV_CleanClient(g_iCurrentTargets[j]);
+}
+void DV_CleanClient(int client) {
+	DV_StripWeapon(client);
+	GivePlayerItem(client, "weapon_knife");
+}
 void DV_BeamEffect(float src[3], float dst[3], int color[4]) {
 	TE_SetupBeamRingPoint(src, 32.0, MAX_DISTANCE/2, g_cLaser, g_cLaser, 0, 12, 2.0, 16.0, 0.0, color, 0, 0);
 	TE_SendToAll();
@@ -427,6 +438,7 @@ int DV_Start(int id) {
 	g_iInitialTargets = g_iCurrentTargets;
 	g_iInitialTargetCount = g_iCurrentTargetCount;
 	
+	DV_CleanTeams();
 	if( g_fStackStart[id] != INVALID_FUNCTION )
 		DV_Call(id, g_fStackStart[id]);	
 }
@@ -436,7 +448,8 @@ int DV_Stop(int id) {
 	if( g_fStackEnd[id] != INVALID_FUNCTION )
 		DV_Call(id, g_fStackEnd[id]);
 	
-	g_iCurrentClientCount = g_iCurrentTargetCount = 0;
+	DV_CleanTeams();
+	g_iInitialTargetCount = g_iInitialClientCount = g_iCurrentClientCount = g_iCurrentTargetCount = 0;
 	g_iDoingDV = -1;
 }
 void DV_Call(int id, Function func) {
