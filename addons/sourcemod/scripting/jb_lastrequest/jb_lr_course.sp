@@ -19,7 +19,7 @@ float g_flCourseStart[3], g_flCourseEnd[3];
 int g_iState;
 
 public void JB_OnPluginReady() {
-	JB_CreateLastRequest("Course - VIP", 	JB_SHOULD_SELECT_CT | JB_RUN_UNTIL_END, 	DV_CAN_VIP, DV_COURSE, DV_COURSE_END);
+	JB_CreateLastRequest("Course", 	JB_SELECT_CT_UNTIL_DEAD, 	DV_CAN_Always, DV_Start, DV_End);
 	
 }
 public void OnMapStart() {
@@ -27,7 +27,7 @@ public void OnMapStart() {
 }
 
 
-public void DV_COURSE(int client, int target) {
+public void DV_Start(int client, int target) {
 	maxTime = GetGameTime() + 30.0;
 	CPrintToChat(client, "%s Faites un clique gauche pour selectionner le départ et l'arrivée.", MOD_TAG);
 	CPrintToChat(client, "%s Vous avez 30 secondes pour définir le parcours.", MOD_TAG);
@@ -49,7 +49,7 @@ public Action DV_COURSE_TASK(Handle timer, Handle dp) {
 	int target = ReadPackCell(dp);
 	
 	bool start = false;
-	float vecEnd[3], vecEnd2[3];
+	static float vecEnd[3], vecEnd2[3];
 	
 	if( maxTime < GetGameTime() ) {
 		if( g_iState == 1 || g_iState == 2 ) {
@@ -66,8 +66,9 @@ public Action DV_COURSE_TASK(Handle timer, Handle dp) {
 			MakeVectorFromPoints(g_flCourseStart, g_flCourseEnd, vec1);
 			GetVectorAngles(vec1, vec2);
 			
-			SetEntProp(client, Prop_Data, "m_CollisionGroup", 2);
-			SetEntProp(target, Prop_Data, "m_CollisionGroup", 2);
+			Entity_SetCollisionGroup(client, COLLISION_GROUP_DEBRIS_TRIGGER);
+			Entity_SetCollisionGroup(target, COLLISION_GROUP_DEBRIS_TRIGGER);
+			
 			TeleportEntity(client, g_flCourseStart, vec2, vec3);
 			TeleportEntity(target, g_flCourseStart, vec2, vec3);
 			
@@ -116,8 +117,13 @@ public Action DV_COURSE_TASK(Handle timer, Handle dp) {
 }
 
 
-public void DV_COURSE_END(int client, int target) {
+public void DV_End(int client, int target) {
 	KillTimer(g_hMain);																// TODO: Gérer ça de façon automatisée ?
 	g_hMain = null;
+	
+	if( client )
+		Entity_SetCollisionGroup(client, COLLISION_GROUP_PLAYER);
+	if( target )
+		Entity_SetCollisionGroup(target, COLLISION_GROUP_PLAYER);
 }
 
