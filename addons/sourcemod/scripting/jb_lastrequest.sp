@@ -6,6 +6,7 @@
 #include <csgocolors>
 #include <emitsoundany>
 #include <cstrike>
+#include <smlib>
 
 #pragma newdecls required
 
@@ -32,7 +33,7 @@ int g_iDoingDV = -1;
 int g_iCurrentClients[MAX_PLAYERS], g_iCurrentClientCount, g_iCurrentTargets[MAX_PLAYERS], g_iCurrentTargetCount;
 int g_iInitialClients[MAX_PLAYERS], g_iInitialClientCount, g_iInitialTargets[MAX_PLAYERS], g_iInitialTargetCount;
 
-int g_cLaser;
+int g_cLaser, g_cArrow;
 
 public void OnPluginStart() {
 	g_hCvar = CreateConVar("sm_hosties_lr", "1");
@@ -50,7 +51,7 @@ public void OnPluginStart() {
 	HookEvent("round_start",		EventRoundStart,	EventHookMode_Post);
 	HookEvent("round_end",			EventRoundEnd,		EventHookMode_Post);
 	
-	CreateTimer(1.0, EventSecondElapsed, TIMER_REPEAT);
+	CreateTimer(1.0, EventSecondElapsed, _, TIMER_REPEAT);
 }
 public void OnConVarChange(Handle cvar, const char[] oldVal, const char[] newVal) {
 	if( cvar == g_hCvar ) {
@@ -66,6 +67,8 @@ public void OnMapStart() {
 	g_iDoingDV = -1;
 	
 	g_cLaser = PrecacheModel("materials/sprites/laserbeam.vmt", true);
+	g_cArrow = PrecacheModel("materials/vgui/hud/icon_arrow_up.vmt", true);
+	PrecacheSoundAny("buttons/blip1.wav", true);
 	
 	Call_StartForward(g_hPluginReady);
 	Call_Finish();
@@ -137,24 +140,28 @@ public Action EventSecondElapsed(Handle timer, any none) {
 			GetClientAbsOrigin(client, src);
 			src[2] += 16.0;
 			
+			
+			
 			for (int j = 0; j < g_iCurrentTargetCount; j++) {
 				target = g_iCurrentTargets[j];
 				GetClientAbsOrigin(target, dst);
 				dst[2] += 16.0;
 				
-				if( GetVectorDistance(src, dst) > MAX_DISTANCE*MAX_DISTANCE ) {
-					TE_SetupBeamRingPoint(src, 32.0, 128.0, g_cLaser, g_cLaser, 0, 12, 1.0, 16.0, 0.0, { 255, 0, 0, 200 }, 0, 0);
-					TE_SendToAll();
-					TE_SetupBeamRingPoint(dst, 32.0, 128.0, g_cLaser, g_cLaser, 0, 12, 1.0, 16.0, 0.0, { 0, 0, 255, 200 }, 0, 0);
-					TE_SendToAll();
+				if( GetVectorDistance(src, dst, true) > MAX_DISTANCE*MAX_DISTANCE ) {
+					DV_BeamEffect(src, dst, {255, 0, 0, 200});
+					DV_BeamEffect(dst, src, { 0, 0, 255, 200});
 					
-					TE_SetupBeamPoints(src, dst, g_cLaser, g_cLaser, 0, 12, 1.0, 16.0, 16.0, 0, 0.0, { 255, 255, 255, 0 }, 0);
-					TE_SendToAll();					
+					EmitSoundToClientAny(client, "buttons/blip1.wav", target);
+					EmitSoundToClientAny(target, "buttons/blip1.wav", client);
 				}
 			}
 		}
+		
 	}
+	
+	return Plugin_Continue;
 }
+
 // -------------------------------------------------------------------------------------------------------------------------------
 public Action cmd_AdminCancel(int client, int args) {
 	if( g_iDoingDV >= 0 )
@@ -372,6 +379,30 @@ int DV_CountTeam(int team) {
 	}
 	return t;
 }
+void DV_BeamEffect(float src[3], float dst[3], int color[4]) {
+	TE_SetupBeamRingPoint(src, 32.0, MAX_DISTANCE/2, g_cLaser, g_cLaser, 0, 12, 2.0, 16.0, 0.0, color, 0, 0);
+	TE_SendToAll();
+	
+	float dir[3], ang[3], vel[3];
+	SubtractVectors(src, dst, dir);
+	GetVectorAngles(dir, ang);
+	Math_RotateVector(view_as<float>({0.0, 16.0, 0.0}), ang, vel);
+	AddVectors(src, vel, dir);
+	AddVectors(dst, vel, ang);
+	
+	Handle trace = TR_TraceRayFilterEx(ang, dir, MASK_SHOT, RayType_EndPoint, TR_FilterClients);
+	if (TR_DidHit(trace))
+		TR_GetEndPosition(dir, trace);
+	CloseHandle(trace);
+	
+	TE_SetupBeamPoints(dir, ang, g_cArrow, g_cArrow, 0, 12, 1.0, 16.0, 16.0, 0, 0.0, color, 10);
+	TE_SendToAll();
+}
+public bool TR_FilterClients(int entity, int mask, any client) {
+	if (entity > 0 && entity <= MaxClients)
+		return false;
+	return true;
+}
 // -------------------------------------------------------------------------------------------------------------------------------
 int DV_Start(int id) {
 	PrintHintTextToAll("Dernière volonté:\n%s", g_cStackName[id]);
@@ -390,7 +421,6 @@ int DV_Start(int id) {
 	if( g_fStackStart[id] != INVALID_FUNCTION )
 		DV_Call(id, g_fStackStart[id]);	
 }
-
 int DV_Stop(int id) {
 	CPrintToChatAll("%s La {blue}DV{default} est terminée.", MOD_TAG);
 	
