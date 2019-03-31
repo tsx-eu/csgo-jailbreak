@@ -391,12 +391,21 @@ void DV_BeamEffect(float src[3], float dst[3], int color[4]) {
 	AddVectors(dst, vel, ang);
 	
 	Handle trace = TR_TraceRayFilterEx(ang, dir, MASK_SHOT, RayType_EndPoint, TR_FilterClients);
-	if (TR_DidHit(trace))
-		TR_GetEndPosition(dir, trace);
+	if (TR_DidHit(trace)) {
+		TR_GetEndPosition(vel, trace);
+		
+		TE_SetupBeamPoints(dir, vel, g_cArrow, g_cArrow, 0, 12, 1.0, 16.0, 16.0, 0, 0.0, color, 10);
+		TE_SendToAll();
+		TE_SetupBeamPoints(vel, ang, g_cArrow, g_cArrow, 0, 12, 1.0, 16.0, 16.0, 0, 0.0, color, 10);
+		TE_SendToAll();
+	}
+	else {
+		TE_SetupBeamPoints(dir, ang, g_cArrow, g_cArrow, 0, 12, 1.0, 16.0, 16.0, 0, 0.0, color, 10);
+		TE_SendToAll();
+	}
 	CloseHandle(trace);
 	
-	TE_SetupBeamPoints(dir, ang, g_cArrow, g_cArrow, 0, 12, 1.0, 16.0, 16.0, 0, 0.0, color, 10);
-	TE_SendToAll();
+	
 }
 public bool TR_FilterClients(int entity, int mask, any client) {
 	if (entity > 0 && entity <= MaxClients)
