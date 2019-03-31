@@ -16,9 +16,6 @@ public void JB_OnPluginReady() {
 	JB_CreateLastRequest("Combat de cut-slide", 	JB_SELECT_CT_UNTIL_DEAD|JB_BEACON, DV_CAN_Always, DV_Start, DV_Stop);
 }
 public void DV_Start(int client, int target) {
-	g_iAirAccelerate = GetConVarInt(FindConVar("sv_airaccelerate"));
-	g_iGravity = GetConVarInt(FindConVar("sv_gravity"));
-	ServerCommand("sv_airaccelerate 1000;sv_gravity 0");	
 	
 	SmartMenu menu = new SmartMenu(selectWeapon);
 	menu.SetTitle("Combien de HP?\n");
@@ -38,6 +35,11 @@ public int selectWeapon(SmartMenu menu, MenuAction action, int client, int param
 	static char options[64];
 	if( action == MenuAction_Select ) {
 		menu.GetItem(params, options, sizeof(options));
+		
+		g_iAirAccelerate = GetConVarInt(FindConVar("sv_airaccelerate"));
+		g_iGravity = GetConVarInt(FindConVar("sv_gravity"));
+		ServerCommand("sv_airaccelerate 1000;sv_gravity 0");	
+		
 		int target = menu.GetCell("target");
 		int hp = StringToInt(options);
 		
@@ -53,6 +55,12 @@ public int selectWeapon(SmartMenu menu, MenuAction action, int client, int param
 		GivePlayerItem(client, "weapon_knife");
 		GivePlayerItem(target, "weapon_knife");
 		
+		SetEntProp(client, Prop_Data, "m_takedamage", 0);
+		SetEntProp(target, Prop_Data, "m_takedamage", 0);
+		
+		CreateTimer(5.0, TIMER_DisableGodmod, client);
+		CreateTimer(5.0, TIMER_DisableGodmod, target);
+		
 		float vel[3];
 		GetClientAbsOrigin(client, g_flStart);
 		vel[2] = 800.0;
@@ -64,11 +72,17 @@ public int selectWeapon(SmartMenu menu, MenuAction action, int client, int param
 		
 		TeleportEntity(client, g_flStart, NULL_VECTOR, vel);
 		TeleportEntity(target, g_flStart, NULL_VECTOR, vel);
+		
+		PrintHintTextToAll("Début du combat dans 5 secondes");
 	}
 	else if( action == MenuAction_End ) {
 		CloseHandle(menu);
 	}
 	return;
+}
+public Action TIMER_DisableGodmod(Handle timer, any client) {
+	SetEntProp(client, Prop_Data, "m_takedamage", 2);
+	PrintHintTextToAll("FIGHT!");
 }
 public void DV_Stop(int client, int target) {
 	ServerCommand("sv_airaccelerate %d;sv_gravity %d", g_iAirAccelerate, g_iGravity);
