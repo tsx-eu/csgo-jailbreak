@@ -13,7 +13,14 @@ int g_iAirAccelerate, g_iGravity;
 Handle g_hMain = INVALID_HANDLE;
 
 public void JB_OnPluginReady() {
-	JB_CreateLastRequest("Combat de flashbang en faible gravité", 	JB_SELECT_CT_UNTIL_DEAD|JB_BEACON, DV_CAN_Always, DV_Start, DV_Stop);
+	JB_CreateLastRequest("Combat de flashbang en faible gravité", 	JB_SELECT_CT_UNTIL_DEAD|JB_BEACON, DV_CAN, DV_Start, DV_Stop);
+}
+stock bool DV_CAN(int client) {
+	Handle cvar = FindConVar("sm_noblock");
+	if( cvar != INVALID_HANDLE )
+		if( GetConVarInt(cvar) == 1 )
+			return false;
+	return true;
 }
 public void DV_Start(int client, int target) {
 	g_iAirAccelerate = GetConVarInt(FindConVar("sv_airaccelerate"));
