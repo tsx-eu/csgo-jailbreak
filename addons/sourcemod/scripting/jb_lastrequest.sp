@@ -312,7 +312,7 @@ bool DV_RemoveClientFromTeam(int client, bool disconnect) {
 	
 	return endOfDV;
 }
-bool DV_RemoveFromStack(int client, int[] stack, int count) {
+bool DV_RemoveFromStack(int client, int[] stack, int& count) {
 	for (int i = 0; i < count; i++) {
 		if( stack[i] == client ) {
 			
