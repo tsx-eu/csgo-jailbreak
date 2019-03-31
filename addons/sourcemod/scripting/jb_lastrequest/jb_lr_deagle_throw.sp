@@ -160,7 +160,7 @@ void DV_CheckWinner() {
 		if( !g_bTossed[i] )
 			continue;
 		
-		float diff = FloatAbs(NormalizeAngle(avgAngle - NormalizeAngle(g_flPositions[i][3][1])));
+		float diff = getAngleDiff(avgAngle, g_flPositions[i][3][1]);
 		
 		if( diff > delta ) {
 			winner = g_iClient;
@@ -184,12 +184,15 @@ void DV_CheckWinner() {
 	CPrintToChatAll(MOD_TAG..."%N semble avoir gagné.", winner);
 }
 float NormalizeAngle(float a) {
-	a += 180.0;
 	if( a > 360.0 )
 		a -= 360.0;
-	a -= 180;
-	
+	if( a < 0.0 )
+		a += 360.0;	
 	return a;
+}
+float getAngleDiff(float a, float b) {
+	float n = NormalizeAngle(FloatAbs(a - b));
+	return NormalizeAngle(n > 180.0 ? 360.0 - n : n);
 }
 
 public void DV_Stop(int client, int target) {
