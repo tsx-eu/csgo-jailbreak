@@ -58,8 +58,11 @@ public void OnConVarChange(Handle cvar, const char[] oldVal, const char[] newVal
 	}
 }
 public void OnMapStart() {
+	if( g_iDoingDV >= 0 )
+		DV_Stop(g_iDoingDV);
+		
 	g_iStackCount = 0;
-	g_iStackCount = g_iCurrentClientCount = g_iCurrentTargetCount = 0;
+	g_iStackCount = g_iCurrentClientCount = g_iCurrentTargetCount = g_iInitialClientCount = g_iInitialTargetCount = 0;
 	g_iDoingDV = -1;
 	
 	g_cLaser = PrecacheModel("materials/sprites/laserbeam.vmt", true);
@@ -92,8 +95,7 @@ public Action EventDeath(Handle ev, const char[] name, bool broadcast) {
 }
 public Action EventRoundStart(Handle ev, const char[] name, bool  bd) {
 	if( g_iDoingDV >= 0 ) { // Comment c'est possible ?
-		g_iStackCount = g_iCurrentClientCount = g_iCurrentTargetCount = 0;
-		g_iDoingDV = -1;
+		DV_Stop(g_iDoingDV);
 		
 		PrintToChatAll("WARNING - Please report the following issue:");
 		PrintToChatAll(" -\t EventRoundStart @ g_iDoingDV >= 0");		
@@ -114,8 +116,9 @@ public Action EventTakeDamage(int victim, int& attacker, int& inflictor, float& 
 	
 	
 	if( victimInDV && attackerInDV ) {
-		if( !(g_iStackFlag[g_iDoingDV] & JB_NODAMAGE) )
+		if( g_iStackFlag[g_iDoingDV] & JB_NODAMAGE )
 			return Plugin_Stop;
+		
 	}
 	else {
 		return Plugin_Stop;
@@ -124,10 +127,11 @@ public Action EventTakeDamage(int victim, int& attacker, int& inflictor, float& 
 	return Plugin_Continue;
 }
 public Action EventSecondElapsed(Handle timer, any none) {
-	float src[3], dst[3];
-	int client, target;
 	
-	if( g_iStackFlag[g_iDoingDV] & JB_BEACON ) {
+	if( g_iDoingDV >= 0 && g_iStackFlag[g_iDoingDV] & JB_BEACON ) {
+		float src[3], dst[3];
+		int client, target;
+		
 		for (int i = 0; i < g_iCurrentClientCount; i++) {
 			client = g_iCurrentClients[i];
 			GetClientAbsOrigin(client, src);
@@ -153,10 +157,8 @@ public Action EventSecondElapsed(Handle timer, any none) {
 }
 // -------------------------------------------------------------------------------------------------------------------------------
 public Action cmd_AdminCancel(int client, int args) {
-	if( g_iDoingDV >= 0 ) {
-		g_iCurrentClientCount = g_iCurrentTargetCount = 0;
-		g_iDoingDV = -1;	
-	}
+	if( g_iDoingDV >= 0 )
+		DV_Stop(g_iDoingDV);
 	
 	return Plugin_Handled;
 }
