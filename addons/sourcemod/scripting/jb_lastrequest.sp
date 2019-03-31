@@ -379,12 +379,18 @@ int DV_CountTeam(int team) {
 	}
 	return t;
 }
-void DV_CleanTeams() {
-	for (int i = 0; i < g_iCurrentClientCount; i++)
-		DV_CleanClient(g_iCurrentClients[i]);
+stock void DV_CleanTeams(int team = 0) {
+	if( team > 0 && team == CS_TEAM_T ) {
+		for (int i = 0; i < g_iCurrentClientCount; i++) {
+			DV_CleanClient(g_iCurrentClients[i]);
+		}
+	}
 	
-	for (int j = 0; j < g_iCurrentTargetCount; j++)
-		DV_CleanClient(g_iCurrentTargets[j]);
+	if( team > 0 && team == CS_TEAM_CT ) {
+		for (int j = 0; j < g_iCurrentTargetCount; j++) {
+			DV_CleanClient(g_iCurrentTargets[j]);
+		}
+	}
 }
 void DV_CleanClient(int client) {
 	DV_StripWeapon(client);
@@ -475,6 +481,7 @@ public APLRes AskPluginLoad2(Handle hPlugin, bool isAfterMapLoaded, char[] error
 	
 	CreateNative("JB_CreateLastRequest", Native_JB_CreateLastRequest);
 	CreateNative("JB_SetTeamCount", Native_JB_SetTeamCount);
+	CreateNative("JB_CeanTeam", Native_DV_CleanTeam);
 	CreateNative("JB_End", Native_JB_End);
 	
 	g_hPluginReady = CreateGlobalForward("JB_OnPluginReady", ET_Ignore);
@@ -498,4 +505,7 @@ public int Native_JB_SetTeamCount(Handle plugin, int numParams) {
 }
 public int Native_JB_End(Handle plugin, int numParams) {
 	DV_Stop(g_iDoingDV);
+}
+public int Native_DV_CleanTeam(Handle plugin, int numParams) {
+	DV_CleanTeams(GetNativeCell(1));
 }

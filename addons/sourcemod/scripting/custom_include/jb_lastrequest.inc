@@ -22,6 +22,7 @@ forward void JB_OnPluginReady();
 native int JB_CreateLastRequest(const char name[128], int flags = JB_DEFAULT, JB_Condition condition = INVALID_FUNCTION, JB_Event start = INVALID_FUNCTION, JB_Event end = INVALID_FUNCTION);
 native int JB_SetTeamCount(int id, int team, int count);
 native void JB_End();
+native void DV_CleanTeam(int team = 0);
 
 typeset JB_Condition {
 	function bool(int client);
