@@ -10,6 +10,7 @@
 #include <jb_lastrequest>
 
 int g_iAirAccelerate, g_iGravity;
+float g_flStart[3];
 
 public void JB_OnPluginReady() {
 	JB_CreateLastRequest("Combat de cut-slide", 	JB_SELECT_CT_UNTIL_DEAD|JB_BEACON, DV_CAN_Always, DV_Start, DV_Stop);
@@ -49,13 +50,20 @@ public int selectWeapon(SmartMenu menu, MenuAction action, int client, int param
 		DV_StripWeapon(client);
 		DV_StripWeapon(target);
 		
-		float src[3], vel[3];
-		GetClientAbsOrigin(client, src);
-		vel[2] = -800.0;
+		GivePlayerItem(client, "weapon_knife");
+		GivePlayerItem(target, "weapon_knife");
 		
-		TeleportEntity(client, src, NULL_VECTOR, vel);
-		TeleportEntity(target, src, NULL_VECTOR, vel);
+		float vel[3];
+		GetClientAbsOrigin(client, g_flStart);
+		vel[2] = 800.0;
 		
+		if( GetEntityFlags(client) & FL_ONGROUND )
+			SetEntityFlags(client, GetEntityFlags(client) & ~FL_ONGROUND);
+		if( GetEntityFlags(target) & FL_ONGROUND )
+			SetEntityFlags(target, GetEntityFlags(target) & ~FL_ONGROUND);
+		
+		TeleportEntity(client, g_flStart, NULL_VECTOR, vel);
+		TeleportEntity(target, g_flStart, NULL_VECTOR, vel);
 	}
 	else if( action == MenuAction_End ) {
 		CloseHandle(menu);
@@ -65,8 +73,12 @@ public int selectWeapon(SmartMenu menu, MenuAction action, int client, int param
 public void DV_Stop(int client, int target) {
 	ServerCommand("sv_airaccelerate %d;sv_gravity %d", g_iAirAccelerate, g_iGravity);
 	
-	if( client > 0 )
+	if( client > 0 ) {
 		Entity_SetCollisionGroup(client, COLLISION_GROUP_PLAYER);
-	if( target > 0 )
+		TeleportEntity(client, g_flStart, NULL_VECTOR, NULL_VECTOR);
+	}
+	if( target > 0 ) {
 		Entity_SetCollisionGroup(target, COLLISION_GROUP_PLAYER);
+		TeleportEntity(target, g_flStart, NULL_VECTOR, NULL_VECTOR);
+	}
 }

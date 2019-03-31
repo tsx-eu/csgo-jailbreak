@@ -38,6 +38,9 @@ public int selectWeapon(SmartMenu menu, MenuAction action, int client, int param
 		
 		DV_StripWeapon(client);
 		DV_StripWeapon(target);
+		
+		GivePlayerItem(client, "weapon_knife");
+		GivePlayerItem(target, "weapon_knife");
 	}
 	else if( action == MenuAction_End ) {
 		CloseHandle(menu);
