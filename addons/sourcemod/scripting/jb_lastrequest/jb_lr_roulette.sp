@@ -3,16 +3,20 @@
 #include <sourcemod>
 #include <sdktools>
 #include <sdkhooks>
+#include <smlib>
 #include <smart-menu>
 
 #pragma newdecls required
 
 #include <jb_lastrequest>
 
-int g_iWeaponId = -1;
+int g_iWeaponId = -1, g_iClient = -1, g_iTarget = -1;
 
+public void OnPluginStart() {
+	HookEvent("weapon_fire",		EventPlayerShot,			EventHookMode_Post);
+}
 public void JB_OnPluginReady() {
-	JB_CreateLastRequest("Roulette", 	JB_SELECT_CT_UNTIL_DEAD|JB_BEACON, DV_CAN_Always, DV_Start, DV_Stop);
+	JB_CreateLastRequest("Roulette", 	JB_SELECT_CT_UNTIL_DEAD|JB_BEACON, DV_CAN_Always, DV_Start, DV_Stop);	
 }
 public void DV_Start(int client, int target) {
 	SmartMenu menu = new SmartMenu(selectWeapon);
@@ -40,27 +44,29 @@ public int selectWeapon(SmartMenu menu, MenuAction action, int client, int param
 		DV_StripWeapon(target);
 		
 		g_iWeaponId = GivePlayerItem(client, options);
+		g_iClient = client;
+		g_iTarget = target;
 		SetEntProp(g_iWeaponId, Prop_Send, "m_iClip1", 1);
-		
-		SDKHook(client, SDKHook_TraceAttackPost, OnTraceAttack);
-		SDKHook(target, SDKHook_TraceAttackPost, OnTraceAttack);
 	}
 	else if( action == MenuAction_End ) {
 		CloseHandle(menu);
 	}
 	return;
 }
-public void OnTraceAttack(int victim, int attacker, int inflictor, float damage, int damagetype, int ammotype, int hitbox, int hitgroup) {
-	if( inflictor == g_iWeaponId ) {
-		RemovePlayerItem(attacker, g_iWeaponId);
-		EquipPlayerWeapon(victim, g_iWeaponId);
-		SetEntProp(g_iWeaponId, Prop_Send, "m_iClip1", 1);
+public Action EventPlayerShot(Handle ev, const char[] name, bool  bd) {
+	int client = GetClientOfUserId(GetEventInt(ev, "userid"));
+	if( client == g_iClient || client == g_iTarget ) {
+		int wpnid = Client_GetActiveWeapon(client);
+		
+		if( wpnid == g_iWeaponId ) {
+			int target = client == g_iClient ? g_iTarget : g_iClient;
+			Client_DetachWeapon(client, g_iWeaponId);
+			Client_EquipWeapon(target, g_iWeaponId, true);
+			SetEntProp(g_iWeaponId, Prop_Send, "m_iClip1", 1);
+		}
 	}
 }
 
 public void DV_Stop(int client, int target) {
-	if( client > 0 )
-		SDKUnhook(client, SDKHook_TraceAttackPost, OnTraceAttack);
-	if( target > 0 )
-		SDKUnhook(target, SDKHook_TraceAttackPost, OnTraceAttack);
+	g_iWeaponId = g_iClient = g_iTarget = -1;
 }
