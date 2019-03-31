@@ -35,6 +35,10 @@ public void OnClientPostAdminCheck(int client) {
 public void DV_Start(int client, int target) {
 	DV_StripWeapon(client, false);
 	DV_StripWeapon(target, false);
+	
+	GivePlayerItem(client, "weapon_knife");
+	GivePlayerItem(target, "weapon_knife");
+	
 	int id = Client_GiveWeaponAndAmmo(client, "weapon_deagle", true, 0, 0, 0, 0);	
 	float timeLeft = GetGameTime() + Math_GetRandomFloat(20.0, 30.0);
 	

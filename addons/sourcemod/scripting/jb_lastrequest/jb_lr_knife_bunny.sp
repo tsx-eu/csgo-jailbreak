@@ -48,6 +48,9 @@ public int selectWeapon(SmartMenu menu, MenuAction action, int client, int param
 		
 		GivePlayerItem(client, "weapon_knife");
 		GivePlayerItem(target, "weapon_knife");
+		
+		Entity_SetCollisionGroup(client, COLLISION_GROUP_DEBRIS_TRIGGER);
+		Entity_SetCollisionGroup(target, COLLISION_GROUP_DEBRIS_TRIGGER);
 	}
 	else if( action == MenuAction_End ) {
 		CloseHandle(menu);
@@ -55,5 +58,11 @@ public int selectWeapon(SmartMenu menu, MenuAction action, int client, int param
 	return;
 }
 public void DV_Stop(int client, int target) {
-	ServerCommand("sv_enablebunnyhopping %d;sv_autobunnyhopping %d", g_iEnabledBunny, g_iAutoBunny);	
+	ServerCommand("sv_enablebunnyhopping %d;sv_autobunnyhopping %d", g_iEnabledBunny, g_iAutoBunny);
+	
+	if( client )
+		Entity_SetCollisionGroup(client, COLLISION_GROUP_PLAYER);
+	if( target )
+		Entity_SetCollisionGroup(target, COLLISION_GROUP_PLAYER);
+	
 }
