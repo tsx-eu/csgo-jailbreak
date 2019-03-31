@@ -16,8 +16,8 @@ public void JB_OnPluginReady() {
 	JB_CreateLastRequest("Combat de molotov", 	JB_SELECT_CT_UNTIL_DEAD|JB_BEACON, DV_CAN_Always, DV_Start, DV_Stop);
 }
 public void DV_Start(int client, int target) {
-	SetEntityHealth(client, 250);
-	SetEntityHealth(target, 250);
+	SetEntityHealth(client, 100);
+	SetEntityHealth(target, 100);
 	
 	DV_StripWeapon(client);
 	DV_StripWeapon(target);
