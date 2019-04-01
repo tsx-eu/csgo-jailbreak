@@ -16,16 +16,40 @@ int g_cLaser;
 Handle g_hMain = INVALID_HANDLE;
 float maxTime;
 float g_flCourseStart[3], g_flCourseEnd[3];
-int g_iState;
+int g_iState, g_iClient;
 
 public void JB_OnPluginReady() {
 	JB_CreateLastRequest("Course", 	JB_SELECT_CT_UNTIL_DEAD, 	DV_CAN_Always, DV_Start, DV_End);
 	
+	
+	HookEvent("weapon_fire",		EventShoot,			EventHookMode_Post);
 }
 public void OnMapStart() {
 	g_cLaser = PrecacheModel("materials/sprites/laserbeam.vmt", true);
 }
 
+public Action EventShoot(Handle ev, const char[] name, bool broadcast) {
+	int client = GetClientOfUserId(GetEventInt(ev, "userid"));
+	
+	if( client == g_iClient ) {
+		char wepname[32];
+		GetEventString(ev, "weapon", wepname, sizeof(wepname));
+		
+		if( StrContains(wepname, "knife") >= 0 && g_iState == 1 ) {
+			GetClientAbsOrigin(client, g_flCourseStart);
+			g_iState = 2;
+		}
+		else if( StrContains(wepname, "knife") >= 0 && g_iState == 2 ) {
+			float tmp[3];
+			GetClientAbsOrigin(client, tmp);
+			if( GetVectorDistance(g_flCourseStart, tmp) > 128.0 ) {
+				g_flCourseEnd = tmp;
+				g_iState = 3;
+				maxTime = 0.0;
+			}
+		}
+	}
+}
 
 public void DV_Start(int client, int target) {
 	maxTime = GetGameTime() + 30.0;
@@ -37,6 +61,9 @@ public void DV_Start(int client, int target) {
 	}
 	
 	g_iState = 1;
+	g_iClient = client;
+	g_flCourseStart[2] = g_flCourseEnd[2] = 9999999.9;
+	
 	
 	Handle dp;
 	g_hMain = CreateDataTimer(0.1, DV_COURSE_TASK, dp, TIMER_REPEAT);

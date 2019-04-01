@@ -18,6 +18,8 @@ public void JB_OnPluginReady() {
 	JB_CreateLastRequest("Spray le plus haut", 	JB_SELECT_CT_UNTIL_DEAD|JB_BEACON|JB_NODAMAGE, DV_CAN_Always, DV_Start, DV_Stop);
 }
 public void OnMapStart() {
+	AddFileToDownloadsTable("materials/rc/dv_spray.vmt");
+	AddFileToDownloadsTable("materials/rc/dv_spray.vtf");
 	g_cSpray = PrecacheDecal("materials/rc/dv_spray.vmt", true);
 }
 
@@ -37,7 +39,7 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 			GetClientEyePosition(client, src);
 			GetClientEyeAngles(client, ang);
 			
-			Handle tr = TR_TraceRayFilterEx(src, ang, MASK_SHOT, RayType_EndPoint, TR_FilterSelf, client);
+			Handle tr = TR_TraceRayFilterEx(src, ang, MASK_SHOT, RayType_Infinite, TR_FilterSelf, client);
 			if( TR_DidHit(tr) ) {
 				TR_GetEndPosition(dst, tr);
 				int target = TR_GetEntityIndex(tr);
@@ -49,11 +51,11 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 					TE_SendToAll();
 					
 					if( client == g_iClient ) {
-						g_bClient = false;
+						g_bClient = true;
 						g_vecClient = dst;
 					}
 					else if( client == g_iTarget ) {
-						g_bTarget = false;
+						g_bTarget = true;
 						g_vecTarget = dst;
 					}
 					
