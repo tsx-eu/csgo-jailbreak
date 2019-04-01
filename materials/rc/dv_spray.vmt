@@ -1,0 +1,7 @@
+"LightmappedGeneric"
+{
+	$decal 1
+	$decalDynamicScale 1
+	$decalscale 0.5
+	"$basetexture" "rc/dv_spray"
+}
