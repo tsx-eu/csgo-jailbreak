@@ -20,7 +20,7 @@ public void JB_OnPluginReady() {
 public void OnMapStart() {
 	AddFileToDownloadsTable("materials/rc/dv_spray.vmt");
 	AddFileToDownloadsTable("materials/rc/dv_spray.vtf");
-	g_cSpray = PrecacheDecal("materials/rc/dv_spray.vmt", true);
+	g_cSpray = PrecacheDecal("rc/dv_spray", true);
 }
 
 public void DV_Start(int client, int target) {
