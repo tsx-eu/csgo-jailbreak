@@ -42,36 +42,35 @@ public Action EventShoot(Handle ev, const char[] name, bool broadcast) {
 	
 	if( (client == g_iTarget || client == g_iClient) ) {
 		if( StrContains(wepname, "knife") >= 0 ) {
-			float src[3], ang[3], dst[3];
+			float src[3], ang[3];
 			GetClientEyePosition(client, src);
-			src[2] -= 8.0;
 			GetClientEyeAngles(client, ang);
 			
-			Handle tr = TR_TraceRayFilterEx(src, ang, MASK_SHOT, RayType_Infinite, TR_FilterSelf, client);
-			if( TR_DidHit(tr) ) {
-				TR_GetEndPosition(dst, tr);
-				int target = TR_GetEntityIndex(tr);
-				
-				TE_SetupBeamPoints(src, dst, g_cLaser, g_cLaser, 0, 0, 1.0, 2.0, 2.0, 0, 8.0, { 240, 230, 170, 200 }, 0);
-				TE_SendToAll();
-				
-				for (int i = 0; i < 8; i++) {
-					TE_SetupBeamPoints(src, dst, g_cLaser, g_cLaser, 0, 0, 1.0, 2.0, 2.0, 0, 64.0, { 255, 255, 0, 200 }, 0);
-					TE_SendToAll();
-				}
-				
-				if(target == g_iTarget || target == g_iClient) {
-					Entity_SetHealth(target, GetClientHealth(target) - 25);
-					SlapPlayer(target, 0);
-					
-					EmitSoundToAllAny("rsc/jailbreak/pika.mp3", client);
-				}
-			}
-			else {
-				PrintToChatAll("no hit");
-			}
+			int target = -1;
+			Effect(client, src, ang, view_as<float>({ -16.0, 0.0, -24.0 }), {255, 128, 40, 128}, 4.0, 64.0, target);
+			Effect(client, src, ang, view_as<float>({   0.0, 0.0, -16.0 }), {255, 128, 40, 128}, 4.0, 64.0, target);
+			Effect(client, src, ang, view_as<float>({  16.0, 0.0, -24.0 }), {255, 128, 40, 128}, 4.0, 64.0, target);
+			Effect(client, src, ang, view_as<float>({   0.0, 0.0, -32.0 }), {255, 128, 40, 128}, 4.0, 64.0, target);
 			
-			CloseHandle(tr);
+			Effect(client, src, ang, view_as<float>({ -8.0, 0.0, -16.0 }), {255, 255, 0, 128}, 2.0, 128.0, target);
+			Effect(client, src, ang, view_as<float>({  0.0, 0.0, -16.0 }), {255, 255, 0, 128}, 2.0, 128.0, target);
+			Effect(client, src, ang, view_as<float>({  8.0, 0.0, -16.0 }), {255, 255, 0, 128}, 2.0, 128.0, target);
+			
+			Effect(client, src, ang, view_as<float>({ -8.0, 0.0, -24.0 }), {255, 255, 0, 128}, 2.0, 128.0, target);
+			Effect(client, src, ang, view_as<float>({  0.0, 0.0, -24.0 }), {255, 255, 0, 128}, 8.0, 32.0, target);
+			Effect(client, src, ang, view_as<float>({  8.0, 0.0, -24.0 }), {255, 255, 0, 128}, 2.0, 128.0, target);
+			
+			
+			Effect(client, src, ang, view_as<float>({ -8.0, 0.0, -32.0 }), {255, 255, 0, 128}, 2.0, 128.0, target);
+			Effect(client, src, ang, view_as<float>({  0.0, 0.0, -32.0 }), {255, 255, 0, 128}, 2.0, 128.0, target);
+			Effect(client, src, ang, view_as<float>({  8.0, 0.0, -32.0 }), {255, 255, 0, 128}, 2.0, 128.0, target);
+			
+			if( target == g_iTarget || target == g_iClient ) {
+				Entity_SetHealth(target, GetClientHealth(target) - 25);
+				SlapPlayer(target, 0);
+				
+				EmitSoundToAllAny("rsc/jailbreak/pika.mp3", client);
+			}
 		}
 	}
 }
@@ -79,6 +78,31 @@ public bool TR_FilterSelf(int entity, int mask, any client) {
 	if (entity == client)
 		return false;
 	return true;
+}
+
+int Effect(int client, float origin[3], float angle[3], float offset[3], int color[4], float size, float amplitude, int& target) {
+	float src[3], dst[3];
+	dst[0] = angle[0];
+	dst[1] = 0.0;
+	dst[2] = 0.0;
+	 
+	Math_RotateVector(offset, angle, src);
+	AddVectors(src, origin, src);
+	
+	
+	Handle tr = TR_TraceRayFilterEx(src, angle, MASK_SHOT, RayType_Infinite, TR_FilterSelf, client);
+	if( TR_DidHit(tr) ) {
+		TR_GetEndPosition(dst, tr);
+		
+		TE_SetupBeamPoints(src, dst, g_cLaser, g_cLaser, 0, 0, 1.0, size, size, 0, amplitude, color, 0);
+		TE_SendToAll();
+		
+		int tmp = TR_GetEntityIndex(tr);
+		if( tmp > 0 && tmp < MaxClients )
+			target = tmp;
+	}
+	CloseHandle(tr);
+	return target;
 }
 
 
