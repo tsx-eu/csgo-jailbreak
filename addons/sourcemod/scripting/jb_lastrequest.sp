@@ -31,8 +31,8 @@ Handle g_hCvar = INVALID_HANDLE;
 bool g_bPluginEnabled;
 
 int g_iDoingDV = -1;
-int g_iCurrentClients[MAX_PLAYERS], g_iCurrentClientCount, g_iCurrentTargets[MAX_PLAYERS], g_iCurrentTargetCount;
-int g_iInitialClients[MAX_PLAYERS], g_iInitialClientCount, g_iInitialTargets[MAX_PLAYERS], g_iInitialTargetCount;
+int g_iCurrentTeam[4][MAX_PLAYERS], g_iCurrentTeamCount[4], g_iInitialTeam[4][MAX_PLAYERS], g_iInitialTeamCount[4];
+
 
 int g_cLaser, g_cArrow;
 
@@ -46,7 +46,6 @@ public void OnPluginStart() {
 	RegConsoleCmd("sm_lastrequest", cmd_DV);
 	
 	RegAdminCmd("sm_cancellr", 		cmd_AdminCancel,	ADMFLAG_KICK);
-	
 	
 	HookEvent("player_death", 		EventDeath, 		EventHookMode_Pre);
 	HookEvent("round_start",		EventRoundStart,	EventHookMode_Post);
@@ -64,7 +63,7 @@ public void OnMapStart() {
 		DV_Stop(g_iDoingDV);
 		
 	g_iStackCount = 0;
-	g_iStackCount = g_iCurrentClientCount = g_iCurrentTargetCount = g_iInitialClientCount = g_iInitialTargetCount = 0;
+	g_iStackCount = g_iCurrentTeamCount[CS_TEAM_T] = g_iCurrentTeamCount[CS_TEAM_CT] = g_iInitialTeamCount[CS_TEAM_T] = g_iInitialTeamCount[CS_TEAM_CT] = 0;
 	g_iDoingDV = -1;
 	
 	g_cLaser = PrecacheModel("materials/sprites/laserbeam.vmt", true);
@@ -136,15 +135,15 @@ public Action EventSecondElapsed(Handle timer, any none) {
 		float src[3], dst[3];
 		int client, target;
 		
-		for (int i = 0; i < g_iCurrentClientCount; i++) {
-			client = g_iCurrentClients[i];
+		for (int i = 0; i < g_iCurrentTeamCount[CS_TEAM_T]; i++) {
+			client = g_iCurrentTeam[CS_TEAM_T][i];
 			GetClientAbsOrigin(client, src);
 			src[2] += 16.0;
 			
 			
 			
-			for (int j = 0; j < g_iCurrentTargetCount; j++) {
-				target = g_iCurrentTargets[j];
+			for (int j = 0; j < g_iCurrentTeamCount[CS_TEAM_CT]; j++) {
+				target = g_iCurrentTeam[CS_TEAM_CT][j];
 				GetClientAbsOrigin(target, dst);
 				dst[2] += 16.0;
 				
@@ -184,9 +183,9 @@ void displayDV(int client) {
 	Menu menu = new Menu(menuDV);
 	menu.SetTitle("Choisissez votre dernière volonté\n");
 	
-	g_iCurrentClients[0] = client;
-	g_iCurrentClientCount = 1;
-	g_iCurrentTargetCount = 0;
+	g_iCurrentTeam[CS_TEAM_T][0] = client;
+	g_iCurrentTeamCount[CS_TEAM_T] = 1;
+	g_iCurrentTeamCount[CS_TEAM_CT] = 0;
 	
 	int targetCount = DV_CountTeam(CS_TEAM_CT);
 	
@@ -205,11 +204,11 @@ void displayDV(int client) {
 			
 			Call_StartFunction(g_hStackPlugin[i], g_fStackCondition[i]);
 			if( g_iStackTeam[i][CS_TEAM_T] > 1 ) {
-				Call_PushArray(g_iCurrentClients, g_iCurrentClientCount);
-				Call_PushCell(g_iCurrentClientCount);
+				Call_PushArray(g_iCurrentTeam[CS_TEAM_T], g_iCurrentTeamCount[CS_TEAM_T]);
+				Call_PushCell(g_iCurrentTeamCount[CS_TEAM_T]);
 			}
 			else
-				Call_PushCell(g_iCurrentClients[0]);
+				Call_PushCell(g_iCurrentTeam[CS_TEAM_T][0]);
 			Call_Finish(can);
 			
 		}
@@ -238,8 +237,8 @@ void displayDV_SelectCT(int id, int client) {
 			continue;
 			
 		int skip = false;
-		for (int j = 0; j < g_iCurrentTargetCount; j++) {
-			if( g_iCurrentTargets[j] == i ) {
+		for (int j = 0; j < g_iCurrentTeamCount[CS_TEAM_CT]; j++) {
+			if( g_iCurrentTeam[CS_TEAM_CT][j] == i ) {
 				skip = true;
 				break;
 			}
@@ -282,10 +281,10 @@ public int menuDVchooseCT(Menu menu, MenuAction action, int client, int params) 
 		ExplodeString(options, " ", data, sizeof(data), sizeof(data[]));
 		
 		int id = StringToInt(data[0]);
-		g_iCurrentTargets[g_iCurrentTargetCount] = StringToInt(data[1]);
-		g_iCurrentTargetCount++;
+		g_iCurrentTeam[CS_TEAM_CT][g_iCurrentTeamCount[CS_TEAM_CT]] = StringToInt(data[1]);
+		g_iCurrentTeamCount[CS_TEAM_CT]++;
 		
-		if( g_iCurrentTargetCount >= g_iStackTeam[id][CS_TEAM_CT] )
+		if( g_iCurrentTeamCount[CS_TEAM_CT] >= g_iStackTeam[id][CS_TEAM_CT] )
 			DV_Start(id);
 		else
 			displayDV_SelectCT(id, client);
@@ -301,19 +300,19 @@ bool DV_RemoveClientFromTeam(int client, bool disconnect) {
 	int team = GetClientTeam(client);
 
 	if( team == CS_TEAM_CT && g_iStackFlag[g_iDoingDV] & (JB_SHOULD_SELECT_CT|JB_RUN_UNTIL_DEAD) ) {
-		DV_RemoveFromStack(client, g_iCurrentTargets, g_iCurrentTargetCount);
+		DV_RemoveFromStack(client, g_iCurrentTeam[CS_TEAM_CT], g_iCurrentTeamCount[CS_TEAM_CT]);
 		if( disconnect )
-			DV_RemoveFromStack(client, g_iInitialTargets, g_iInitialTargetCount);
+			DV_RemoveFromStack(client, g_iInitialTeam[CS_TEAM_CT], g_iInitialTeamCount[CS_TEAM_CT]);
 		
-		if( g_iCurrentTargetCount <= 0 )
+		if( g_iCurrentTeamCount[CS_TEAM_CT] <= 0 )
 			endOfDV = true;
 	}
 	if( team == CS_TEAM_T ) {
-		DV_RemoveFromStack(client, g_iCurrentClients, g_iCurrentClientCount);
+		DV_RemoveFromStack(client, g_iCurrentTeam[CS_TEAM_T], g_iCurrentTeamCount[CS_TEAM_T]);
 		if( disconnect )
-			DV_RemoveFromStack(client, g_iInitialClients, g_iInitialClientCount);
+			DV_RemoveFromStack(client, g_iInitialTeam[CS_TEAM_T], g_iInitialTeamCount[CS_TEAM_T]);
 		
-		if( g_iCurrentClientCount <= 0 )
+		if( g_iCurrentTeamCount[CS_TEAM_T] <= 0 )
 			endOfDV = true;
 	}
 	
@@ -331,16 +330,18 @@ bool DV_RemoveFromStack(int client, int[] stack, int& count) {
 		}
 	}
 }
-bool DV_IsClientInsideTeam(int client) {
-	int team = GetClientTeam(client);
+bool DV_IsClientInsideTeam(int client, int team = -1) {
+	if( team == -1 )
+		team = GetClientTeam(client);
+	
 	if( team == CS_TEAM_CT ) {
-		for (int i = 0; i < g_iCurrentTargetCount; i++)
-			if( g_iCurrentTargets[i] == client )
+		for (int i = 0; i < g_iCurrentTeamCount[CS_TEAM_CT]; i++)
+			if( g_iCurrentTeam[CS_TEAM_CT][i] == client )
 				return true;
 	}
 	else if( team == CS_TEAM_T ) {
-		for (int i = 0; i < g_iCurrentClientCount; i++)
-			if( g_iCurrentClients[i] == client )
+		for (int i = 0; i < g_iCurrentTeamCount[CS_TEAM_T]; i++)
+			if( g_iCurrentTeam[CS_TEAM_T][i] == client )
 				return true;
 	}
 	
@@ -381,14 +382,14 @@ int DV_CountTeam(int team) {
 }
 stock void DV_CleanTeams(int team = 0) {
 	if( team > 0 && team == CS_TEAM_T ) {
-		for (int i = 0; i < g_iCurrentClientCount; i++) {
-			DV_CleanClient(g_iCurrentClients[i]);
+		for (int i = 0; i < g_iCurrentTeamCount[CS_TEAM_T]; i++) {
+			DV_CleanClient(g_iCurrentTeam[CS_TEAM_T][i]);
 		}
 	}
 	
 	if( team > 0 && team == CS_TEAM_CT ) {
-		for (int j = 0; j < g_iCurrentTargetCount; j++) {
-			DV_CleanClient(g_iCurrentTargets[j]);
+		for (int j = 0; j < g_iCurrentTeamCount[CS_TEAM_CT]; j++) {
+			DV_CleanClient(g_iCurrentTeam[CS_TEAM_CT][j]);
 		}
 	}
 }
@@ -433,24 +434,24 @@ public bool TR_FilterClients(int entity, int mask, any client) {
 int DV_Start(int id) {
 	PrintHintTextToAll("Dernière volonté:\n%s", g_cStackName[id]);
 		
-	if( g_iCurrentTargetCount > 0 )
-		CPrintToChatAll(MOD_TAG ... "{teamcolor}%N{default} a choisis de faire sa DV " ... MOD_TAG_START ... "%s" ... MOD_TAG_END ... " contre " ... MOD_TAG_START ... "%N" ... MOD_TAG_END ... ".", g_iCurrentClients[0], g_cStackName[id], g_iCurrentTargets[0]);
+	if( g_iCurrentTeamCount[CS_TEAM_CT] > 0 )
+		CPrintToChatAll(MOD_TAG ... "{teamcolor}%N{default} a choisis de faire sa DV " ... MOD_TAG_START ... "%s" ... MOD_TAG_END ... " contre " ... MOD_TAG_START ... "%N" ... MOD_TAG_END ... ".", g_iCurrentTeam[CS_TEAM_T][0], g_cStackName[id], g_iCurrentTeam[CS_TEAM_CT][0]);
 	else
-		CPrintToChatAll(MOD_TAG ... "{blue}%N{default} a choisis sa dernière volontée: " ... MOD_TAG_START ... "%s" ... MOD_TAG_END ... ".", g_iCurrentClients[0],  g_cStackName[id]);
+		CPrintToChatAll(MOD_TAG ... "{blue}%N{default} a choisis sa dernière volontée: " ... MOD_TAG_START ... "%s" ... MOD_TAG_END ... ".", g_iCurrentTeam[CS_TEAM_T][0],  g_cStackName[id]);
 	
 	g_iDoingDV = id;
-	g_iInitialClients = g_iCurrentClients;
-	g_iInitialClientCount = g_iCurrentClientCount;
-	g_iInitialTargets = g_iCurrentTargets;
-	g_iInitialTargetCount = g_iCurrentTargetCount;
+	g_iInitialTeam[CS_TEAM_T] = g_iCurrentTeam[CS_TEAM_T];
+	g_iInitialTeamCount[CS_TEAM_T] = g_iCurrentTeamCount[CS_TEAM_T];
+	g_iInitialTeam[CS_TEAM_CT] = g_iCurrentTeam[CS_TEAM_CT];
+	g_iInitialTeamCount[CS_TEAM_CT] = g_iCurrentTeamCount[CS_TEAM_CT];
 	
 	DV_CleanTeams();
 	if( g_fStackStart[id] != INVALID_FUNCTION )
 		DV_Call(id, g_fStackStart[id]);
 	
 	Call_StartForward(g_hOnStartLR);
-	Call_PushCell(g_iInitialClients[0]);
-	Call_PushCell(g_iInitialTargets[0]);	
+	Call_PushCell(g_iInitialTeam[CS_TEAM_T][0]);
+	Call_PushCell(g_iInitialTeam[CS_TEAM_CT][0]);	
 	Call_Finish();
 }
 int DV_Stop(int id) {
@@ -460,29 +461,29 @@ int DV_Stop(int id) {
 		DV_Call(id, g_fStackEnd[id]);
 	
 	Call_StartForward(g_hOnStopLR);
-	Call_PushCell(g_iInitialClients[0]);
-	Call_PushCell(g_iInitialTargets[0]);	
+	Call_PushCell(g_iInitialTeam[CS_TEAM_T][0]);
+	Call_PushCell(g_iInitialTeam[CS_TEAM_CT][0]);	
 	Call_Finish();
 	
 	DV_CleanTeams();
-	g_iInitialTargetCount = g_iInitialClientCount = g_iCurrentClientCount = g_iCurrentTargetCount = 0;
+	g_iInitialTeamCount[CS_TEAM_CT] = g_iInitialTeamCount[CS_TEAM_T] = g_iCurrentTeamCount[CS_TEAM_T] = g_iCurrentTeamCount[CS_TEAM_CT] = 0;
 	g_iDoingDV = -1;
 }
 void DV_Call(int id, Function func) {
 	Call_StartFunction(g_hStackPlugin[id], func);
 	if( g_iStackTeam[id][CS_TEAM_T] > 1 ) {
-		Call_PushArray(g_iInitialClients, g_iInitialClientCount);
-		Call_PushCell(g_iInitialClientCount);
+		Call_PushArray(g_iInitialTeam[CS_TEAM_T], g_iInitialTeamCount[CS_TEAM_T]);
+		Call_PushCell(g_iInitialTeamCount[CS_TEAM_T]);
 	}
 	else if( g_iStackTeam[id][CS_TEAM_T] == 1 )
-		Call_PushCell(g_iInitialClientCount > 0 ? g_iInitialClients[0] : 0 );
+		Call_PushCell(g_iInitialTeamCount[CS_TEAM_T] > 0 ? g_iInitialTeam[CS_TEAM_T][0] : 0 );
 	
 	if( g_iStackTeam[id][CS_TEAM_CT] > 1 ) {
-		Call_PushArray(g_iInitialTargets, g_iInitialTargetCount);
-		Call_PushCell(g_iInitialTargetCount);
+		Call_PushArray(g_iInitialTeam[CS_TEAM_CT], g_iInitialTeamCount[CS_TEAM_CT]);
+		Call_PushCell(g_iInitialTeamCount[CS_TEAM_CT]);
 	}
 	else if( g_iStackTeam[id][CS_TEAM_CT] == 1 )
-		Call_PushCell(g_iInitialTargetCount > 0 ? g_iInitialTargets[0] : 0);
+		Call_PushCell(g_iInitialTeamCount[CS_TEAM_CT] > 0 ? g_iInitialTeam[CS_TEAM_CT][0] : 0);
 	Call_Finish();
 }
 // -------------------------------------------------------------------------------------------------------------------------------
@@ -491,6 +492,7 @@ public APLRes AskPluginLoad2(Handle hPlugin, bool isAfterMapLoaded, char[] error
 	
 	CreateNative("JB_CreateLastRequest", Native_JB_CreateLastRequest);
 	CreateNative("JB_SetTeamCount", Native_JB_SetTeamCount);
+	CreateNative("JB_AddClientInDV", Native_JB_AddClientInDV);
 	CreateNative("JB_CeanTeam", Native_DV_CleanTeam);
 	CreateNative("JB_End", Native_JB_End);
 	
@@ -520,4 +522,24 @@ public int Native_JB_End(Handle plugin, int numParams) {
 }
 public int Native_DV_CleanTeam(Handle plugin, int numParams) {
 	DV_CleanTeams(GetNativeCell(1));
+}
+public int Native_JB_AddClientInDV(Handle plugin, int numParams) {
+	int client = GetNativeCell(1);
+	int team = GetClientTeam(client);
+	
+	for (int i = 0; i < g_iInitialTeamCount[team]; i++)
+		if( g_iInitialTeam[team][i] == client )
+			return;
+	
+	g_iInitialTeam[team][g_iInitialTeamCount[team]] = client;
+	g_iInitialTeamCount[team]++;
+	
+	if( IsPlayerAlive(client) ) {
+		for (int i = 0; i < g_iCurrentTeamCount[team]; i++)
+			if( g_iCurrentTeam[team][i] == client )
+				return;
+		g_iCurrentTeam[team][g_iCurrentTeamCount[team]] = client;
+		g_iCurrentTeamCount[team]++;
+	}
+
 }
