@@ -20,7 +20,7 @@ public void JB_OnPluginReady() {
 public void OnMapStart() {
 	AddFileToDownloadsTable("materials/rc/dv_spray.vmt");
 	AddFileToDownloadsTable("materials/rc/dv_spray.vtf");
-	g_cSpray = PrecacheDecal("rc/dv_spray", true);
+	g_cSpray = PrecacheDecal("rc/dv_spray.vmt", true);
 }
 
 public void DV_Start(int client, int target) {
@@ -33,6 +33,9 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 	static lastButtons[65];
 	
 	if( (client == g_iTarget || client == g_iClient) ) {
+		
+		if(( client == g_iClient && g_bClient ) || ( client == g_iTarget && g_bTarget ) )
+			return Plugin_Continue;
 		
 		if( buttons & IN_USE && !(lastButtons[client] & IN_USE) ) {
 			float src[3], ang[3], dst[3];
@@ -73,6 +76,7 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 		
 		lastButtons[client] = buttons;
 	}
+	return Plugin_Continue;
 }
 public bool TR_FilterSelf(int entity, int mask, any client) {
 	if (entity == client)

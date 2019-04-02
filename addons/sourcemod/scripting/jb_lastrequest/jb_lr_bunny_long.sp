@@ -37,7 +37,7 @@ public void DV_Start(int client, int target) {
 	g_flDistance[client] = 0.0;
 	g_flDistance[target] = 0.0;	
 	
-	CreateTimer(30.0, TIMER_Check);
+	CreateTimer(20.0, TIMER_Check);
 }
 public Action TIMER_Check(Handle timer, any none) {
 	if( g_flDistance[g_iClient] > g_flDistance[g_iTarget] )
@@ -74,7 +74,7 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 			TE_SetupBeamPoints(g_flJumpEnd[client], dst, g_cLaser, g_cLaser, 0, 30, 1.0, 1.0, 1.0, 1, 0.0, {255, 0, 0, 200}, 0);
 			TE_SetupBeamPoints(src, dst, g_cLaser, g_cLaser, 0, 30, 1.0, 1.0, 1.0, 1, 0.0, {255, 255, 255, 200}, 0);
 			
-			PrintHintTextToAll("%N: %f\n%N: %f", g_iClient, g_flDistance[g_iClient], g_iTarget, g_flDistance[g_iTarget]);
+			PrintHintTextToAll("%N: %.2f\n%N: %.2f", g_iClient, g_flDistance[g_iClient], g_iTarget, g_flDistance[g_iTarget]);
 		}
 		if( groundEnd == -1 && oldGround[client] >= 0 ) {
 			GetClientAbsOrigin(client, g_flJumpStart[client]);
