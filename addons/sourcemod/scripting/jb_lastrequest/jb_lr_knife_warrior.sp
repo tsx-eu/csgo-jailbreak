@@ -8,7 +8,7 @@
 #include <jb_lastrequest>
 
 public void JB_OnPluginReady() {
-	JB_CreateLastRequest("Combat de cut warrior", 	JB_RUN_UNTIL_DEAD|JB_BEACON, DV_CAN_Min3CT﻿, DV_Start);
+	JB_CreateLastRequest("Combat de cut warrior", 	JB_RUN_UNTIL_DEAD|JB_BEACON, DV_CAN_Min3CT, DV_Start);
 }
 public void DV_Start(int client) {
 	int cpt = 0;
@@ -25,7 +25,7 @@ public void DV_Start(int client) {
 		SetEntityHealth(i, 100);
 		DV_StripWeapon(i);
 		GivePlayerItem(i, "weapon_knife");
-		JB_SetClientTeam(i, CS_TEAM_CT);
+		JB_AddClientInDV(i);
 		cpt++;
 	}
 	
