@@ -7,6 +7,7 @@
 #include <cstrike>
 #include <emitsoundany>
 #include <csgocolors>
+#include <smart-menu>
 
 #pragma newdecls required
 
@@ -17,6 +18,8 @@ Handle g_hMain = INVALID_HANDLE;
 float maxTime;
 float g_flCourseStart[3], g_flCourseEnd[3];
 int g_iState, g_iClient;
+
+int g_iAirAccelerate, g_iGravity, g_iEnabledBunny, g_iAutoBunny;
 
 public void JB_OnPluginReady() {
 	JB_CreateLastRequest("Course", 	JB_SELECT_CT_UNTIL_DEAD, 	DV_CAN_Always, DV_Start, DV_End);
@@ -52,24 +55,58 @@ public Action EventShoot(Handle ev, const char[] name, bool broadcast) {
 }
 
 public void DV_Start(int client, int target) {
-	maxTime = GetGameTime() + 30.0;
-	CPrintToChat(client, "%s Faites un clique gauche pour selectionner le départ et l'arrivée.", MOD_TAG);
-	CPrintToChat(client, "%s Vous avez 30 secondes pour définir le parcours.", MOD_TAG);
+	SmartMenu menu = new SmartMenu(selectStyle);
+	menu.SetTitle("Quel style de course?\n");
+	menu.SetCell("target", target);
+
+	menu.AddItem("normal", 	"normal");
+	menu.AddItem("bunny", 	"bunny");
+	menu.AddItem("lowgrav",	"lowgrav");
 	
-	if( Client_GetWeapon(client, "weapon_knife") == -1) {
-		GivePlayerItem(client, "weapon_knife");
-	}
-	
-	g_iState = 1;
-	g_iClient = client;
-	g_flCourseStart[2] = g_flCourseEnd[2] = 9999999.9;
-	
-	
-	Handle dp;
-	g_hMain = CreateDataTimer(0.1, DV_COURSE_TASK, dp, TIMER_REPEAT);
-	WritePackCell(dp, client);
-	WritePackCell(dp, target);
+	menu.ExitButton = false;
+	menu.Display(client, MENU_TIME_FOREVER);
 }
+public int selectStyle(SmartMenu menu, MenuAction action, int client, int params) {
+	static char options[64];
+	if( action == MenuAction_Select ) {
+		menu.GetItem(params, options, sizeof(options));
+		int target = menu.GetCell("target");
+		
+		g_iEnabledBunny = GetConVarInt(FindConVar("sv_enablebunnyhopping"));
+		g_iAutoBunny = GetConVarInt(FindConVar("sv_autobunnyhopping"));
+		g_iAirAccelerate = GetConVarInt(FindConVar("sv_airaccelerate"));
+		g_iGravity = GetConVarInt(FindConVar("sv_gravity"));
+		
+		if( StrEqual(options, "bunny") )
+			ServerCommand("sv_enablebunnyhopping 1;sv_autobunnyhopping 1");	
+		if( StrEqual(options, "lowgrav") )
+			ServerCommand("sv_airaccelerate 1000;sv_gravity 200");
+		
+		
+		maxTime = GetGameTime() + 30.0;
+		CPrintToChat(client, "%s Faites un clique gauche pour selectionner le départ et l'arrivée.", MOD_TAG);
+		CPrintToChat(client, "%s Vous avez 30 secondes pour définir le parcours.", MOD_TAG);
+		
+		if( Client_GetWeapon(client, "weapon_knife") == -1) {
+			GivePlayerItem(client, "weapon_knife");
+		}
+		
+		g_iState = 1;
+		g_iClient = client;
+		g_flCourseStart[2] = g_flCourseEnd[2] = 9999999.9;
+		
+		
+		Handle dp;
+		g_hMain = CreateDataTimer(0.1, DV_COURSE_TASK, dp, TIMER_REPEAT);
+		WritePackCell(dp, client);
+		WritePackCell(dp, target);
+	}
+	else if( action == MenuAction_End ) {
+		CloseHandle(menu);
+	}
+	return;
+}
+
 public Action DV_COURSE_TASK(Handle timer, Handle dp) {
 	ResetPack(dp);
 	int client = ReadPackCell(dp);
@@ -147,6 +184,9 @@ public Action DV_COURSE_TASK(Handle timer, Handle dp) {
 public void DV_End(int client, int target) {
 	KillTimer(g_hMain);																// TODO: Gérer ça de façon automatisée ?
 	g_hMain = null;
+	
+	ServerCommand("sv_enablebunnyhopping %d;sv_autobunnyhopping %d", g_iEnabledBunny, g_iAutoBunny);
+	ServerCommand("sv_airaccelerate %d;sv_gravity %d", g_iAirAccelerate, g_iGravity);
 	
 	if( client )
 		Entity_SetCollisionGroup(client, COLLISION_GROUP_PLAYER);
