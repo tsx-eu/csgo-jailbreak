@@ -334,16 +334,9 @@ bool DV_IsClientInsideTeam(int client, int team = -1) {
 	if( team == -1 )
 		team = GetClientTeam(client);
 	
-	if( team == CS_TEAM_CT ) {
-		for (int i = 0; i < g_iCurrentTeamCount[CS_TEAM_CT]; i++)
-			if( g_iCurrentTeam[CS_TEAM_CT][i] == client )
-				return true;
-	}
-	else if( team == CS_TEAM_T ) {
-		for (int i = 0; i < g_iCurrentTeamCount[CS_TEAM_T]; i++)
-			if( g_iCurrentTeam[CS_TEAM_T][i] == client )
-				return true;
-	}
+	for (int i = 0; i < g_iCurrentTeamCount[team]; i++)
+		if( g_iCurrentTeam[team][i] == client )
+			return true;
 	
 	return false;
 }
@@ -381,17 +374,8 @@ int DV_CountTeam(int team) {
 	return t;
 }
 stock void DV_CleanTeams(int team = 0) {
-	if( team > 0 && team == CS_TEAM_T ) {
-		for (int i = 0; i < g_iCurrentTeamCount[CS_TEAM_T]; i++) {
-			DV_CleanClient(g_iCurrentTeam[CS_TEAM_T][i]);
-		}
-	}
-	
-	if( team > 0 && team == CS_TEAM_CT ) {
-		for (int j = 0; j < g_iCurrentTeamCount[CS_TEAM_CT]; j++) {
-			DV_CleanClient(g_iCurrentTeam[CS_TEAM_CT][j]);
-		}
-	}
+	for (int i = 0; i < g_iCurrentTeamCount[team]; i++)
+		DV_CleanClient(g_iCurrentTeam[team][i]);
 }
 void DV_CleanClient(int client) {
 	DV_StripWeapon(client);
