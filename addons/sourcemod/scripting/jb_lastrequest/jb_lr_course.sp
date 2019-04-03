@@ -59,9 +59,9 @@ public void DV_Start(int client, int target) {
 	menu.SetTitle("Quel style de course?\n");
 	menu.SetCell("target", target);
 
-	menu.AddItem("normal", 	"normal");
-	menu.AddItem("bunny", 	"bunny");
-	menu.AddItem("lowgrav",	"lowgrav");
+	menu.AddItem("normal", 	"Normal");
+	menu.AddItem("bunny", 	"Bunny");
+	menu.AddItem("lowgrav",	"Lowgrav");
 	
 	menu.ExitButton = false;
 	menu.Display(client, MENU_TIME_FOREVER);
