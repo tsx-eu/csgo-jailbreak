@@ -29,7 +29,6 @@ new Handle:g_OnClientApplyDifficulty;
 new Handle:g_OnClientApplyDifficultyPre;
 
 new iPrevButtons[MAXPLAYERS+1];
-new Float:fCheckTime[MAXPLAYERS+1];
 
 //Plugin Flags
 new bool:g_bLateLoaded = false;
@@ -191,14 +190,14 @@ public OnPluginStart()
 	HookEvent("player_spawn", Event_PlayerSpawn);
 	HookEvent("player_jump", Event_PlayerJump);
 
-	RegAdminCmd("sm_timer_reload_config", Command_ReloadConfig, ADMFLAG_CONVARS, "Reload timer settings");
+	RegAdminCmd("sm_timer_reload_config", Command_ReloadConfig, ADMFLAG_ROOT, "Reload timer settings");
 	if(g_Settings[MultimodeEnable]) RegConsoleCmd("sm_style", Command_Difficulty);
 	if(g_Settings[NoclipEnable]) RegConsoleCmd("sm_nc", Command_NoclipMe);
 	if(g_Settings[NoclipEnable]) RegConsoleCmd("sm_noclipme", Command_NoclipMe);
 	if(g_Settings[BhopEnable]) RegConsoleCmd("sm_tauto", Command_ToggleAuto);
 	if(g_Settings[BhopEnable]) RegConsoleCmd("sm_autobhop", Command_ToggleAuto);
 	if(g_Settings[BhopEnable]) RegConsoleCmd("sm_autojump", Command_ToggleAuto);
-	RegAdminCmd("sm_colour", Command_Colour, ADMFLAG_RESERVATION);
+	RegAdminCmd("sm_colour", Command_Colour, ADMFLAG_ROOT);
 
 	g_hPlattformColor = CreateConVar("timer_plattform_color", "0 255 0 255", "The color of detected plattforms.");
 
@@ -877,23 +876,6 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 
 	if (buttons & IN_JUMP)
 	{
-		new bool:boost = false;
-
-		if(g_timerMapzones)
-		{
-			if(!Timer_IsPlayerTouchingZoneType(client, ZtNoBoost))
-			{
-				boost = true;
-			}
-		}
-		else boost = true;
-
-		if(boost && onground && g_fBoost[client] > 0.0)
-		{
-			g_bPushWait[client] = true;
-			CreateTimer(0.0, Timer_Push, client, TIMER_FLAG_NO_MAPCHANGE);
-		}
-
 		if(!onground)
 		{
 			new auto = false;
@@ -923,36 +905,8 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 		}
 	}
 
-	// Player didn't jump immediately after the last jump.
-	if (!(buttons & IN_JUMP) && onground && fCheckTime[client] > 0.0)
-	{
-		fCheckTime[client] = 0.0;
-	}
-
 	new oldjumps = g_iFullJumpCount[client];
 	new bool:perfect = false;
-
-	// Ignore this jump if the player is in a tight space or stuck in the ground.
-	if ((buttons & IN_JUMP) && !abuse)
-	{
-		if(!(iPrevButtons[client] & IN_JUMP))
-		{
-			// Player is on the ground and about to trigger a jump.
-			if (onground)
-			{
-				// Player jumped on the exact frame that allowed it.
-				if (fCheckTime[client] > 0.0 && fGameTime >= fCheckTime[client])
-				{
-					perfect = true;
-					g_iFullJumpCount[client]++;
-					g_fJumpAccuracy[client] = 100-((100/g_Settings[MultiBhopDelay])*g_fFullJumpTimeAmount[client])/g_iFullJumpCount[client];
-				}
-				else fCheckTime[client] = fGameTime + g_Settings[MultiBhopJumpTime];
-			}
-			else if(fCheckTime[client] != 0.0)
-				fCheckTime[client] = 0.0;
-		}
-	}
 
 	if(!abuse && !perfect)
 	{
@@ -1436,7 +1390,7 @@ ApplyDifficulty(client)
 		#endif
 
 		if(!StrEqual(g_Physics[style][StyleDesc], ""))
-			CPrintToChat(client, "%s %s", PLUGIN_PREFIX2, g_Physics[style][StyleDesc]);
+			CPrintToChat(client, "%s %s", PREFIX, g_Physics[style][StyleDesc]);
 
 		if(g_Settings[TeleportOnStyleChanged])
 		{

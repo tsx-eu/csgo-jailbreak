@@ -5,22 +5,22 @@
 #include <cstrike>
 #include <adminmenu>
 #include <smlib>
-#include <include/timer>
-#include <include/timer-mapzones>
-#include <include/timer-logging>
-#include <include/timer-stocks>
-#include <include/timer-logging>
-#include <include/timer-mysql>
-#include <include/timer-config_loader.sp>
+#include <timer>
+#include <timer-mapzones>
+#include <timer-logging>
+#include <timer-stocks>
+#include <timer-logging>
+#include <timer-mysql>
+#include <timer-config_loader.sp>
 
 #undef REQUIRE_PLUGIN
-#include <include/js_ljstats>
-#include <include/timer-physics>
-#include <include/timer-hide>
-#include <include/timer-maptier>
-#include <include/timer-teams>
+#include <js_ljstats>
+#include <timer-physics>
+#include <timer-hide>
+#include <timer-maptier>
+#include <timer-teams>
 
-#define TIME_RESTART 10
+#define TIME_RESTART 30
 
 #define WHITE 0x01
 #define LIGHTRED 0x0F
@@ -257,16 +257,16 @@ public OnPluginStart()
 		OnAdminMenuReady(topmenu);
 	}
 
-	RegAdminCmd("sm_zoneadminmode", Command_LevelAdminMode, ADMFLAG_BAN);
-	RegAdminCmd("sm_zonename", Command_LevelName, ADMFLAG_BAN);
-	RegAdminCmd("sm_zoneid", Command_LevelID, ADMFLAG_BAN);
-	RegAdminCmd("sm_zonetype", Command_LevelType, ADMFLAG_BAN);
-	RegAdminCmd("sm_zoneadd", Command_AddZone, ADMFLAG_BAN);
-	RegAdminCmd("sm_zonereload", Command_ReloadZones, ADMFLAG_BAN);
-	RegAdminCmd("sm_npc_next", Command_NPC_Next, ADMFLAG_BAN);
-	RegAdminCmd("sm_zone", Command_AdminZone, ADMFLAG_BAN);
-	RegAdminCmd("sm_zonedel", Command_AdminZoneDel, ADMFLAG_BAN);
-	RegAdminCmd("sm_toggle_tp", Command_ToggleTeleporters, ADMFLAG_BAN);
+	RegAdminCmd("sm_zoneadminmode", Command_LevelAdminMode, ADMFLAG_ROOT);
+	RegAdminCmd("sm_zonename", Command_LevelName, ADMFLAG_ROOT);
+	RegAdminCmd("sm_zoneid", Command_LevelID, ADMFLAG_ROOT);
+	RegAdminCmd("sm_zonetype", Command_LevelType, ADMFLAG_ROOT);
+	RegAdminCmd("sm_zoneadd", Command_AddZone, ADMFLAG_ROOT);
+	RegAdminCmd("sm_zonereload", Command_ReloadZones, ADMFLAG_ROOT);
+	RegAdminCmd("sm_npc_next", Command_NPC_Next, ADMFLAG_ROOT);
+	RegAdminCmd("sm_zone", Command_AdminZone, ADMFLAG_ROOT);
+	RegAdminCmd("sm_zonedel", Command_AdminZoneDel, ADMFLAG_ROOT);
+	RegAdminCmd("sm_toggle_tp", Command_ToggleTeleporters, ADMFLAG_ROOT);
 
 	RegConsoleCmd("sm_levels", Command_Levels);
 	RegConsoleCmd("sm_stage", Command_Levels);
@@ -2885,25 +2885,25 @@ public OnAdminMenuReady(Handle:topmenu)
 	}
 
 	AddToTopMenu(hTopMenu, "timer_mapzones_add",TopMenuObject_Item,AdminMenu_AddMapZone,
-	oMapZoneMenu,"timer_mapzones_add",ADMFLAG_BAN);
+	oMapZoneMenu,"timer_mapzones_add",ADMFLAG_ROOT);
 
 	AddToTopMenu(hTopMenu, "timer_mapzones_remove",TopMenuObject_Item,AdminMenu_RemoveMapZone,
-	oMapZoneMenu,"timer_mapzones_remove",ADMFLAG_BAN);
+	oMapZoneMenu,"timer_mapzones_remove",ADMFLAG_ROOT);
 
 	AddToTopMenu(hTopMenu, "timer_mapzones_remove_all",TopMenuObject_Item,AdminMenu_RemoveAllMapZones,
-	oMapZoneMenu,"timer_mapzones_remove_all",ADMFLAG_BAN);
+	oMapZoneMenu,"timer_mapzones_remove_all",ADMFLAG_ROOT);
 
 	AddToTopMenu(hTopMenu, "sm_npc_next",TopMenuObject_Item,AdminMenu_NPC,
-	oMapZoneMenu,"sm_npc_next",ADMFLAG_BAN);
+	oMapZoneMenu,"sm_npc_next",ADMFLAG_ROOT);
 
 	AddToTopMenu(hTopMenu, "sm_zoneadminmode",TopMenuObject_Item,AdminMenu_AdminMode,
-	oMapZoneMenu,"sm_zoneadminmode",ADMFLAG_BAN);
+	oMapZoneMenu,"sm_zoneadminmode",ADMFLAG_ROOT);
 
 	AddToTopMenu(hTopMenu, "sm_zonereload",TopMenuObject_Item,AdminMenu_Reload,
-	oMapZoneMenu,"sm_zonereload",ADMFLAG_BAN);
+	oMapZoneMenu,"sm_zonereload",ADMFLAG_ROOT);
 
 	AddToTopMenu(hTopMenu, "sm_zone",TopMenuObject_Item,AdminMenu_Teleport,
-	oMapZoneMenu,"sm_zone",ADMFLAG_BAN);
+	oMapZoneMenu,"sm_zone",ADMFLAG_ROOT);
 }
 
 public AdminMenu_CategoryHandler(Handle:topmenu,
@@ -2999,12 +2999,12 @@ public AdminMenu_AdminMode(Handle:topmenu,
 	{
 		if(adminmode == 0)
 		{
-			CPrintToChatAll("%s Adminmode enabled!", PLUGIN_PREFIX2);
+			CPrintToChatAll("%s Admin mode activé !", PREFIX);
 			adminmode = 1;
 		}
 		else
 		{
-			CPrintToChatAll("%s Adminmode disabled!", PLUGIN_PREFIX2);
+			CPrintToChatAll("%s Admin mode désactivé !", PREFIX);
 			adminmode = 0;
 		}
 	}
@@ -3021,7 +3021,7 @@ public AdminMenu_Reload(Handle:topmenu,
 		FormatEx(buffer, maxlength, "Zone Reload");
 	} else if (action == TopMenuAction_SelectOption)
 	{
-		CPrintToChatAll("%s Zones Reloaded!", PLUGIN_PREFIX2);
+		CPrintToChatAll("%s Zones raffraichis !", PREFIX);
 		LoadMapZones();
 	}
 }
@@ -4793,14 +4793,14 @@ public Action:Command_Stuck(client, args)
 	Timer_IsPlayerTouchingZoneType(client, ZtBonus4Level) || 
 	Timer_IsPlayerTouchingZoneType(client, ZtBonus5Level))
 	{
-		CPrintToChat(client, "%s You can't use this command inside this zone type.", PLUGIN_PREFIX2);
+		CPrintToChat(client, "%s You can't use this command inside this zone type.", PREFIX);
 		return Plugin_Handled;
 	}
 
 	if(Timer_GetStatus(client) && g_Settings[StuckPenaltyTime] > 0)
 	{
 		Timer_AddPenaltyTime(client, g_Settings[StuckPenaltyTime]);
-		CPrintToChat(client, "%s You have used !stuck and got an %ds penalty time.", PLUGIN_PREFIX2, RoundToFloor(g_Settings[StuckPenaltyTime]));
+		CPrintToChat(client, "%s You have used !stuck and got an %ds penalty time.", PREFIX, RoundToFloor(g_Settings[StuckPenaltyTime]));
 	}
 
 	TeleLastCheckpoint(client);

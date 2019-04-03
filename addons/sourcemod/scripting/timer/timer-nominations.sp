@@ -352,18 +352,7 @@ BuildMapMenu()
 		ReplaceString(display, sizeof(display), "bhop_", "", false);
 		ReplaceString(display, sizeof(display), "bh_", "", false);
 		ReplaceString(display, sizeof(display), "mg_", "", false);
-		
-		new tier = Timer_GetMapTier(sMap, TRACK_NORMAL);
-		
-		if( tier == -2 )
-			Format(display, sizeof(display), "[FUN]", tier);
-		else if( tier == -1 )
-			Format(display, sizeof(display), "[MG]", tier);
-		else
-			Format(display, sizeof(display), "[T:%d]", tier);
-		
-		Format(display, sizeof(display), "%s %s", display, map);
-		
+		Format(display, sizeof(display), "[T:%d] %s", Timer_GetMapTier(sMap, TRACK_NORMAL), map);
 		AddMenuItem(g_MapMenu, sMap, display);
 		SetTrieValue(g_mapTrie, sMap, status);
 	}
