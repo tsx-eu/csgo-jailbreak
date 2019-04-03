@@ -47,9 +47,8 @@ public int selectStyle(SmartMenu menu, MenuAction action, int client, int params
 			ServerCommand("sv_airaccelerate 1000;sv_gravity 0");
 		
 		SmartMenu submenu = new SmartMenu(selectWeapon);
-		submenu.SetTitle("Combien de HP?\n");
+		submenu.SetTitle("Combien de HP?\n"); 
 		submenu.SetCell("target", target);
-		submenu.SetString("style", options);
 	
 		submenu.AddItem("1", 	"1");
 		submenu.AddItem("35", 	"35");
@@ -73,7 +72,6 @@ public int selectWeapon(SmartMenu menu, MenuAction action, int client, int param
 		menu.GetItem(params, options, sizeof(options));
 		int hp = StringToInt(options);
 		int target = menu.GetCell("target");
-		menu.GetString("style", options, sizeof(options));
 		
 		SetEntityHealth(client, hp);
 		SetEntityHealth(target, hp);
@@ -84,7 +82,7 @@ public int selectWeapon(SmartMenu menu, MenuAction action, int client, int param
 		GivePlayerItem(client, "weapon_knife");
 		GivePlayerItem(target, "weapon_knife");
 		
-		if( StrEqual(options, "slide") ) {
+		if( GetConVarInt(FindConVar("sv_gravity")) == 0 ) {
 			Entity_SetCollisionGroup(client, COLLISION_GROUP_DEBRIS_TRIGGER);
 			Entity_SetCollisionGroup(target, COLLISION_GROUP_DEBRIS_TRIGGER);
 		
@@ -117,15 +115,17 @@ public Action TIMER_DisableGodmod(Handle timer, any client) {
 	PrintHintTextToAll("FIGHT!");
 }
 public void DV_End(int client, int target) {	
+	if( GetConVarInt(FindConVar("sv_gravity")) == 0 ) {
+		if( client > 0 ) {
+			Entity_SetCollisionGroup(client, COLLISION_GROUP_PLAYER);
+			TeleportEntity(client, g_flStart, NULL_VECTOR, NULL_VECTOR);
+		}
+		if( target > 0 ) {
+			Entity_SetCollisionGroup(target, COLLISION_GROUP_PLAYER);
+			TeleportEntity(target, g_flStart, NULL_VECTOR, NULL_VECTOR);
+		}
+	}
+	
 	ServerCommand("sv_enablebunnyhopping %d;sv_autobunnyhopping %d", g_iEnabledBunny, g_iAutoBunny);
 	ServerCommand("sv_airaccelerate %d;sv_gravity %d", g_iAirAccelerate, g_iGravity);
-	
-	if( client > 0 ) {
-		Entity_SetCollisionGroup(client, COLLISION_GROUP_PLAYER);
-		TeleportEntity(client, g_flStart, NULL_VECTOR, NULL_VECTOR);
-	}
-	if( target > 0 ) {
-		Entity_SetCollisionGroup(target, COLLISION_GROUP_PLAYER);
-		TeleportEntity(target, g_flStart, NULL_VECTOR, NULL_VECTOR);
-	}
 }
