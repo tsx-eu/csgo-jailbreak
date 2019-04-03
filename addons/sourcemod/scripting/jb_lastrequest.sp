@@ -25,7 +25,7 @@ int g_iStackCount = 0;
 char g_cStackName[MAX_LR][128];
 Function g_fStackCondition[MAX_LR], g_fStackStart[MAX_LR], g_fStackEnd[MAX_LR];
 Handle g_hStackPlugin[MAX_LR];
-int g_iStackFlag[MAX_LR], g_iStackTeam[MAX_LR][4]; // CS_TEAM_T == 2 CS_TEAM_CT == 3 
+int g_iStackFlag[MAX_LR], g_iStackTeam[MAX_LR][4], g_iSorted[MAX_LR]; // CS_TEAM_T == 2 CS_TEAM_CT == 3 
 Handle g_hPluginReady = INVALID_HANDLE, g_hOnStartLR = INVALID_HANDLE, g_hOnStopLR = INVALID_HANDLE;
 Handle g_hCvar = INVALID_HANDLE;
 bool g_bPluginEnabled;
@@ -190,19 +190,21 @@ void displayDV(int client) {
 	int targetCount = DV_CountTeam(CS_TEAM_CT);
 	
 	for (int i = 0; i < g_iStackCount; i++) {
-		Format(tmp, sizeof(tmp), "%d", i);
+		int id = g_iSorted[i];
+		
+		Format(tmp, sizeof(tmp), "%d", id);
 		
 		bool can;
 		
-		if( g_iStackTeam[i][CS_TEAM_CT] > targetCount ) {
+		if( g_iStackTeam[id][CS_TEAM_CT] > targetCount ) {
 			can = false;
 		}
-		else if( g_fStackCondition[i] == INVALID_FUNCTION ) {
+		else if( g_fStackCondition[id] == INVALID_FUNCTION ) {
 			can = true;
 		}
 		else {
 			
-			Call_StartFunction(g_hStackPlugin[i], g_fStackCondition[i]);
+			Call_StartFunction(g_hStackPlugin[id], g_fStackCondition[id]);
 			if( g_iStackTeam[i][CS_TEAM_T] > 1 ) {
 				Call_PushArray(g_iCurrentTeam[CS_TEAM_T], g_iCurrentTeamCount[CS_TEAM_T]);
 				Call_PushCell(g_iCurrentTeamCount[CS_TEAM_T]);
@@ -213,7 +215,7 @@ void displayDV(int client) {
 			
 		}
 		
-		menu.AddItem(tmp, g_cStackName[i], can ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
+		menu.AddItem(tmp, g_cStackName[id], can ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
 	}
 	
 	menu.ExitButton = false;
@@ -495,8 +497,14 @@ public int Native_JB_CreateLastRequest(Handle plugin, int numParams) {
 	
 	g_iStackTeam[g_iStackCount][CS_TEAM_T] = 1;
 	g_iStackTeam[g_iStackCount][CS_TEAM_CT] = 1;
+	g_iSorted[g_iStackCount] = g_iStackCount;
+	
+	SortCustom1D(g_iSorted, g_iStackCount+1, SortAscending);
 	
 	return g_iStackCount++;
+}
+public int SortAscending(int a, int b, const int[] array, Handle hdl) {
+	return strcmp(g_cStackName[a], g_cStackName[b]);
 }
 public int Native_JB_SetTeamCount(Handle plugin, int numParams) {	
 	g_iStackTeam[GetNativeCell(1)][GetNativeCell(2)] = GetNativeCell(3);	
