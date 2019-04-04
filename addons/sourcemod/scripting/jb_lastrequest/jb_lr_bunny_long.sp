@@ -95,4 +95,6 @@ public void DV_Stop(int client, int target) {
 	if( target )
 		Entity_SetCollisionGroup(target, COLLISION_GROUP_PLAYER);
 	
+	
+	g_iClient = g_iTarget = -1;
 }

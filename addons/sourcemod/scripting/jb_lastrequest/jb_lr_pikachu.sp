@@ -12,14 +12,15 @@
 int g_iClient, g_iTarget;
 int g_cLaser;
 
+public void OnPluginStart() {
+	HookEvent("weapon_fire",		EventShoot,			EventHookMode_Post);
+}
 public void JB_OnPluginReady() {
 	JB_CreateLastRequest("Pikachu", 	JB_SELECT_CT_UNTIL_DEAD|JB_BEACON|JB_NODAMAGE, DV_CAN_Always, DV_Start, DV_Stop);
 }
 public void OnMapStart() {
 	g_cLaser = PrecacheModel("materials/sprites/laserbeam.vmt", true);
 	PrecacheSoundAny("rsc/jailbreak/pika.mp3");
-	
-	HookEvent("weapon_fire",		EventShoot,			EventHookMode_Post);
 }
 
 public void DV_Start(int client, int target) {

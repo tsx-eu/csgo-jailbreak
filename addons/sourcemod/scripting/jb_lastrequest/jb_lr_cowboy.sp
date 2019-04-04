@@ -28,7 +28,6 @@ public void OnMapStart() {
 	
 	AddFileToDownloadsTable("sound/rsc/jailbreak/taunt_bell.wav");
 	AddFileToDownloadsTable("sound/rsc/jailbreak/heavy_niceshot02.wav");
-	
 }
 public void DV_Start(int client, int target) {
 	g_iClient = client;
@@ -42,7 +41,14 @@ public void DV_Start(int client, int target) {
 public Action CheckDistance(Handle timer, any none) {
 	float dist = Entity_GetDistance(g_iClient, g_iTarget);
 	
-	if( dist >= 256.0 && dist <= 512.0 ) {
+	
+	if( dist < 256.0 ) {
+		PrintHintTextToAll("Reculez-vous");
+	}
+	else if( dist <= 512.0 ) {
+		PrintHintTextToAll("Rapprochez-vous");
+	}
+	else {
 		UpdateClientData(g_iClient);
 		UpdateClientData(g_iTarget);
 		
@@ -59,6 +65,12 @@ public Action CheckDistance(Handle timer, any none) {
 				g_hMain = CreateTimer(5.0, Start);
 				return Plugin_Handled;
 			}
+			else {
+				PrintHintTextToAll("Quelque chose se trouve entre vous deux");
+			}
+		}
+		else {
+			PrintHintTextToAll("Ne sautez pas");
 		}
 	}
 	

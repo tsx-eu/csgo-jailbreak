@@ -18,9 +18,9 @@ public void JB_OnPluginReady() {
 	JB_CreateLastRequest("Spray le plus haut", 	JB_SELECT_CT_UNTIL_DEAD|JB_BEACON|JB_NODAMAGE, DV_CAN_Always, DV_Start, DV_Stop);
 }
 public void OnMapStart() {
-	AddFileToDownloadsTable("materials/rc/dv_spray.vmt");
+	AddFileToDownloadsTable("materials/rc/dv_spray2.vmt");
 	AddFileToDownloadsTable("materials/rc/dv_spray.vtf");
-	g_cSpray = PrecacheDecal("rc/dv_spray.vmt", true);
+	g_cSpray = PrecacheDecal("rc/dv_spray2.vmt", true);
 }
 
 public void DV_Start(int client, int target) {

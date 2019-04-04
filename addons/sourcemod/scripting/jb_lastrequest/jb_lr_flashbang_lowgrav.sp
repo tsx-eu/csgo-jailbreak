@@ -10,6 +10,7 @@
 #include <jb_lastrequest>
 
 int g_iAirAccelerate, g_iGravity;
+int g_iState = 0;
 Handle g_hMain = INVALID_HANDLE;
 
 public void JB_OnPluginReady() {
@@ -23,6 +24,7 @@ stock bool DV_CAN(int client) {
 	return true;
 }
 public void DV_Start(int client, int target) {
+	g_iState = 1;
 	g_iAirAccelerate = GetConVarInt(FindConVar("sv_airaccelerate"));
 	g_iGravity = GetConVarInt(FindConVar("sv_gravity"));
 	ServerCommand("sv_airaccelerate 1000;sv_gravity 200");
@@ -41,6 +43,16 @@ public void DV_Start(int client, int target) {
 	WritePackCell(dp, client);
 	WritePackCell(dp, target);
 }
+public void OnEntityCreated(int entity, const char[] classname) {
+	if( g_iState == 1 && StrEqual(classname, "flashbang_projectile") ) {
+		DispatchKeyValue(entity, "OnUser1", "!self,KillHierarchy,,1.5,-1");
+		AcceptEntityInput(entity, "FireUser1");
+	}
+}
+public Action OnTouch(int entity, int target) {
+	if( target == 0 )
+		AcceptEntityInput(entity, "Kill");
+}
 public Action EventSecondElapsed(Handle timer, Handle dp) {
 	ResetPack(dp);
 	int client = ReadPackCell(dp);
@@ -53,6 +65,7 @@ public Action EventSecondElapsed(Handle timer, Handle dp) {
 }
 
 public void DV_Stop(int client, int target) {
+	g_iState = 0;
 	ServerCommand("sv_airaccelerate %d;sv_gravity %d", g_iAirAccelerate, g_iGravity);
 	
 	KillTimer(g_hMain);

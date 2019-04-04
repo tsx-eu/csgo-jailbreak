@@ -4,6 +4,7 @@
 #include <sdktools>
 #include <smlib>
 #include <smart-menu>
+#include <emitsoundany>
 
 #pragma newdecls required
 
@@ -15,6 +16,13 @@ char g_szOptions[64];
 
 public void JB_OnPluginReady() {
 	JB_CreateLastRequest("Combat de cut", 	JB_SELECT_CT_UNTIL_DEAD|JB_BEACON, DV_CAN_Always, DV_Start, DV_Stop);
+}
+public void OnMapStart() {
+	PrecacheSoundAny("rsc/jailbreak/taunt_bell.wav");
+	PrecacheSoundAny("rsc/jailbreak/heavy_niceshot02.wav");
+	
+	AddFileToDownloadsTable("sound/rsc/jailbreak/taunt_bell.wav");
+	AddFileToDownloadsTable("sound/rsc/jailbreak/heavy_niceshot02.wav");
 }
 public void DV_Start(int client, int target) {
 	SmartMenu menu = new SmartMenu(selectStyle);
@@ -33,18 +41,6 @@ public int selectStyle(SmartMenu menu, MenuAction action, int client, int params
 	if( action == MenuAction_Select ) {
 		menu.GetItem(params, g_szOptions, sizeof(g_szOptions));
 		int target = menu.GetCell("target");
-		
-		g_iEnabledBunny = GetConVarInt(FindConVar("sv_enablebunnyhopping"));
-		g_iAutoBunny = GetConVarInt(FindConVar("sv_autobunnyhopping"));
-		g_iAirAccelerate = GetConVarInt(FindConVar("sv_airaccelerate"));
-		g_iGravity = GetConVarInt(FindConVar("sv_gravity"));
-		
-		if( StrEqual(g_szOptions, "bunny") )
-			ServerCommand("sv_enablebunnyhopping 1;sv_autobunnyhopping 1");	
-		if( StrEqual(g_szOptions, "lowgrav") )
-			ServerCommand("sv_airaccelerate 1000;sv_gravity 200");
-		if( StrEqual(g_szOptions, "slide") )
-			ServerCommand("sv_airaccelerate 1000;sv_gravity 0");
 		
 		SmartMenu submenu = new SmartMenu(selectWeapon);
 		submenu.SetTitle("Combien de HP?\n"); 
@@ -82,6 +78,18 @@ public int selectWeapon(SmartMenu menu, MenuAction action, int client, int param
 		GivePlayerItem(client, "weapon_knife");
 		GivePlayerItem(target, "weapon_knife");
 		
+		g_iEnabledBunny = GetConVarInt(FindConVar("sv_enablebunnyhopping"));
+		g_iAutoBunny = GetConVarInt(FindConVar("sv_autobunnyhopping"));
+		g_iAirAccelerate = GetConVarInt(FindConVar("sv_airaccelerate"));
+		g_iGravity = GetConVarInt(FindConVar("sv_gravity"));
+		
+		if( StrEqual(g_szOptions, "bunny") )
+			ServerCommand("sv_enablebunnyhopping 1;sv_autobunnyhopping 1");	
+		if( StrEqual(g_szOptions, "lowgrav") )
+			ServerCommand("sv_airaccelerate 1000;sv_gravity 200");
+		if( StrEqual(g_szOptions, "slide") )
+			ServerCommand("sv_airaccelerate 1000;sv_gravity 0");
+		
 		if( StrEqual(g_szOptions, "bunny") ) {
 			Entity_SetCollisionGroup(client, COLLISION_GROUP_DEBRIS_TRIGGER);
 			Entity_SetCollisionGroup(target, COLLISION_GROUP_DEBRIS_TRIGGER);
@@ -118,7 +126,7 @@ public int selectWeapon(SmartMenu menu, MenuAction action, int client, int param
 }
 public Action TIMER_DisableGodmod(Handle timer, any client) {
 	SetEntProp(client, Prop_Data, "m_takedamage", 2);
-	PrintHintTextToAll("FIGHT!");
+	EmitSoundToAllAny("rsc/jailbreak/taunt_bell.wav", client);
 }
 public void DV_Stop(int client, int target) {
 	if( StrEqual(g_szOptions, "bunny") ) {
