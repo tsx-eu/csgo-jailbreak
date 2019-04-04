@@ -20,7 +20,7 @@ int g_iState;
 Handle g_hMain = INVALID_HANDLE;
 
 public void JB_OnPluginReady() {
-	JB_CreateLastRequest("CowBoy", 	JB_SELECT_CT_UNTIL_DEAD|JB_BEACON, DV_CAN_Always, DV_Start, DV_Stop);
+	JB_CreateLastRequest("Roulette CowBoy", 	JB_SELECT_CT_UNTIL_DEAD|JB_BEACON, DV_CAN_Always, DV_Start, DV_Stop);
 }
 public void OnMapStart() {
 	PrecacheSoundAny("rsc/jailbreak/taunt_bell.wav");
@@ -249,11 +249,7 @@ bool IsAbleToSee(int entity, int client) {
 		return true;
 		
 	// Check outer 4 corners of player.
-	if (IsRectangleVisible(g_vEyePos[client], g_vAbsCentre[entity], g_vMins[entity], g_vMaxs[entity], 1.10))
-		return true;
-	
-	// Check inner 4 corners of player.
-	if (IsRectangleVisible(g_vEyePos[client], g_vAbsCentre[entity], g_vMins[entity], g_vMaxs[entity], 0.9))
+	if (IsRectangleVisible(g_vEyePos[client], g_vAbsCentre[entity], g_vMins[entity], g_vMaxs[entity], 0.75))
 		return true;
 	
 	return false;
