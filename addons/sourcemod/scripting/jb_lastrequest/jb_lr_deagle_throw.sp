@@ -15,13 +15,30 @@ int g_cLaser, g_wpnClient, g_wpnTarget;
 int g_iClient, g_iTarget, g_iPlaying;
 int g_iLastOwner[2049];
 bool g_bThrowed[MAX_PLAYERS], g_bTossed[MAX_PLAYERS];
-float g_flPositions[MAX_PLAYERS][5][3];
+float g_flPositions[MAX_PLAYERS][10][3];
 
-public void JB_OnPluginReady() {
-	JB_CreateLastRequest("Lancé de deagle", 	JB_SELECT_CT_UNTIL_DEAD|JB_BEACON, DV_CAN_Always, DV_Start, DV_Stop);
+#define		VEC_START	0
+#define		VEC_STOP	1
+#define		VEC_DIR		2
+#define		VEC_ANGLE	3
+#define		VEC_DIRFIX	4
+#define		VEC_ANGFIX	5
+#define		VEC_SRCFIX	6
+#define		VEC_DSTFIX	7
+
+public void OnPluginStart() {
 	for (int i = 1; i <= MaxClients; i++) 
 		if( IsClientInGame(i) )
 			SDKHook(i, SDKHook_WeaponCanUse, OnWeaponCanUse);
+	RegConsoleCmd("force_drop", CmdDrop);
+}
+public Action CmdDrop(int client, int args) {
+	for (int i = 1; i <= MaxClients; i++)
+		if( IsClientInGame(i) )
+			FakeClientCommand(i, "drop");
+}
+public void JB_OnPluginReady() {
+	JB_CreateLastRequest("Lancé de deagle", 	JB_SELECT_CT_UNTIL_DEAD|JB_BEACON, DV_CAN_Always, DV_Start, DV_Stop);
 }
 public void OnMapStart() {
 	g_cLaser = PrecacheModel("materials/sprites/laserbeam.vmt", true);
@@ -64,7 +81,7 @@ public void DV_Start(int client, int target) {
 }
 public Action OnWeaponDrop(int client, int wpnid) {
 	if( wpnid == EntRefToEntIndex(g_wpnClient) || wpnid == EntRefToEntIndex(g_wpnTarget) ) {
-		GetClientEyePosition(client, g_flPositions[client][0]);
+		GetClientEyePosition(client, g_flPositions[client][VEC_START]);
 		g_bThrowed[client] = true;
 		g_iLastOwner[wpnid] = client;
 	}
@@ -89,12 +106,10 @@ public Action DV_DeagleThrow_Task(Handle timer, any entity) {
 	if( Weapon_GetOwner(entity) == -1 ) {
 		int client = g_iLastOwner[entity];
 		float vecStart[3], vecEnd[3];
-		
 		Entity_GetAbsOrigin(entity, vecStart);
 		
 		
-		
-		if( GetVectorDistance(vecStart, g_flPositions[ client ][1]) <= 0.0) {
+		if( GetVectorDistance(vecStart, g_flPositions[ client ][ VEC_STOP ]) <= 0.0) {
 			Entity_GetAbsOrigin(entity, vecEnd);
 			vecEnd[2] += 64.0;
 		
@@ -109,7 +124,7 @@ public Action DV_DeagleThrow_Task(Handle timer, any entity) {
 			return Plugin_Handled;
 		}
 		
-		Entity_GetAbsOrigin(entity, g_flPositions[ client ][1]);
+		Entity_GetAbsOrigin(entity, g_flPositions[ client ][ VEC_STOP ]);
 	}
 	
 	CreateTimer(0.01, DV_DeagleThrow_Task, EntIndexToEntRef(entity) );
@@ -134,11 +149,11 @@ void DV_CheckWinner() {
 		if( !g_bTossed[i] )
 			continue;  
 		
-		SubtractVectors(g_flPositions[i][1], g_flPositions[i][0], g_flPositions[i][2]);
-		GetVectorAngles(g_flPositions[i][2], g_flPositions[i][3]);
+		SubtractVectors(g_flPositions[i][VEC_STOP], g_flPositions[i][VEC_START], g_flPositions[i][VEC_DIR]);
+		GetVectorAngles(g_flPositions[i][VEC_DIR], g_flPositions[i][VEC_ANGLE]);
 		
-		avgAngleCOS += Cosine(g_flPositions[i][3][1]);
-		avgAngleSIN += Sine(g_flPositions[i][3][1]);				
+		avgAngleCOS += Cosine(g_flPositions[i][VEC_ANGLE][1]);
+		avgAngleSIN += Sine(g_flPositions[i][VEC_ANGLE][1]);				
 		
 		avgStart[0] += g_flPositions[i][0][0];
 		avgStart[1] += g_flPositions[i][0][1];
@@ -147,7 +162,7 @@ void DV_CheckWinner() {
 	
 	float avgAngle = NormalizeAngle(ArcTangent2(avgAngleSIN / float(cpt), avgAngleCOS / float(cpt)));
 	ScaleVector(avgStart, 1.0 / float(cpt));
-	float end[3];
+	float end[3], vegAngle[3];
 	end = avgStart;
 	end[2] += 64.0;
 	
@@ -160,25 +175,34 @@ void DV_CheckWinner() {
 		if( !g_bTossed[i] )
 			continue;
 		
-		float diff = getAngleDiff(avgAngle, g_flPositions[i][3][1]);
-		
+		float diff = getAngleDiff(avgAngle, g_flPositions[i][VEC_ANGLE][1]);
+		/*
 		if( diff > delta ) {
 			winner = g_iClient;
 			CPrintToChatAll(MOD_TAG..."les joueurs n'ont pas lancé dans la même direction. La priorité est donné au T, soit %N.", winner);
 			return;
 		}
+		*/
 		
 		TE_SetupBeamPoints(avgStart, g_flPositions[i][1], g_cLaser, g_cLaser, 0, 30, 60.0, 0.5, 0.5, 1, 0.0, {0, 255, 0, 200}, 0);
 		TE_SendToAll();
 		
-		g_flPositions[i][4] = g_flPositions[i][1];
-		g_flPositions[i][4][2] = 0.0;
+		PrintToChatAll("%f", diff);
+		vegAngle[1] = -diff;
+		Math_RotateVector(g_flPositions[i][VEC_DIR], vegAngle, g_flPositions[i][VEC_DIRFIX]);
+		GetVectorAngles(g_flPositions[i][VEC_DIRFIX], g_flPositions[i][VEC_ANGFIX]);
+		AddVectors(g_flPositions[i][VEC_DIRFIX], g_flPositions[i][VEC_START], g_flPositions[i][VEC_DIRFIX]);
 		
-		float dist = GetVectorDistance(avgStart, g_flPositions[i][4]);
-		if( dist > maxDistance ) {
-			maxDistance = dist;
-			winner = i;
-		}
+		Math_RotateVector(g_flPositions[i][VEC_START], g_flPositions[i][VEC_ANGFIX], g_flPositions[i][VEC_SRCFIX]);
+		Math_RotateVector(g_flPositions[i][VEC_DIRFIX], g_flPositions[i][VEC_ANGFIX], g_flPositions[i][VEC_DSTFIX]);
+		
+		
+		g_flPositions[i][VEC_DIRFIX][2] = g_flPositions[i][VEC_START][2];
+		TE_SetupBeamPoints(g_flPositions[i][VEC_START], g_flPositions[i][VEC_DIRFIX], g_cLaser, g_cLaser, 0, 30, 60.0, 0.5, 0.5, 1, 0.0, {255, 0, 0, 200}, 0);
+		TE_SendToAll();
+		
+		TE_SetupBeamPoints(g_flPositions[i][VEC_SRCFIX], g_flPositions[i][VEC_DSTFIX], g_cLaser, g_cLaser, 0, 30, 60.0, 0.5, 0.5, 1, 0.0, {0, 0, 255, 200}, 0);
+		TE_SendToAll();
 	}
 	
 	CPrintToChatAll(MOD_TAG..."%N semble avoir gagné.", winner);
