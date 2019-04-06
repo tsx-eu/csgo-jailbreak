@@ -54,6 +54,9 @@ public int selectWeapon(SmartMenu menu, MenuAction action, int client, int param
 		WritePackCell(dp, client);
 		WritePackCell(dp, target);
 	}
+	else if( action == MenuAction_Cancel && params == MenuCancel_Interrupted ) {
+		JB_DisplayMenu(client, menu.GetCell("target"), DV_Start);
+	}
 	else if( action == MenuAction_End ) {
 		CloseHandle(menu);
 	}

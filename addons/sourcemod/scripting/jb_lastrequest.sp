@@ -481,6 +481,7 @@ public APLRes AskPluginLoad2(Handle hPlugin, bool isAfterMapLoaded, char[] error
 	CreateNative("JB_AddClientInDV", Native_JB_AddClientInDV);
 	CreateNative("JB_CeanTeam", Native_DV_CleanTeam);
 	CreateNative("JB_End", Native_JB_End);
+	CreateNative("JB_IsDvActive", Native_JB_IsDvActive);
 	
 	g_hPluginReady = CreateGlobalForward("JB_OnPluginReady", ET_Ignore);
 	g_hOnStartLR = CreateGlobalForward("OnStartLR", ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
@@ -534,4 +535,16 @@ public int Native_JB_AddClientInDV(Handle plugin, int numParams) {
 		g_iCurrentTeamCount[team]++;
 	}
 
+}
+public int Native_JB_IsDvActive(Handle plugin, int numParams) {
+	Handle pl = GetNativeCell(1);
+	if( pl == INVALID_HANDLE ) {
+		if( g_iDoingDV >= 0 )
+			return view_as<int>(true);
+	}
+	else {
+		if( g_iDoingDV >= 0 && g_hStackPlugin[g_iDoingDV] == pl )
+			return view_as<int>(true);
+	}
+	return view_as<int>(false);
 }

@@ -26,6 +26,7 @@ native int JB_CreateLastRequest(const char name[128], int flags = JB_DEFAULT, JB
 native int JB_SetTeamCount(int id, int team, int count);
 native int JB_AddClientInDV(int client);
 
+native bool JB_IsDvActive(Handle plugin = INVALID_HANDLE);
 native void JB_End();
 native void DV_CleanTeam(int team = 0);
 
@@ -70,4 +71,30 @@ stock void DV_StripWeapon(int client, bool drop = false) {
 			}
 		}
 	}
+}
+stock void JB_DisplayMenu(int client, int target, Function menu) {
+	Handle dp;
+	
+	CreateDataTimer(0.01, DV_REOPEN_MENU_TASK, dp, TIMER_DATA_HNDL_CLOSE);
+	WritePackCell(dp, client);
+	WritePackCell(dp, target);
+	WritePackFunction(dp, menu);
+}
+
+public Action DV_REOPEN_MENU_TASK(Handle timer, Handle dp) {
+	if( !JB_IsDvActive(GetMyHandle()) )
+		return;
+	
+	ResetPack(dp);
+	int client = ReadPackCell(dp);
+	int target = ReadPackCell(dp);
+	Function menu = ReadPackFunction(dp);
+	
+	
+	Call_StartFunction(INVALID_HANDLE, menu);
+	Call_PushCell(client);
+	Call_PushCell(target);
+	Call_Finish();
+	
+	delete dp;
 }

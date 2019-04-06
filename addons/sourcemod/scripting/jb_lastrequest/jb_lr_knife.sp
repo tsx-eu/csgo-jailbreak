@@ -56,6 +56,9 @@ public int selectStyle(SmartMenu menu, MenuAction action, int client, int params
 		submenu.ExitButton = false;
 		submenu.Display(client, MENU_TIME_FOREVER);
 	}
+	else if( action == MenuAction_Cancel && params == MenuCancel_Interrupted ) {
+		DV_Start(client, menu.GetCell("target"));
+	}
 	else if( action == MenuAction_End ) {
 		CloseHandle(menu);
 	}
@@ -118,6 +121,9 @@ public int selectWeapon(SmartMenu menu, MenuAction action, int client, int param
 		CreateTimer(5.0, TIMER_DisableGodmod, target);
 		
 		PrintHintTextToAll("Début du combat dans 5 secondes");
+	}
+	else if( action == MenuAction_Cancel && params == MenuCancel_Interrupted ) {
+		JB_DisplayMenu(client, menu.GetCell("target"), DV_Start);
 	}
 	else if( action == MenuAction_End ) {
 		CloseHandle(menu);

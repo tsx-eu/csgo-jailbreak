@@ -17,7 +17,7 @@ int g_cLaser;
 Handle g_hMain = INVALID_HANDLE;
 float maxTime;
 float g_flCourseStart[3], g_flCourseEnd[3];
-int g_iState, g_iClient;
+int g_iState, g_iClient, g_iTarget;
 
 int g_iAirAccelerate, g_iGravity, g_iEnabledBunny, g_iAutoBunny;
 
@@ -55,6 +55,8 @@ public Action EventShoot(Handle ev, const char[] name, bool broadcast) {
 }
 
 public void DV_Start(int client, int target) {
+	g_iClient = client;
+	
 	SmartMenu menu = new SmartMenu(selectStyle);
 	menu.SetTitle("Quel style de course?\n");
 	menu.SetCell("target", target);
@@ -92,7 +94,6 @@ public int selectStyle(SmartMenu menu, MenuAction action, int client, int params
 		}
 		
 		g_iState = 1;
-		g_iClient = client;
 		g_flCourseStart[2] = g_flCourseEnd[2] = 9999999.9;
 		
 		
@@ -100,6 +101,9 @@ public int selectStyle(SmartMenu menu, MenuAction action, int client, int params
 		g_hMain = CreateDataTimer(0.1, DV_COURSE_TASK, dp, TIMER_REPEAT);
 		WritePackCell(dp, client);
 		WritePackCell(dp, target);
+	}
+	else if( action == MenuAction_Cancel && params == MenuCancel_Interrupted ) {
+		JB_DisplayMenu(client, menu.GetCell("target"), DV_Start);
 	}
 	else if( action == MenuAction_End ) {
 		CloseHandle(menu);
