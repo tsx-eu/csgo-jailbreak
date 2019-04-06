@@ -25,6 +25,11 @@ float g_flPositions[MAX_PLAYERS][10][3];
 #define		VEC_ANGFIX	5
 #define		VEC_SRCFIX	6
 #define		VEC_DSTFIX	7
+#define		VEC_TEMP	8
+
+#define	PI					3.141592653
+#define RadianToDegree(%1) (%1*180.0/PI)
+#define DegreeToRadian(%1) (%1*PI/180.0)
 
 public void OnPluginStart() {
 	for (int i = 1; i <= MaxClients; i++) 
@@ -131,6 +136,8 @@ public Action DV_DeagleThrow_Task(Handle timer, any entity) {
 	return Plugin_Handled;
 }
 void DV_CheckWinner() {
+	int color[2][4] =  {  { 255, 0, 0, 200 }, { 0, 0, 255, 200 } };
+	
 	int cpt;
 	for (int i = 1; i < MaxClients; i++)
 		if( g_bTossed[i] )
@@ -142,25 +149,27 @@ void DV_CheckWinner() {
 	float avgAngleCOS = 0.0, avgAngleSIN = 0.0;
 	float avgStart[3];
 	float delta = 45.0 / 2.0;
-	float maxDistance = 0.0;
+	float maxDistance = -9999999.0;
 	int winner = 0;
 	
 	for (int i = 1; i < MaxClients; i++) {
 		if( !g_bTossed[i] )
 			continue;  
 		
+		g_flPositions[i][VEC_STOP][2] = g_flPositions[i][VEC_START][2];
 		SubtractVectors(g_flPositions[i][VEC_STOP], g_flPositions[i][VEC_START], g_flPositions[i][VEC_DIR]);
+		SubtractVectors(g_flPositions[i][VEC_START], g_flPositions[i][VEC_STOP], g_flPositions[i][VEC_TEMP]);
 		GetVectorAngles(g_flPositions[i][VEC_DIR], g_flPositions[i][VEC_ANGLE]);
 		
-		avgAngleCOS += Cosine(g_flPositions[i][VEC_ANGLE][1]);
-		avgAngleSIN += Sine(g_flPositions[i][VEC_ANGLE][1]);				
+		avgAngleCOS += Cosine(DegreeToRadian(g_flPositions[i][VEC_ANGLE][1]));
+		avgAngleSIN += Sine(DegreeToRadian(g_flPositions[i][VEC_ANGLE][1]));
 		
 		avgStart[0] += g_flPositions[i][0][0];
 		avgStart[1] += g_flPositions[i][0][1];
 		avgStart[2] += g_flPositions[i][0][2];		
 	}
 	
-	float avgAngle = NormalizeAngle(ArcTangent2(avgAngleSIN / float(cpt), avgAngleCOS / float(cpt)));
+	float avgAngle = NormalizeAngle(RadianToDegree(ArcTangent2(avgAngleSIN / float(cpt), avgAngleCOS / float(cpt))));
 	ScaleVector(avgStart, 1.0 / float(cpt));
 	float end[3], vegAngle[3];
 	end = avgStart;
@@ -175,37 +184,53 @@ void DV_CheckWinner() {
 		if( !g_bTossed[i] )
 			continue;
 		
-		float diff = getAngleDiff(avgAngle, g_flPositions[i][VEC_ANGLE][1]);
+		float diff = avgAngle - g_flPositions[i][VEC_ANGLE][1];
 		/*
 		if( diff > delta ) {
 			winner = g_iClient;
 			CPrintToChatAll(MOD_TAG..."les joueurs n'ont pas lancé dans la même direction. La priorité est donné au T, soit %N.", winner);
 			return;
-		}
-		*/
+		}*/
 		
-		TE_SetupBeamPoints(avgStart, g_flPositions[i][1], g_cLaser, g_cLaser, 0, 30, 60.0, 0.5, 0.5, 1, 0.0, {0, 255, 0, 200}, 0);
+		TE_SetupBeamPoints(avgStart, g_flPositions[i][1], g_cLaser, g_cLaser, 0, 30, 60.0, 0.5, 0.5, 1, 0.0, color[GetClientTeam(i)-2], 0);
 		TE_SendToAll();
 		
-		PrintToChatAll("%f", diff);
-		vegAngle[1] = -diff;
-		Math_RotateVector(g_flPositions[i][VEC_DIR], vegAngle, g_flPositions[i][VEC_DIRFIX]);
+		RotateVector(g_flPositions[i][VEC_TEMP], diff, g_flPositions[i][VEC_DIRFIX]);
 		GetVectorAngles(g_flPositions[i][VEC_DIRFIX], g_flPositions[i][VEC_ANGFIX]);
-		AddVectors(g_flPositions[i][VEC_DIRFIX], g_flPositions[i][VEC_START], g_flPositions[i][VEC_DIRFIX]);
-		
-		Math_RotateVector(g_flPositions[i][VEC_START], g_flPositions[i][VEC_ANGFIX], g_flPositions[i][VEC_SRCFIX]);
-		Math_RotateVector(g_flPositions[i][VEC_DIRFIX], g_flPositions[i][VEC_ANGFIX], g_flPositions[i][VEC_DSTFIX]);
+		AddVectors(g_flPositions[i][VEC_DIRFIX], g_flPositions[i][VEC_STOP], g_flPositions[i][VEC_DIRFIX]);
 		
 		
-		g_flPositions[i][VEC_DIRFIX][2] = g_flPositions[i][VEC_START][2];
-		TE_SetupBeamPoints(g_flPositions[i][VEC_START], g_flPositions[i][VEC_DIRFIX], g_cLaser, g_cLaser, 0, 30, 60.0, 0.5, 0.5, 1, 0.0, {255, 0, 0, 200}, 0);
+		TE_SetupBeamPoints(g_flPositions[i][VEC_STOP], g_flPositions[i][VEC_DIRFIX], g_cLaser, g_cLaser, 0, 30, 60.0, 1.0, 16.0, 1, 0.0, color[GetClientTeam(i)-2], 0);
 		TE_SendToAll();
 		
-		TE_SetupBeamPoints(g_flPositions[i][VEC_SRCFIX], g_flPositions[i][VEC_DSTFIX], g_cLaser, g_cLaser, 0, 30, 60.0, 0.5, 0.5, 1, 0.0, {0, 0, 255, 200}, 0);
+		RotateVector(g_flPositions[i][VEC_STOP], -g_flPositions[i][VEC_ANGFIX][1], g_flPositions[i][VEC_SRCFIX]);
+		RotateVector(g_flPositions[i][VEC_DIRFIX], -g_flPositions[i][VEC_ANGFIX][1], g_flPositions[i][VEC_DSTFIX]);
+		
+		TE_SetupBeamPoints(g_flPositions[i][VEC_SRCFIX], g_flPositions[i][VEC_DSTFIX], g_cLaser, g_cLaser, 0, 30, 60.0, 1.0, 16.0, 1, 0.0, color[GetClientTeam(i)-2], 0);
 		TE_SendToAll();
+		
+		PrintToChatAll("%N: %f %f", i, g_flPositions[i][VEC_SRCFIX][0], g_flPositions[i][VEC_SRCFIX][1]);
+		PrintToChatAll("%N: %f %f", i, g_flPositions[i][VEC_DSTFIX][0], g_flPositions[i][VEC_DSTFIX][1]);
+		
+		TE_SetupBeamRingPoint(g_flPositions[i][VEC_SRCFIX], 1.0, 64.0, g_cLaser, g_cLaser, 0, 0, 60.0, 1.0, 0.0, color[GetClientTeam(i)-2], 0, 0);
+		TE_SendToAll();
+		
+		
+		if( -g_flPositions[i][VEC_DSTFIX][0] > maxDistance ) {
+			maxDistance = -g_flPositions[i][VEC_DSTFIX][0];
+			winner = i;
+		}
 	}
 	
+	
 	CPrintToChatAll(MOD_TAG..."%N semble avoir gagné.", winner);
+}
+
+float RotateVector(float point[3], float ang, float dst[3]) {
+	float rad = DegreeToRadian(ang);
+	dst[0] = point[0] * Cosine(rad) - point[1] * Sine(rad);
+	dst[1] = point[1] * Cosine(rad) + point[0] * Sine(rad);
+	dst[2] = point[2];	
 }
 float NormalizeAngle(float a) {
 	if( a > 360.0 )
@@ -213,10 +238,6 @@ float NormalizeAngle(float a) {
 	if( a < 0.0 )
 		a += 360.0;	
 	return a;
-}
-float getAngleDiff(float a, float b) {
-	float n = NormalizeAngle(FloatAbs(a - b));
-	return NormalizeAngle(n > 180.0 ? 360.0 - n : n);
 }
 
 public void DV_Stop(int client, int target) {
