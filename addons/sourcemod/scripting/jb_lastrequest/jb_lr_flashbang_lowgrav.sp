@@ -3,7 +3,6 @@
 #include <sourcemod>
 #include <sdktools>
 #include <smlib>
-#include <smart-menu>
 
 #pragma newdecls required
 

@@ -5,7 +5,6 @@
 #include <sdkhooks>
 #include <csgocolors>
 #include <smlib>
-#include <smart-menu>
 
 #pragma newdecls required
 

@@ -129,6 +129,9 @@ public Action TIMER_DisableGodmod(Handle timer, any client) {
 	EmitSoundToAllAny("rsc/jailbreak/taunt_bell.wav", client);
 }
 public void DV_Stop(int client, int target) {
+	
+	CloseMenu(client);
+	
 	if( StrEqual(g_szOptions, "bunny") ) {
 		if( client > 0 )
 			Entity_SetCollisionGroup(client, COLLISION_GROUP_PLAYER);

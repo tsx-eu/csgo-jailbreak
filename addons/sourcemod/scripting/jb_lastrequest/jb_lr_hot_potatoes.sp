@@ -5,7 +5,6 @@
 #include <sdkhooks>
 #include <smlib>
 #include <emitsoundany>
-#include <smart-menu>
 
 #pragma newdecls required
 

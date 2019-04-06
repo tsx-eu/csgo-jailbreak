@@ -67,6 +67,7 @@ public Action EventSecondElapsed(Handle timer, Handle dp) {
 }
 
 public void DV_Stop(int client, int target) {
+	CloseMenu(client);
 	KillTimer(g_hMain);
 	g_hMain = null;
 }

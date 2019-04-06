@@ -79,5 +79,6 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 }
 
 public void DV_Stop(int client, int target) {
+	CloseMenu(client);
 	g_iClient = g_iTarget = -1;
 }

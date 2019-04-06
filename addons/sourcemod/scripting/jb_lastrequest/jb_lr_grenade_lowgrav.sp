@@ -73,6 +73,7 @@ public Action EventSecondElapsed(Handle timer, Handle dp) {
 
 public void DV_Stop(int client, int target) {
 	ServerCommand("sv_airaccelerate %d;sv_gravity %d", g_iAirAccelerate, g_iGravity);
+	CloseMenu(client);
 	
 	KillTimer(g_hMain);
 	g_hMain = null;

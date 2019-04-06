@@ -185,6 +185,8 @@ public void DV_End(int client, int target) {
 	KillTimer(g_hMain);																// TODO: Gérer ça de façon automatisée ?
 	g_hMain = null;
 	
+	CloseMenu(client);
+	
 	ServerCommand("sv_enablebunnyhopping %d;sv_autobunnyhopping %d", g_iEnabledBunny, g_iAutoBunny);
 	ServerCommand("sv_airaccelerate %d;sv_gravity %d", g_iAirAccelerate, g_iGravity);
 	

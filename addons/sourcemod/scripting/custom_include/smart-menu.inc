@@ -85,3 +85,7 @@ methodmap SmartMenu __nullable__ < Menu {
     	}
     }
 }
+
+stock CloseMenu(int client) {
+	InternalShowMenu(client, "\10", 1);
+}

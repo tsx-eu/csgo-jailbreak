@@ -72,5 +72,6 @@ public Action SwitchDeagleTeam(Handle timer, any client) {
 	SetEntProp(g_iWeaponId, Prop_Send, "m_iPrimaryReserveAmmoCount", 0);
 }
 public void DV_Stop(int client, int target) {
+	CloseMenu(client);
 	g_iWeaponId = g_iClient = g_iTarget = -1;
 }
