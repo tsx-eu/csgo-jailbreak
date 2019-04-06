@@ -149,7 +149,7 @@ void DV_CheckWinner() {
 	float avgAngleCOS = 0.0, avgAngleSIN = 0.0;
 	float avgStart[3];
 	float delta = 45.0 / 2.0;
-	float maxDistance = -9999999.0;
+	float maxDistance = 9999999.0;
 	int winner = 0;
 	
 	for (int i = 1; i < MaxClients; i++) {
@@ -185,12 +185,12 @@ void DV_CheckWinner() {
 			continue;
 		
 		float diff = avgAngle - g_flPositions[i][VEC_ANGLE][1];
-		/*
+		
 		if( diff > delta ) {
 			winner = g_iClient;
 			CPrintToChatAll(MOD_TAG..."les joueurs n'ont pas lancé dans la même direction. La priorité est donné au T, soit %N.", winner);
 			return;
-		}*/
+		}
 		
 		TE_SetupBeamPoints(avgStart, g_flPositions[i][1], g_cLaser, g_cLaser, 0, 30, 60.0, 0.5, 0.5, 1, 0.0, color[GetClientTeam(i)-2], 0);
 		TE_SendToAll();
@@ -209,15 +209,14 @@ void DV_CheckWinner() {
 		TE_SetupBeamPoints(g_flPositions[i][VEC_SRCFIX], g_flPositions[i][VEC_DSTFIX], g_cLaser, g_cLaser, 0, 30, 60.0, 1.0, 16.0, 1, 0.0, color[GetClientTeam(i)-2], 0);
 		TE_SendToAll();
 		
-		PrintToChatAll("%N: %f %f", i, g_flPositions[i][VEC_SRCFIX][0], g_flPositions[i][VEC_SRCFIX][1]);
-		PrintToChatAll("%N: %f %f", i, g_flPositions[i][VEC_DSTFIX][0], g_flPositions[i][VEC_DSTFIX][1]);
+		PrintToChatAll("%N: %f %f", i, g_flPositions[i][VEC_SRCFIX][0], g_flPositions[i][VEC_DSTFIX][0]);
 		
 		TE_SetupBeamRingPoint(g_flPositions[i][VEC_SRCFIX], 1.0, 64.0, g_cLaser, g_cLaser, 0, 0, 60.0, 1.0, 0.0, color[GetClientTeam(i)-2], 0, 0);
 		TE_SendToAll();
 		
 		
-		if( -g_flPositions[i][VEC_DSTFIX][0] > maxDistance ) {
-			maxDistance = -g_flPositions[i][VEC_DSTFIX][0];
+		if( g_flPositions[i][VEC_SRCFIX][0] < maxDistance ) {
+			maxDistance = g_flPositions[i][VEC_SRCFIX][0];
 			winner = i;
 		}
 	}
