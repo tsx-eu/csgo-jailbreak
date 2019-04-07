@@ -88,11 +88,13 @@ int Effect(int client, float origin[3], float angle[3], float offset[3], int col
 	
 	SDKHook(ent, SDKHook_Touch, OnTouch);
 	
-	TE_SetupBeamFollow(ent, g_cLaser, 0, 10.0, 8.0, 8.0, 3, color);
+	TE_SetupBeamFollow(ent, g_cLaser, 0, 1.0, 2.0, 0.1, 1, color);
 	TE_SendToAll();
 }
 public void OnTouch(int entity, int client) {
 	if( client == g_iClient || client == g_iTarget ) {
+		if( Entity_GetOwner(entity) == client )
+			return;
 		AcceptEntityInput(entity, "Break");
 		Entity_SetHealth(client, GetClientHealth(client) - 25);
 		SlapPlayer(client, 0);

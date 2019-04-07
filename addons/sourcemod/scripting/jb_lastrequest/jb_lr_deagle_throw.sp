@@ -147,7 +147,7 @@ void DV_CheckWinner() {
 	
 	float avgAngleCOS = 0.0, avgAngleSIN = 0.0;
 	float avgStart[3];
-	float delta = 45.0 / 2.0;
+	float delta = 45.0/4.0;
 	float maxDistance = 9999999.0;
 	int winner = 0;
 	
@@ -184,8 +184,7 @@ void DV_CheckWinner() {
 			continue;
 		
 		float diff = avgAngle - g_flPositions[i][VEC_ANGLE][1];
-		
-		if( diff > delta ) {
+		if( !(FloatAbs(diff) > 360.0-delta || FloatAbs(diff) < delta) ) {
 			winner = g_iClient;
 			CPrintToChatAll(MOD_TAG..."les joueurs n'ont pas lancé dans la même direction. La priorité est donné au T, soit %N.", winner);
 			return;
