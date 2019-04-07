@@ -45,6 +45,7 @@ public void OnMapStart() {
 }
 
 public int OnTimerRecord(int client, int track, int style, float newTime, float bestTime, int currentRank, int newRank) {
+	Timer_ForceReloadCache();
 	char szNewPlayerTime[64], szBestPlayerTime[64], szPlayerAuth[32];
 	Timer_SecondsToTime(newTime, szNewPlayerTime, sizeof(szNewPlayerTime), 2);
 	Timer_SecondsToTime(bestTime, szBestPlayerTime, sizeof(szBestPlayerTime), 2);
@@ -73,9 +74,9 @@ public int OnTimerRecord(int client, int track, int style, float newTime, float 
 	fBeatenPlayerTimeDiff = fBeatenPlayerTime - newTime;
 	Timer_SecondsToTime(fBeatenPlayerTimeDiff, szBeatenPlayerTimeDiff, sizeof(szBeatenPlayerTimeDiff), 2);
 
-	PrintToChatAll("%f - fServerRecordTime", fServerRecordTime);
+	/*PrintToChatAll("%f - fServerRecordTime", fServerRecordTime);
 	PrintToChatAll("%f - newTime", newTime);
-	PrintToChatAll("%f - bestTime", bestTime);
+	PrintToChatAll("%f - bestTime", bestTime);*/
 
 	char szGetTrack[32], szGetPlayerPosition[32], szGetTrackName[32];
 	if(track == 0) {
@@ -104,7 +105,7 @@ public int OnTimerRecord(int client, int track, int style, float newTime, float 
 	}
 	FormatEx(szGetPlayerPosition, sizeof(szGetPlayerPosition), "Pos : {white}%d/%d{blue}.", newRank, iTotalRanks);
 
-	if(newTime == fServerRecordTime) {
+	if(newTime <= fServerRecordTime) {
 		if(track == 0)
 			SetHudTextParamsEx(-1.0, 0.3, 2.0, {255, 102, 0, 255}, {255, 255, 255, 255}, 2, 0.10, 0.08, 0.010);
 		else
@@ -117,7 +118,10 @@ public int OnTimerRecord(int client, int track, int style, float newTime, float 
 	}
 
 	if(IsRankedStyle) {
-		if(newTime == fServerRecordTime) { //Nouveau serveur record
+		if(newTime <= fServerRecordTime || fServerRecordTime <= 0.0) { //Nouveau serveur record
+			if(iTotalRanks == 0)
+				iTotalRanks++;
+				
 			ChooseRandomSoundSR();
 			CPrintToChatAll("{darkred}*** NOUVEAU RECORD SERVEUR ***");
 			if((iTotalRanks - 1) == 0 && currentRank <= 0) { //Premier temps sur la map
