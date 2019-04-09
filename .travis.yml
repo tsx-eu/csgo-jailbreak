@@ -13,6 +13,7 @@ env:
 
 #And compile!
 install:
+    - cd $HOME/build/kossolax/rebels-corp/
     - wget http://sourcemod.net/smdrop/$SMVERSION/ -O - | grep "\.tar\.gz" | sed 's/^.*"sourcemod/sourcemod/;s/\.tar\.gz".*$/.tar.gz/' | tail --lines=1 > sourcemod
     - wget --input-file=sourcemod --base=http://sourcemod.net/smdrop/$SMVERSION/
     - tar -xzf $(cat sourcemod)
@@ -25,5 +26,6 @@ before_script:
     - chmod 777 $HOME/compiled/
 
 script:
-    - for i in addons/scripting/jb_lastrequest/*.sp; do echo -e "\n\n----------------------------------------------------------------------------\nCompiling... $i"; $HOME/addons/sourcemod/scripting/spcomp $i -o=$HOME/compiled/`basename $i | cut -d. -f1` -O2; RETVAL=$?; if [ $RETVAL -ne 0 ]; then exit 1; fi; done;
+    - cd $HOME/build/kossolax/rebels-corp/addons/sourcemod/scripting/
+    - for i in ./jb_lastrequest/*.sp; do echo -e "\n\n----------------------------------------------------------------------------\nCompiling... $i"; ./spcomp $i -o=$HOME/compiled/`basename $i | cut -d. -f1` -O2; RETVAL=$?; if [ $RETVAL -ne 0 ]; then exit 1; fi; done;
 
