@@ -81,12 +81,12 @@ stock void DV_StripWeapon(int client, bool drop = false) {
 }
 stock void JB_DisplayMenu(Function menu, int ...) {
 	Handle dp;
+	va_start(2);
 	
 	CreateDataTimer(0.01, DV_REOPEN_MENU_TASK, dp, TIMER_DATA_HNDL_CLOSE);
 	WritePackFunction(dp, menu);
 	WritePackCell(dp, va_args());
 	
-	va_start(2);
 	while ( va_more() )
 		WritePackCell(dp, va_arg());
 	va_end()
