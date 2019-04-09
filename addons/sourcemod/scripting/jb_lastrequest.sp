@@ -7,6 +7,7 @@
 #include <emitsoundany>
 #include <cstrike>
 #include <smlib>
+#include <smart-menu>
 
 #pragma newdecls required
 
@@ -224,11 +225,12 @@ void displayDV(int client) {
 	PrintHintTextToAll("%N\nchoisis sa dernière volonté", client);
 	EmitSoundToAllAny("ui/bonus_alert_start.wav");
 }
-void displayDV_SelectCT(int client) {
+void displayDV_SelectCT(int client, int id) {
 	static char tmp[2][64];
 	
-	Menu menu = new Menu(menuDVchooseCT);
+	Menu menu = new SmartMenu(menuDVchooseCT);
 	menu.SetTitle("Choisissez un CT\n");
+	menu.SetCell("id", id);
 	
 	for (int i = 1; i <= MaxClients; i++) {
 		if( !IsClientInGame(i) )
@@ -249,7 +251,7 @@ void displayDV_SelectCT(int client) {
 		if( skip )
 			continue;
 		
-		Format(tmp[0], sizeof(tmp[]), "%d %d", id, i);
+		Format(tmp[0], sizeof(tmp[]), "%d", i);
 		Format(tmp[1], sizeof(tmp[]), "%N", i);
 		
 		menu.AddItem(tmp[0], tmp[1]);
@@ -265,7 +267,7 @@ public int menuDV(Menu menu, MenuAction action, int client, int params) {
 		int id = StringToInt(options);
 		
 		if( g_iStackFlag[id] & JB_SHOULD_SELECT_CT ) {
-			displayDV_SelectCT(id, client);
+			displayDV_SelectCT(client, id);
 		}
 		else {
 			DV_Start(id);
@@ -283,20 +285,20 @@ public int menuDVchooseCT(Menu menu, MenuAction action, int client, int params) 
 	static char options[64], data[2][16];
 	if( action == MenuAction_Select ) {
 		GetMenuItem(menu, params, options, sizeof(options));
-		ExplodeString(options, " ", data, sizeof(data), sizeof(data[]));
+		int id = menu.GetCell("id");
+		int teamCount = StringToInt(data[1]);
 		
-		int id = StringToInt(data[0]);
-		g_iCurrentTeam[CS_TEAM_CT][g_iCurrentTeamCount[CS_TEAM_CT]] = StringToInt(data[1]);
+		g_iCurrentTeam[CS_TEAM_CT][g_iCurrentTeamCount[CS_TEAM_CT]] = teamCount;
 		g_iCurrentTeamCount[CS_TEAM_CT]++;
 		
 		if( g_iCurrentTeamCount[CS_TEAM_CT] >= g_iStackTeam[id][CS_TEAM_CT] )
 			DV_Start(id);
 		else
-			displayDV_SelectCT(id, client);
+			displayDV_SelectCT(client, id);
 		
 	}
 	else if( action == MenuAction_Cancel && params == MenuCancel_Interrupted ) {
-		JB_DisplayMenu(displayDV_SelectCT, client);
+		JB_DisplayMenu(displayDV_SelectCT, client, menu.GetCell("id"));
 	}
 	else if( action == MenuAction_End ) {
 		CloseHandle(menu);
