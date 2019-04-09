@@ -224,7 +224,7 @@ void displayDV(int client) {
 	PrintHintTextToAll("%N\nchoisis sa dernière volonté", client);
 	EmitSoundToAllAny("ui/bonus_alert_start.wav");
 }
-void displayDV_SelectCT(int id, int client) {
+void displayDV_SelectCT(int client) {
 	static char tmp[2][64];
 	
 	Menu menu = new Menu(menuDVchooseCT);
@@ -271,6 +271,9 @@ public int menuDV(Menu menu, MenuAction action, int client, int params) {
 			DV_Start(id);
 		}
 	}
+	else if( action == MenuAction_Cancel && params == MenuCancel_Interrupted ) {
+		JB_DisplayMenu(displayDV, client);
+	}
 	else if( action == MenuAction_End ) {
 		CloseHandle(menu);
 	}
@@ -291,6 +294,9 @@ public int menuDVchooseCT(Menu menu, MenuAction action, int client, int params) 
 		else
 			displayDV_SelectCT(id, client);
 		
+	}
+	else if( action == MenuAction_Cancel && params == MenuCancel_Interrupted ) {
+		JB_DisplayMenu(displayDV_SelectCT, client);
 	}
 	else if( action == MenuAction_End ) {
 		CloseHandle(menu);
