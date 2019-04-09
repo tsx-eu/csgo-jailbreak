@@ -1,4 +1,5 @@
 #include <cstrike>
+#include <valist>
 
 #define MOD_TAG					"{lightgreen}[ {default}LR {lightgreen}] "
 #define MOD_TAG_START			"{default}"
@@ -72,13 +73,17 @@ stock void DV_StripWeapon(int client, bool drop = false) {
 		}
 	}
 }
-stock void JB_DisplayMenu(int client, int target, Function menu) {
+stock void JB_DisplayMenu(Function menu, int ...) {
 	Handle dp;
 	
 	CreateDataTimer(0.01, DV_REOPEN_MENU_TASK, dp, TIMER_DATA_HNDL_CLOSE);
-	WritePackCell(dp, client);
-	WritePackCell(dp, target);
 	WritePackFunction(dp, menu);
+	WritePackCell(dp, va_args());
+	
+	va_start(2);
+	while ( va_more() )
+		WritePackCell(dp, va_arg());
+	va_end()
 }
 
 public Action DV_REOPEN_MENU_TASK(Handle timer, Handle dp) {
@@ -86,14 +91,13 @@ public Action DV_REOPEN_MENU_TASK(Handle timer, Handle dp) {
 		return;
 	
 	ResetPack(dp);
-	int client = ReadPackCell(dp);
-	int target = ReadPackCell(dp);
 	Function menu = ReadPackFunction(dp);
+	int count = ReadPackCell(dp);
 	
 	
 	Call_StartFunction(INVALID_HANDLE, menu);
-	Call_PushCell(client);
-	Call_PushCell(target);
+	for(int i =0; i<count; i++)
+		Call_PushCell(ReadPackCell(dp));
 	Call_Finish();
 	
 	delete dp;
