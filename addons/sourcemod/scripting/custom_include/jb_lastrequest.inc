@@ -1,4 +1,10 @@
 #include <cstrike>
+
+#if defined _jb_last_request_included
+ #endinput
+#endif
+#define _jb_last_request_included
+
 #include <valist>
 
 #define MOD_TAG					"{lightgreen}[ {default}LR {lightgreen}] "
@@ -75,15 +81,15 @@ stock void DV_StripWeapon(int client, bool drop = false) {
 }
 stock void JB_DisplayMenu(Function menu, int ...) {
 	Handle dp;
+	va_start(2);
 	
 	CreateDataTimer(0.01, DV_REOPEN_MENU_TASK, dp, TIMER_DATA_HNDL_CLOSE);
 	WritePackFunction(dp, menu);
 	WritePackCell(dp, va_args());
 	
-	va_start(2);
 	while ( va_more() )
 		WritePackCell(dp, va_arg());
-	va_end()
+	va_end();
 }
 
 public Action DV_REOPEN_MENU_TASK(Handle timer, Handle dp) {
