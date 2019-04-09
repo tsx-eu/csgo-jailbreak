@@ -89,7 +89,7 @@ stock void JB_DisplayMenu(Function menu, int ...) {
 	
 	while ( va_more() )
 		WritePackCell(dp, va_arg());
-	va_end()
+	va_end();
 }
 
 public Action DV_REOPEN_MENU_TASK(Handle timer, Handle dp) {
