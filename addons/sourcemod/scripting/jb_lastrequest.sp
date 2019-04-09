@@ -228,7 +228,7 @@ void displayDV(int client) {
 void displayDV_SelectCT(int client, int id) {
 	static char tmp[2][64];
 	
-	Menu menu = new SmartMenu(menuDVchooseCT);
+	SmartMenu menu = new SmartMenu(menuDVchooseCT);
 	menu.SetTitle("Choisissez un CT\n");
 	menu.SetCell("id", id);
 	
@@ -281,7 +281,7 @@ public int menuDV(Menu menu, MenuAction action, int client, int params) {
 	}
 	return;
 }
-public int menuDVchooseCT(Menu menu, MenuAction action, int client, int params) {
+public int menuDVchooseCT(SmartMenu menu, MenuAction action, int client, int params) {
 	static char options[64], data[2][16];
 	if( action == MenuAction_Select ) {
 		GetMenuItem(menu, params, options, sizeof(options));
