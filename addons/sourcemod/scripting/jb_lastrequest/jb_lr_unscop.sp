@@ -49,7 +49,7 @@ public int selectWeapon(SmartMenu menu, MenuAction action, int client, int param
 		g_iTarget = target;
 	}
 	else if( action == MenuAction_Cancel && params == MenuCancel_Interrupted ) {
-		JB_DisplayMenu(client, menu.GetCell("target"), DV_Start);
+		JB_DisplayMenu(DV_Start, client, menu.GetCell("target"));
 	}
 	else if( action == MenuAction_End ) {
 		CloseHandle(menu);
