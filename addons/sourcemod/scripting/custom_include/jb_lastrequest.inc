@@ -1,4 +1,10 @@
 #include <cstrike>
+
+#if defined _jb_last_request_included
+ #endinput
+#endif
+#define _jb_last_request_included
+
 #include <valist>
 
 #define MOD_TAG					"{lightgreen}[ {default}LR {lightgreen}] "
