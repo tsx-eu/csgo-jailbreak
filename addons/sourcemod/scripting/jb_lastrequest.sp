@@ -181,6 +181,9 @@ public Action cmd_DV(int client, int args) {
 void displayDV(int client) {
 	static char tmp[8];
 	
+	int t = DV_CanBeStarted();
+	int dv = 0;
+	
 	Menu menu = new Menu(menuDV);
 	menu.SetTitle("Choisissez votre dernière volonté\n");
 	
@@ -193,37 +196,27 @@ void displayDV(int client) {
 	for (int i = 0; i < g_iStackCount; i++) {
 		int id = g_iSorted[i];
 		
-		Format(tmp, sizeof(tmp), "%d", id);
-		
-		bool can;
-		
-		if( g_iStackTeam[id][CS_TEAM_CT] > targetCount ) {
-			can = false;
-		}
-		else if( g_fStackCondition[id] == INVALID_FUNCTION ) {
-			can = true;
-		}
-		else {
+		if( g_iStackTeam[id][CS_TEAM_T] == t ) {
+			Format(tmp, sizeof(tmp), "%d", id);
 			
-			Call_StartFunction(g_hStackPlugin[id], g_fStackCondition[id]);
-			if( g_iStackTeam[i][CS_TEAM_T] > 1 ) {
-				Call_PushArray(g_iCurrentTeam[CS_TEAM_T], g_iCurrentTeamCount[CS_TEAM_T]);
-				Call_PushCell(g_iCurrentTeamCount[CS_TEAM_T]);
-			}
-			else
-				Call_PushCell(g_iCurrentTeam[CS_TEAM_T][0]);
-			Call_Finish(can);
-			
+			bool can = DV_CanBePlayed(id, targetCount);		
+			menu.AddItem(tmp, g_cStackName[id], can ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
+			if( can )
+				dv++;
 		}
-		
-		menu.AddItem(tmp, g_cStackName[id], can ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
 	}
 	
 	menu.ExitButton = false;
-	menu.Display(client, MENU_TIME_FOREVER);
 	
-	PrintHintTextToAll("%N\nchoisis sa dernière volonté", client);
-	EmitSoundToAllAny("ui/bonus_alert_start.wav");
+	if( dv >  0) {
+		menu.Display(client, MENU_TIME_FOREVER);
+		PrintHintTextToAll("%N\nchoisis sa dernière volonté", client);
+		EmitSoundToAllAny("ui/bonus_alert_start.wav");
+	}
+	else {
+		CPrintToChat(client, MOD_TAG ... "Vous n'avez {red}pas{default} le droit d'utiliser le " ... MOD_TAG_START ... "!dv" ... MOD_TAG_END ... " maintenant.");
+		delete menu;
+	}
 }
 void displayDV_SelectCT(int client, int id) {
 	static char tmp[2][64];
@@ -356,22 +349,30 @@ int DV_CanBeStarted() {
 	if( g_iDoingDV >= 0 )
 		return -1;
 			
-	int ct, t, found;
+	int ct, t;
 	for (int i = 1; i <= MaxClients; i++) {
 		if( !IsClientInGame(i) || !IsPlayerAlive(i) )
 			continue;
 		if( GetClientTeam(i) == CS_TEAM_CT )
 			ct++;
-		else if( GetClientTeam(i) == CS_TEAM_T ) {
+		else if( GetClientTeam(i) == CS_TEAM_T )
 			t++;
-			found = i;
-		}
 	}
 			
-	if( t > 1 || ct == 0 ) 
+	if( ct == 0 ) {
 		return -1;
+	}
+	if( t > 1 ) {
+		for (int id = 0; id < g_iStackCount; id++) {
+			if( g_iStackTeam[id][CS_TEAM_T] == t ) {
+				if( DV_CanBePlayed(id, ct) )
+					return t;
+			}
+		}
+		return -1;
+	}
 	
-	return found;
+	return t;
 }
 int DV_CountTeam(int team) {
 	int t = 0;
@@ -425,7 +426,34 @@ public bool TR_FilterClients(int entity, int mask, any client) {
 	return true;
 }
 // -------------------------------------------------------------------------------------------------------------------------------
-int DV_Start(int id) {
+bool DV_CanBePlayed(int id, int targetCount=1) {
+	bool can;
+		
+	if( g_iStackTeam[id][CS_TEAM_CT] > targetCount ) {
+		can = false;
+	}
+	else if( g_fStackCondition[id] == INVALID_FUNCTION ) {
+		can = true;
+	}
+	else {
+		Call_StartFunction(g_hStackPlugin[id], g_fStackCondition[id]);
+		if( g_iStackTeam[id][CS_TEAM_T] > 1 ) {
+			Call_PushArray(g_iCurrentTeam[CS_TEAM_T], g_iCurrentTeamCount[CS_TEAM_T]);
+			Call_PushCell(g_iCurrentTeamCount[CS_TEAM_T]);
+		}
+		else
+			Call_PushCell(g_iCurrentTeam[CS_TEAM_T][0]);
+		Call_Finish(can);
+	}
+	return can;
+}
+bool DV_Start(int id) {
+	if( !DV_CanBePlayed(id, g_iCurrentTeamCount[CS_TEAM_CT]) ) {
+		CPrintToChatAll("%s La {blue}DV{default} n'est plus disponible.", MOD_TAG);
+		displayDV(g_iCurrentTeam[CS_TEAM_T][0]);
+		return false;
+	}
+	
 	PrintHintTextToAll("Dernière volonté:\n%s", g_cStackName[id]);
 		
 	if( g_iCurrentTeamCount[CS_TEAM_CT] > 0 )
@@ -447,8 +475,10 @@ int DV_Start(int id) {
 	Call_PushCell(g_iInitialTeam[CS_TEAM_T][0]);
 	Call_PushCell(g_iInitialTeam[CS_TEAM_CT][0]);	
 	Call_Finish();
+	
+	return false;
 }
-int DV_Stop(int id) {
+void DV_Stop(int id) {
 	CPrintToChatAll("%s La {blue}DV{default} est terminée.", MOD_TAG);
 	
 	if( g_fStackEnd[id] != INVALID_FUNCTION )
