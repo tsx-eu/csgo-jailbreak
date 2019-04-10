@@ -31,7 +31,7 @@ script:
     - for i in ./*/*.sp; do echo -e "\n\n----------------------------------------------------------------------------\nCompiling... $i"; ./spcomp -i include/ -i custom_include/ $i -o=$HOME/compiled/`basename $i | cut -d. -f1` -O2; RETVAL=$?; if [ $RETVAL -ne 0 ]; then exit 1; fi; done;
 
 before_deploy:
-    - git tag $TRAVIS_BUILD_NUMBER
+    - git tag -f travis-dev-build
 
 deploy:
   provider: releases
@@ -40,5 +40,8 @@ deploy:
   file_glob: true
   file: $HOME/compiled/*.smx
   skip_cleanup: true
+  overwrite: true
+  name: development build
+  body: Automatic development build of $TRAVIS_BRANCH ($TRAVIS_COMMIT) built by Travis CI on $(date +'%F %T %Z').
   on:
     repo: kossolax/rebels-corp
