@@ -178,6 +178,17 @@ public Action cmd_DV(int client, int args) {
 	displayDV(client);
 	return Plugin_Handled;
 }
+void initTeam(int team) {
+	g_iCurrentTeamCount[team] = 0;
+	for (int i = 1; i < MaxClients; i++) {
+		if( !IsClientInGame(i) || !IsPlayerAlive(i) )
+			continue;
+		if( GetClientTeam(i) != team )
+			continue;
+		
+		g_iCurrentTeam[team][g_iCurrentTeamCount[team]++] = i;
+	}
+}
 void displayDV(int client) {
 	static char tmp[8];
 	
@@ -187,8 +198,7 @@ void displayDV(int client) {
 	Menu menu = new Menu(menuDV);
 	menu.SetTitle("Choisissez votre dernière volonté\n");
 	
-	g_iCurrentTeam[CS_TEAM_T][0] = client;
-	g_iCurrentTeamCount[CS_TEAM_T] = 1;
+	initTeam(CS_TEAM_T);
 	g_iCurrentTeamCount[CS_TEAM_CT] = 0;
 	
 	int targetCount = DV_CountTeam(CS_TEAM_CT);
@@ -348,7 +358,7 @@ int DV_CanBeStarted() {
 		return -1;
 	if( g_iDoingDV >= 0 )
 		return -1;
-			
+	
 	int ct, t;
 	for (int i = 1; i <= MaxClients; i++) {
 		if( !IsClientInGame(i) || !IsPlayerAlive(i) )
@@ -358,11 +368,12 @@ int DV_CanBeStarted() {
 		else if( GetClientTeam(i) == CS_TEAM_T )
 			t++;
 	}
-			
+	
 	if( ct == 0 ) {
 		return -1;
 	}
 	if( t > 1 ) {
+		initTeam(CS_TEAM_T);
 		for (int id = 0; id < g_iStackCount; id++) {
 			if( g_iStackTeam[id][CS_TEAM_T] == t ) {
 				if( DV_CanBePlayed(id, ct) )
@@ -428,7 +439,7 @@ public bool TR_FilterClients(int entity, int mask, any client) {
 // -------------------------------------------------------------------------------------------------------------------------------
 bool DV_CanBePlayed(int id, int targetCount=1) {
 	bool can;
-		
+	
 	if( g_iStackTeam[id][CS_TEAM_CT] > targetCount ) {
 		can = false;
 	}
@@ -545,7 +556,7 @@ public int Native_JB_CreateLastRequest(Handle plugin, int numParams) {
 public int SortAscending(int a, int b, const int[] array, Handle hdl) {
 	return strcmp(g_cStackName[a], g_cStackName[b]);
 }
-public int Native_JB_SetTeamCount(Handle plugin, int numParams) {	
+public int Native_JB_SetTeamCount(Handle plugin, int numParams) {
 	g_iStackTeam[GetNativeCell(1)][GetNativeCell(2)] = GetNativeCell(3);	
 }
 public int Native_JB_End(Handle plugin, int numParams) {

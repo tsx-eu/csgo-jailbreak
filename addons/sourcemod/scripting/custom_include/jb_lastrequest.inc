@@ -39,15 +39,15 @@ native void DV_CleanTeam(int team = 0);
 
 typeset JB_Condition {
 	function bool(int client);
-	function bool(int[] client, int clientCount);
+	function bool(int[] clients, int clientCount);
 }
 typeset JB_Event {
 	function void(int client);
 	function void(int client, int target);
 	function void(int client, int[] targets, int targetCount);
-	function void(int[] client, int clientCount);
-	function void(int[] client, int clientCount, int target);
-	function void(int[] client, int clientCount, int[] targets, int targetCount);
+	function void(int[] clients, int clientCount);
+	function void(int[] clients, int clientCount, int target);
+	function void(int[] clients, int clientCount, int[] targets, int targetCount);
 }
 
 stock bool DV_CAN_Always(int client) {
@@ -64,7 +64,25 @@ stock bool DV_CAN_Min3CT(int client) {
 stock bool DV_CAN_VIP(int client) {
 	return view_as<bool>(GetUserFlagBits(client) & ADMFLAG_CUSTOM1);
 }
+stock bool DV_CAN_Cupidon(int[] clients, int clientCount) {
+	if( clientCount != 2 )
+		return false;
+	static char tmp[32];
 
+	int i = 0;
+	while ( (i = FindEntityByClassname(i, "info_particle_system")) != INVALID_ENT_REFERENCE ) {
+		GetEntPropString(i, Prop_Data, "m_iTargetName", tmp, sizeof(tmp)); 
+		PrintToChatAll("%d -> %s -> %d", i, tmp, Entity_GetParent(i));
+	}
+
+	for (i = 0; i < clientCount; i++) {
+		Format(tmp, sizeof(tmp), "particlecupidon%d", clients[i]);
+		if( Entity_FindByName(tmp, "info_particle_system") == INVALID_ENT_REFERENCE )
+			return false;
+	}
+	
+	return true;
+}
 stock void DV_StripWeapon(int client, bool drop = false) {
 	int wepIdx = -1;
 	for( int i = 0; i < 5; i++ ) {

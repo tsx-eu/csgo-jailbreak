@@ -9,22 +9,28 @@
 #pragma newdecls required
 
 #include <jb_lastrequest>
-int g_cLaser, g_wpnClient, g_wpnTarget;
+int g_cLaser;
 
-int g_iClient, g_iTarget, g_iPlaying, g_iState;
+int g_iPlaying, g_iState;
 int g_iLastOwner[2049];
+int g_iClient;
+int g_iWeapons[MAX_PLAYERS];
 bool g_bThrowed[MAX_PLAYERS], g_bTossed[MAX_PLAYERS];
-float g_flPositions[MAX_PLAYERS][2][3], g_flTarget[3];
+float g_flPositions[MAX_PLAYERS][3], g_flTarget[3];
 Handle g_hMain = INVALID_HANDLE;
 
 public void OnPluginStart() {
 	HookEvent("weapon_fire",		EventShoot,			EventHookMode_Post);
-}
-public void JB_OnPluginReady() {
-	JB_CreateLastRequest("Lancé de deagle de précision", 	JB_SELECT_CT_UNTIL_DEAD|JB_BEACON|JB_NODAMAGE, DV_CAN_Always, DV_Start, DV_Stop);
 	for (int i = 1; i <= MaxClients; i++) 
 		if( IsClientInGame(i) )
 			SDKHook(i, SDKHook_WeaponCanUse, OnWeaponCanUse);
+}
+public void JB_OnPluginReady() {
+	JB_CreateLastRequest("Lancé de deagle de précision", 	JB_SELECT_CT_UNTIL_DEAD|JB_BEACON|JB_NODAMAGE, DV_CAN_Always, DV_Start, DV_Stop);
+	
+	int id = JB_CreateLastRequest("Lancé de deagle de précision", 	JB_SELECT_CT_UNTIL_DEAD|JB_BEACON|JB_NODAMAGE, DV_CAN_Cupidon, DV_StartMulti, DV_StopMulti);
+	JB_SetTeamCount(id, CS_TEAM_T, 2);
+	JB_SetTeamCount(id, CS_TEAM_CT, 2);
 }
 public void OnMapStart() {
 	g_cLaser = PrecacheModel("materials/sprites/laserbeam.vmt", true);
@@ -41,17 +47,37 @@ public Action OnWeaponCanUse(int client, int wepID) {
 		return Plugin_Handled;
 	return Plugin_Continue;
 }
-
-public void DV_Start(int client, int target) {
+public void DV_StartMulti(int[] clients, int clientCount, int[] targets, int targetCount) {
 	g_iState = 1;
-	g_iClient = client;
-	g_iTarget = target;
+	g_iClient = clients[0];
 	g_flTarget[2] = 9999999.9;
 	
-	SDKHook(g_iClient, SDKHook_WeaponDropPost, OnWeaponDrop);
-	SDKHook(g_iTarget, SDKHook_WeaponDropPost, OnWeaponDrop);
+	for (int i = 0; i < clientCount; i++) {
+		int client = clients[i];
+		
+		DV_StripWeapon(client);
+		SDKHook(client, SDKHook_WeaponDropPost, OnWeaponDrop);
+		g_iWeapons[client] = EntIndexToEntRef(Client_GiveWeaponAndAmmo(client, "weapon_deagle", true, 0, 0, 0, 0));
+		SetEntityRenderMode(g_iWeapons[client], RENDER_TRANSCOLOR);
+		CreateTimer(0.01, DV_DeagleThrow_Task,g_iWeapons[client] );
+	}
+	for (int i = 0; i < targetCount; i++) {
+		int client = clients[i];
+		
+		DV_StripWeapon(client);
+		SDKHook(client, SDKHook_WeaponDropPost, OnWeaponDrop);
+		g_iWeapons[client] = EntIndexToEntRef(Client_GiveWeaponAndAmmo(client, "weapon_deagle", true, 0, 0, 0, 0));
+		SetEntityRenderMode(g_iWeapons[client], RENDER_TRANSCOLOR);
+		CreateTimer(0.01, DV_DeagleThrow_Task,g_iWeapons[client] );
+	}	
 	
 	g_hMain = CreateTimer(0.1, DV_TASK, _, TIMER_REPEAT);
+}
+public void DV_Start(int client, int target) {
+	 int clients[1], targets[1];
+	 clients[0] = client;
+	 targets[0] = target;
+	 DV_StartMulti(clients, 1, targets, 1);
 }
 public Action DV_TASK(Handle timer, Handle dp) {
 	float vecEnd[3];
@@ -75,31 +101,17 @@ public Action EventShoot(Handle ev, const char[] name, bool broadcast) {
 			GetClientAbsOrigin(client, g_flTarget);
 			g_iState = 2;
 			
-			DV_StripWeapon(g_iClient);
-			DV_StripWeapon(g_iTarget);
-
-			g_wpnClient = EntIndexToEntRef(Client_GiveWeaponAndAmmo(g_iClient, "weapon_deagle", true, 0, 0, 0, 0));
-			g_wpnTarget = EntIndexToEntRef(Client_GiveWeaponAndAmmo(g_iTarget, "weapon_deagle", true, 0, 0, 0, 0));
-			
-			SetEntityRenderMode(g_wpnClient, RENDER_TRANSCOLOR);
-			SetEntityRenderMode(g_wpnTarget, RENDER_TRANSCOLOR);
-			
-			SetEntityRenderColor(g_wpnClient, 255, 0, 0, 200);
-			SetEntityRenderColor(g_wpnTarget, 0, 0, 255, 200);
-			
-			CreateTimer(0.01, DV_DeagleThrow_Task, g_wpnClient );
-			CreateTimer(0.01, DV_DeagleThrow_Task, g_wpnTarget );
-			
-			for (int i = 1; i < MaxClients; i++)
+			for (int i = 1; i < MaxClients; i++) {
 				g_bThrowed[i] = g_bTossed[i] = false;
+				
+			}
 			
 			g_iPlaying = 2;
 		}
 	}
 }
 public Action OnWeaponDrop(int client, int wpnid) {
-	if( wpnid == EntRefToEntIndex(g_wpnClient) || wpnid == EntRefToEntIndex(g_wpnTarget) ) {
-		GetClientEyePosition(client, g_flPositions[client][0]);
+	if( g_iWeapons[client] == EntIndexToEntRef(wpnid) ) {
 		g_bThrowed[client] = true;
 		g_iLastOwner[wpnid] = client;
 	}
@@ -127,7 +139,7 @@ public Action DV_DeagleThrow_Task(Handle timer, any entity) {
 		
 		Entity_GetAbsOrigin(entity, vecStart);
 		
-		if( GetVectorDistance(vecStart, g_flPositions[ client ][1]) <= 0.0) {
+		if( GetVectorDistance(vecStart, g_flPositions[ client ]) <= 0.0) {
 			Entity_GetAbsOrigin(entity, vecEnd);
 			vecEnd[2] += 64.0;
 		
@@ -142,7 +154,7 @@ public Action DV_DeagleThrow_Task(Handle timer, any entity) {
 			return Plugin_Handled;
 		}
 		
-		Entity_GetAbsOrigin(entity, g_flPositions[ client ][1]);
+		Entity_GetAbsOrigin(entity, g_flPositions[ client ]);
 	}
 	
 	CreateTimer(0.01, DV_DeagleThrow_Task, EntIndexToEntRef(entity) );
@@ -156,7 +168,7 @@ void DV_CheckWinner() {
 		if( !g_bTossed[i] )
 			continue;
 		
-		float tmp = GetVectorDistance(g_flPositions[i][1], g_flTarget);
+		float tmp = GetVectorDistance(g_flPositions[i], g_flTarget);
 		if( tmp < distance ) {
 			winner = i;
 			distance = tmp;
@@ -172,17 +184,26 @@ void DV_CheckWinner() {
 	}
 }
 public void DV_Stop(int client, int target) {
+	int clients[1], targets[1];
+	clients[0] = client;
+	targets[0] = target;
+	DV_StopMulti(clients, 1, targets, 1);
+}
+public void DV_StopMulti(int[] clients, int clientCount, int[] targets, int targetCount) {
 	g_iPlaying = 0;
 	g_iState = 0;
 	
-	AcceptEntityInput(g_wpnClient, "Kill");
-	AcceptEntityInput(g_wpnTarget, "Kill");
+	for (int i = 0; i < MaxClients; i++) {
+		if( IsValidEdict(g_iWeapons[i]) && IsValidEntity(g_iWeapons[i]) ) {
+			AcceptEntityInput(g_iWeapons[i], "Kill");
+		}
+	}
 	
 	KillTimer(g_hMain);
 	g_hMain = null;
 	
-	if( client )
-		SDKUnhook(client, SDKHook_WeaponDropPost, OnWeaponDrop);
-	if( target )
-		SDKUnhook(target, SDKHook_WeaponDropPost, OnWeaponDrop);
+	for (int i = 0; i < clientCount; i++)
+		SDKUnhook(clients[i], SDKHook_WeaponDropPost, OnWeaponDrop);
+	for (int i = 0; i < targetCount; i++)
+		SDKUnhook(targets[i], SDKHook_WeaponDropPost, OnWeaponDrop);
 }
