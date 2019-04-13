@@ -1,5 +1,12 @@
+#if defined _gang_included
+#endinput
+#endif
+#define _gang_included
+
 #define PLUGIN_VERSION "2.6.8"
 #define PLUGIN_NAME "Gang - "
+
+#include <rsc_utils>
 
 #define JSON_ITEM_PATH "addons/sourcemod/data/gangs/items/"
 
@@ -662,100 +669,4 @@ stock void ChangeMenuItemDisplay(Menu menu, int item, char[] display, any ...) {
 		menu.InsertItem(i, szItem, szDisplay, style);
 		menu.RemoveItem(i+1);
 	}
-}
-
-/* ---------------------------------------------------------------------- */
-
-/* Fonction qui supprime un timer */
-stock void DeleteTimer(Handle &timer) {
-	if(timer != null) {
-		delete timer;
-	}
-	
-	timer = null;
-}
-
-/* Fonction qui transforme un temps en progressbar */
-stock void TimeToProgressBar(int time, int maxtime, int bartime, char[] buffer, int maxlen, char[] load, char[] notload)
-{
-	float convert = float(bartime) * (float(time) / float(maxtime));
-
-	for (int i = 1; i <= bartime; i++)
-		Format(buffer, maxlen, "%s%s", buffer, convert >= i ? load:notload);
-}
-
-stock void FakePrecacheSound(const char[] path) {
-	AddToStringTable(FindStringTable("soundprecache"), path);
-}
-
-/* Fonction qui convertis les secondes en temps */
-stock void TimeToMinuts(int time, char[] buffer, int size)
-{
-	int minutes = time / 60;
-	int seconds = time - 60 * minutes;
-	
-	Format(buffer, size, "%s%i'%s%i", (minutes < 10 ? "0":""), minutes, (seconds < 10 ? "0":""), seconds);
-}
-
-/* Precache d'effect */
-stock void PrecacheParticleEffect(char[] sEffectName) {
-	/*int table = INVALID_STRING_TABLE;
-	
-	if (table == INVALID_STRING_TABLE) {
-		table = FindStringTable("ParticleEffectNames");
-	}*/
-	
-	int table = FindStringTable("ParticleEffectNames");
-	bool save = LockStringTables(false);
-	AddToStringTable(table, sEffectName);
-	LockStringTables(save);
-}
-
-/* ---------------------------------------------------------------------- */
-
-/* Fonction qui trouve un client via son steamid */
-stock int FindPlayerByAuthid(char[] buffer, AuthIdType authid) {
-	char szAuthId[32];
-	
-	for (int i = 1; i <= MaxClients; i++) {
-		if(!IsClientValid(i)) {
-			continue;
-		}
-		
-		GetClientAuthId(i, authid, szAuthId, sizeof(szAuthId));
-		
-		if(StrEqual(buffer, szAuthId)) {
-			return i;
-		}
-	}
-	
-	return 0;
-}
-
-/* Fonction qui vérifie la validité du client */
-stock bool IsClientValid(int client, bool alive = false)
-{
-	if(client > 0 && client <= MaxClients && IsClientConnected(client) && IsClientInGame(client))
-	{
-		if(alive && !IsPlayerAlive(client))
-			return false;
-		
-		return true;
-	}
-	return false;
-}
-
-/* Fonction qui reprend le nombre de joueur pas en spec (je sais plus pourquoi) */
-stock int GetNumbPlayer() {
-	int amount;
-	
-	for (int i = 1; i <= MaxClients; i++) {
-		if(IsClientValid(i)) {
-			if(GetClientTeam(i) > 1) {
-				amount++;
-			}
-		}
-	}
-	
-	return amount;
 }

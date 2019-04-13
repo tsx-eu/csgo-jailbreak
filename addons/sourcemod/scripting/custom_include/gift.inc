@@ -5,6 +5,7 @@
 
 #include <sourcemod>
 #include <sdktools>
+#include <rsc_utils>
 
 #define MAX_GIFT 50
 #define PREFIX "[Gift]"
@@ -217,66 +218,3 @@ native void Gift_ForceRandomGift(int client);
  *
 */
 native int Gift_ClientUseGift(int client, int gift);
-
-/* ------------------------------------------------------------------------------------------------------------- */
-
-stock bool IsClientValid(int client, bool alive = false)
-{
-	if(client > 0 && client <= MaxClients && IsClientConnected(client) && IsClientInGame(client))
-	{
-		if(alive && !IsPlayerAlive(client))
-			return false;
-		
-		return true;
-	}
-	return false;
-}
-
-stock FakePrecacheSound(const char[] szPath)
-{
-	AddToStringTable( FindStringTable( "soundprecache" ), szPath );
-}
-
-stock void TimeToProgressBar(int time, int maxtime, int bartime, char[] buffer, int maxlen, char[] load, char[] notload)
-{
-	float convert = float(bartime) * (float(time) / float(maxtime));
-
-	for (int i = 1; i <= bartime; i++)
-		Format(buffer, maxlen, "%s%s", buffer, convert >= i ? load:notload);
-}
-
-stock void FlashTimer(Handle &timer)
-{
-	if(timer != null)
-		delete timer;
-	timer = null;
-}
-
-stock void ClientDisarm(int client)
-{
-	int index;
-	for (int i = 0; i < 6; i++)
-		if (i < 6 && (index = GetPlayerWeaponSlot(client, i)) != -1)
-			RemovePlayerItem(client, index);
-}
-
-stock void DeleteEntityDelay(int entity, float time = 0.1)
-{
-	CreateTimer(time, Timer_DeleteEntity, EntIndexToEntRef(entity));
-}
-
-public Action Timer_DeleteEntity(Handle timer, any ref)
-{
-	int entity = EntRefToEntIndex(ref);
-
-	if(IsValidEntity(entity) && IsValidEdict(entity) && entity > 0)
-		AcceptEntityInput(entity, "Kill");
-}
-
-stock void TimeToMinuts(int time, char[] buffer, int size)
-{
-	int minutes = time / 60;
-	int seconds = time - 60 * minutes;
-	
-	Format(buffer, size, "%s%i'%s%i", (minutes < 10 ? "0":""), minutes, (seconds < 10 ? "0":""), seconds);
-}
