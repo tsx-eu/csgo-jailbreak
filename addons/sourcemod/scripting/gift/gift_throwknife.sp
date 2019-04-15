@@ -5,11 +5,12 @@
 #include <sdkhooks>
 #include <smlib>
 #include <gift>
+#include <csgocolors>
 #include <cstrike>
 
 #pragma newdecls required
 
-#define MODEL "models/weapons/w_knife_flip.mdl"
+#define MODEL "models/weapons/w_knife_flip_dropped.mdl"
 
 int g_iClient[MAXPLAYERS];
 int g_cLaser;
@@ -29,6 +30,8 @@ public Action Gift_OnRandomGift(int client, int gift) {
 	if(gift != g_iGift)
 		return Plugin_Handled;
 	
+	
+	CPrintToChat(client, "{lightgreen}%s {green} Vous pouvez lancer deux couteaux!", PREFIX);
 	g_iClient[client] = 2;
 	return Plugin_Continue;
 }
@@ -45,7 +48,7 @@ public Action EventShoot(Handle ev, const char[] name, bool broadcast) {
 			GetClientEyePosition(client, src);
 			GetClientEyeAngles(client, ang);
 			
-			Effect(client, src, ang, view_as<float>({   0.0, 24.0,-8.0 }), GetClientTeam(client) == CS_TEAM_T ? {255, 0, 0, 200} : {0, 0, 255, 200});
+			Effect(client, src, ang, view_as<float>({ 0.0, 24.0, -8.0 }), GetClientTeam(client) == CS_TEAM_T ? {255, 0, 0, 150} : {0, 0, 255, 150});
 		}
 	}
 }
@@ -69,9 +72,8 @@ int Effect(int client, float origin[3], float angle[3], float offset[3], int col
 	GetEntPropVector(client, Prop_Data, "m_vecVelocity", fPVel);
 	AddVectors(fVel, fPVel, fVel);
 	
-	int ent = CreateEntityByName("prop_physics");
+	int ent = CreateEntityByName("prop_physics_override");
 	DispatchKeyValue(ent, "model", MODEL);
-	DispatchKeyValue(ent, "health", "1");
 	DispatchKeyValue(ent, "OnUser1", "!self,Kill,,10.0,-1");
 	DispatchSpawn( ent );
 	
@@ -84,15 +86,19 @@ int Effect(int client, float origin[3], float angle[3], float offset[3], int col
 	
 	SDKHook(ent, SDKHook_Touch, OnTouch);	
 	
-	SetEntPropVector(ent, Prop_Data, "m_vecAngVelocity", view_as<float>({4500.0, 0.0, 0.0}));
+	SetEntPropFloat(ent, Prop_Send, "m_flElasticity", 0.01);
+	SetEntPropVector(ent, Prop_Data, "m_vecAngVelocity", view_as<float>({20000.0, 0.0, 0.0}));
 	
-	TE_SetupBeamFollow(ent, g_cLaser, 0, 1.0, 2.0, 0.1, 1, color);
+	TE_SetupBeamFollow(ent, g_cLaser, 0, 0.5, 2.0, 0.1, 1, color);
 	TE_SendToAll();
 }
 public void OnTouch(int entity, int client) {
 	if( Entity_GetOwner(entity) == client )
 		return;
-	AcceptEntityInput(entity, "Kill");
-	Entity_SetHealth(client, GetClientHealth(client) - 25);
-	SlapPlayer(client, 0);
+	
+	if( client > 0 ) {
+		AcceptEntityInput(entity, "Kill");
+		Entity_SetHealth(client, GetClientHealth(client) - 25);
+		SlapPlayer(client, 0);
+	}
 }
