@@ -68,31 +68,63 @@ public Action OnTakeDamage(int victim, int& attacker, int& inflictor, float& dam
 	
 	if( attacker > 0 && attacker < MaxClients && g_bHasGift[victim] && damage > 0.0 ) {
 		GangList gang = Gang_GetClientGang(victim);
+		int team = GetClientTeam(victim);
+		
 		if( gang == GangNothing )
 			return Plugin_Continue;
 		if( damage > 500.0 )
 			return Plugin_Continue;
 		
+		if( team == GetClientTeam(attacker) ) {
+			if( !(IsFriendlyFireActive() || IsTeammateAreEnnemies()) )
+				return Plugin_Continue;
+			if( Gang_GetClientGang(attacker) == gang )
+				return Plugin_Continue;
+		}
+		
 		int cpt = 0;
 		for (int i = 1; i < MaxClients; i++) {
 			if( !IsClientInGame(i) || !IsPlayerAlive(i) )
 				continue;
-			if( Gang_GetClientGang(i) == gang )
-				i++;
-		}
-		
-		damage /= float(cpt);
-		
-		for (int i = 1; i < MaxClients; i++) {
-			if( !IsClientInGame(i) || !IsPlayerAlive(i) )
+			if( GetClientTeam(i) != team )
 				continue;
 			if( Gang_GetClientGang(i) == gang )
-				i++;
-			
-			SDKHooks_TakeDamage(i, inflictor, attacker, damage, damagetype, weapon, damageForce, damagePosition);
+				cpt++;
 		}
 		
-		return Plugin_Handled;
+		if( cpt >= 2 ) {			
+		
+			damage /= float(cpt);
+			
+			for (int i = 1; i < MaxClients; i++) {
+				if( !IsClientInGame(i) || !IsPlayerAlive(i) )
+					continue;
+				if( GetClientTeam(i) != team )
+					continue;
+				
+				SDKHooks_TakeDamage(i, inflictor, attacker, damage, damagetype, weapon, damageForce, damagePosition);
+			}
+			
+			return Plugin_Handled;
+		}
+		
+		return Plugin_Continue;
 	}
 	return Plugin_Continue;
+}
+
+
+bool IsFriendlyFireActive() {
+	static Handle cvar = INVALID_HANDLE;
+	if( cvar == INVALID_HANDLE )
+		cvar = FindConVar("mp_friendlyfire");
+	
+	return GetConVarInt(cvar) != 0;
+}
+bool IsTeammateAreEnnemies() {
+	static Handle cvar = INVALID_HANDLE;
+	if( cvar == INVALID_HANDLE )
+		cvar = FindConVar("mp_teammates_are_enemies");
+	
+	return GetConVarInt(cvar) != 0;
 }

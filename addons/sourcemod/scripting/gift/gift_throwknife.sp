@@ -93,12 +93,17 @@ int Effect(int client, float origin[3], float angle[3], float offset[3], int col
 	TE_SendToAll();
 }
 public void OnTouch(int entity, int client) {
-	if( Entity_GetOwner(entity) == client )
+	int owner = Entity_GetOwner(entity);
+	if( owner == client || owner == 0  )
 		return;
 	
-	if( client > 0 ) {
+	if( client > 0 && client < MaxClients ) {
 		AcceptEntityInput(entity, "Kill");
 		Entity_SetHealth(client, GetClientHealth(client) - 25);
 		SlapPlayer(client, 0);
 	}
+	else {
+		Entity_SetOwner(entity, 0);
+	}
+	
 }
