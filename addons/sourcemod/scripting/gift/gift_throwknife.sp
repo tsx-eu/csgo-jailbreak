@@ -16,11 +16,17 @@ int g_iClient[MAXPLAYERS];
 int g_cLaser;
 int g_iGift;
 
+int g_iMaxThrow;
+int g_iHealth;
+
 public void OnPluginStart() {
 	HookEvent("weapon_fire",		EventShoot,			EventHookMode_Post);
 }
 public void JB_OnPluginReady() {
 	g_iGift = Gift_RegisterNewGift("Lancé de couteau", "knifethrow", true, false, 100.0, -1, ADMFLAG_CUSTOM1|ADMFLAG_ROOT);
+	
+	g_iMaxThrow = Gift_GetConfigInt("throw.ini", "max_throw");
+	g_iHealth = Gift_GetConfigInt("throw.ini", "health");
 }
 public void OnMapStart() {
 	g_cLaser = PrecacheModel("materials/sprites/laserbeam.vmt", true);
@@ -31,8 +37,8 @@ public Action Gift_OnRandomGift(int client, int gift) {
 		return Plugin_Handled;
 	
 	
-	CPrintToChat(client, "{lightgreen}%s {green} Vous pouvez lancer deux couteaux!", PREFIX);
-	g_iClient[client] = 2;
+	CPrintToChat(client, "{lightgreen}%s {green} Vous pouvez lancer %i couteau%s!", PREFIX, g_iMaxThrow, g_iMaxThrow > 1 ? "x":"");
+	g_iClient[client] = g_iMaxThrow;
 	return Plugin_Continue;
 }
 public Action EventShoot(Handle ev, const char[] name, bool broadcast) {
@@ -99,7 +105,7 @@ public void OnTouch(int entity, int client) {
 	
 	if( client > 0 && client < MaxClients ) {
 		AcceptEntityInput(entity, "Kill");
-		Entity_SetHealth(client, GetClientHealth(client) - 25);
+		Entity_SetHealth(client, GetClientHealth(client) - g_iHealth);
 		SlapPlayer(client, 0);
 	}
 	else {
