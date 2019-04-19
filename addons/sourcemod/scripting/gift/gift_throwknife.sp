@@ -23,7 +23,7 @@ public void OnPluginStart() {
 	HookEvent("weapon_fire",		EventShoot,			EventHookMode_Post);
 }
 public void JB_OnPluginReady() {
-	g_iGift = Gift_RegisterNewGift("Lancé de couteau", "knifethrow", true, false, 100.0, -1, ADMFLAG_CUSTOM1|ADMFLAG_ROOT);
+	g_iGift = Gift_RegisterNewGift(Lancé de couteau", "knifethrow", Gift_GetConfigBool("throw.ini", "active t"), Gift_GetConfigBool("throw.ini", "active ct"), Gift_GetConfigFloat("throw.ini", "chance"), Gift_GetConfigInt("throw.ini", "numb"), ADMFLAG_CUSTOM1|ADMFLAG_ROOT);
 	
 	g_iMaxThrow = Gift_GetConfigInt("throw.ini", "max_throw");
 	g_iHealth = Gift_GetConfigInt("throw.ini", "health");
