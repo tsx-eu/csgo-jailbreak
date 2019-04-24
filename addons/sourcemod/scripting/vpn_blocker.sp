@@ -83,18 +83,23 @@ public int OnSteamWorksHTTPComplete(Handle hRequest, bool fail, bool success, EH
 		SteamWorks_GetHTTPResponseBodyData(hRequest, body, sizeof(body));
 		
 		float score = StringToFloat(body);
-		g_hScoring.SetValue(IP, score);
 		
-		
-		if( score >= GetConVarFloat(g_hCvarScore) ) {
-			for (int i = 1; i <= MaxClients; i++) {
-				if( !IsClientInGame(i) )
-					continue;
-				
-				GetClientIP(i, body, sizeof(body));
-				
-				if( StrEqual(IP, body) ) {
-					BanClient(i, BAN_TIME, BANFLAG_IP, "VPN", "VPN are not allowed on this server");
+		if( score <= -1.0 ) {
+			LogToGame("[VPN Blocker] Something went wrong with: %s --> %f", IP, score);
+		}
+		else {
+			g_hScoring.SetValue(IP, score);	
+			
+			if( score >= GetConVarFloat(g_hCvarScore) ) {
+				for (int i = 1; i <= MaxClients; i++) {
+					if( !IsClientInGame(i) )
+						continue;
+					
+					GetClientIP(i, body, sizeof(body));
+					
+					if( StrEqual(IP, body) ) {
+						BanClient(i, BAN_TIME, BANFLAG_IP, "VPN", "VPN are not allowed on this server");
+					}
 				}
 			}
 		}
