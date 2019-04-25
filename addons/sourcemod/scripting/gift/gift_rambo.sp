@@ -13,6 +13,7 @@
 
 int g_iGift = -1;
 int g_iRamboCount[65];
+int g_iCount = -1;
 
 public Plugin myinfo = {
 	name = "Gift: RAMBO",
@@ -23,7 +24,9 @@ public Plugin myinfo = {
 };
 
 public void Gift_OnGiftStart() {
-	g_iGift = Gift_RegisterNewGift("Rambo", "RAMBO", false, true, 100.0, -1, ADMFLAG_CUSTOM1|ADMFLAG_ROOT);
+	g_iGift = Gift_RegisterNewGift("Rambo", "rambo", Gift_GetConfigBool("rambo.ini", "active t"), Gift_GetConfigBool("rambo.ini", "active ct"), Gift_GetConfigFloat("rambo.ini", "chance"), Gift_GetConfigInt("rambo.ini", "numb"), ADMFLAG_CUSTOM1 | ADMFLAG_ROOT);
+	
+	g_iCount = Gift_GetConfigInt("rambo.ini", "count");
 }
 public void OnPluginStart() {
 	HookEvent("round_start", 		OnRoundStart, 			EventHookMode_Post);
@@ -33,7 +36,7 @@ public Action Gift_OnRandomGift(int client, int gift) {
 	if(gift != g_iGift)
 		return Plugin_Handled;
 	
-	g_iRamboCount[client] = 3;
+	g_iRamboCount[client] = g_iCount;
 	CPrintToChat(client, "{lightgreen}%s {green} Vous êtes RAMBO!", PREFIX);
 	
 	SDKHook(client, SDKHook_PostThinkPost, OnPlayerThink);
