@@ -101,6 +101,8 @@ public Action OnTakeDamage(int victim, int& attacker, int& inflictor, float& dam
 					continue;
 				if( GetClientTeam(i) != team )
 					continue;
+				if( Gang_GetClientGang(i) != gang )
+					continue;
 				
 				SDKHooks_TakeDamage(i, inflictor, attacker, damage, damagetype, weapon, damageForce, damagePosition);
 			}
