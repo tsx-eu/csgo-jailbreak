@@ -1,6 +1,5 @@
 #pragma semicolon 1
-#pragma tabsize 0
-#pragma newdecls required
+
 
 public Plugin myinfo = {
 	name = "[Client] Votekick/ban",
@@ -13,6 +12,8 @@ public Plugin myinfo = {
 #include <cstrike>
 #include <csgocolors>
 #include <sourcebanspp>
+
+#pragma newdecls required
 
 #define PREFIX "{green}[ {white}VOTE {green}] "
 #define VOTE_YES "###yes###"
