@@ -10,6 +10,7 @@
 
 int g_iGift = -1;
 int g_iRollback[65];
+int g_iCount = -1;
 float g_flPositions[65][3];
 
 public Plugin myinfo = {
@@ -21,7 +22,9 @@ public Plugin myinfo = {
 };
 
 public void Gift_OnGiftStart() {
-	g_iGift = Gift_RegisterNewGift("Rollback", "Rollback", true, false, 25.0, -1, ADMFLAG_CUSTOM1|ADMFLAG_ROOT);
+	g_iGift = Gift_RegisterNewGift("Rollback", "Rollback", Gift_GetConfigBool("rollback.ini", "active t"), Gift_GetConfigBool("rollback.ini", "active ct"), Gift_GetConfigFloat("rollback.ini", "chance"), Gift_GetConfigInt("rollback.ini", "numb"), ADMFLAG_CUSTOM1|ADMFLAG_ROOT);
+	
+	g_iCount = Gift_GetConfigInt("rollback.ini", "count");
 }
 public void OnPluginStart() {
 	HookEvent("round_start", 		OnRoundStart, 			EventHookMode_Post);
@@ -40,7 +43,7 @@ public Action Gift_OnRandomGift(int client, int gift) {
 	CPrintToChat(client, "{lightgreen}%s {green} Vous pouvez retourner dans le temps!", PREFIX);
 	CPrintToChat(client, "{lightgreen}%s {green} Tapez !rollback pour sauvegarder votre position.", PREFIX);
 	
-	g_iRollback[client] = 1;
+	g_iRollback[client] = g_iCount;
 	
 	return Plugin_Handled;
 }
