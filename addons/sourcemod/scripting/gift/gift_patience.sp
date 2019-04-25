@@ -11,7 +11,11 @@
 #pragma newdecls required
 
 int g_iGift = -1;
+int g_iAmmo = -1;
+int g_iMaxAmmo = -1;
 Handle g_hWeapon[65];
+
+float g_fIncTime;
 
 public Plugin myinfo = {
 	name = "Gift: PATIENCE",
@@ -23,6 +27,10 @@ public Plugin myinfo = {
 
 public void Gift_OnGiftStart() {
 	g_iGift = Gift_RegisterNewGift("Patience", "Patience", Gift_GetConfigBool("patience.ini", "active t"), Gift_GetConfigBool("patience.ini", "active ct"), Gift_GetConfigFloat("patience.ini", "chance"), Gift_GetConfigInt("patience.ini", "numb"), ADMFLAG_CUSTOM1|ADMFLAG_ROOT);
+	
+	g_fIncTime = Gift_GetConfigFloat("patience.ini", "incrementation_time");
+	g_iAmmo = Gift_GetConfigInt("patience.ini", "add_ammo");
+	g_iMaxAmmo = Gift_GetConfigInt("patience.ini", "max_ammo");
 }
 public void OnPluginStart() {
 	HookEvent("round_start", 		OnRoundStart, 			EventHookMode_Post);
@@ -38,10 +46,10 @@ public Action Gift_OnRandomGift(int client, int gift) {
 	if( wpnId > 0 )
 		AcceptEntityInput(wpnId, "Kill");
 	
-	wpnId = EntIndexToEntRef(Client_GiveWeaponAndAmmo(client, "weapon_p250", true, 0, 0, 1, 0));
+	wpnId = EntIndexToEntRef(Client_GiveWeaponAndAmmo(client, "weapon_p250", true, 0, 0, g_iAmmo, 0));
 	
 	Handle dp;
-	g_hWeapon[client] = CreateDataTimer(20.0, Timer_IncrementAmmunition, dp, TIMER_REPEAT);
+	g_hWeapon[client] = CreateDataTimer(g_fIncTime, Timer_IncrementAmmunition, dp, TIMER_REPEAT);
 	WritePackCell(dp, client);
 	WritePackCell(dp, wpnId);
 	
@@ -58,8 +66,8 @@ public Action Timer_IncrementAmmunition(Handle timer, Handle dp) {
 	}
 	
 	if( client == Weapon_GetOwner(wpnId) ) {
-		int ammo = Weapon_GetPrimaryClip(wpnId) + 1;
-		if( ammo <= 2 ) {
+		int ammo = Weapon_GetPrimaryClip(wpnId) + g_iAmmo;
+		if( ammo <= g_iMaxAmmo ) {
 			Weapon_SetPrimaryClip(wpnId, ammo);
 			CPrintToChat(client, "{lightgreen}%s {green} Une nouvelle balle est disponible dans votre chargeur!", PREFIX);
 		}
