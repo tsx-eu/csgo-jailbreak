@@ -8,7 +8,7 @@ public void OnPluginStart() {
 }
 
 public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3], float angles[3], int &weapon, int &subtype, int &cmdnum, int &tickcount, int &seed, int mouse[2]) {
-	char szNextMap[32], buffer[128];
+	static char szNextMap[32], buffer[128];
 	if( IsFakeClient(client) )
 		return Plugin_Continue;
 	
