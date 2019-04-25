@@ -35,7 +35,7 @@ public Action OnRoundStart(Handle ev, const char[] name, bool dontBroadcast) {
 }
 
 public void Gift_OnGiftStart() {
-	g_iGift = Gift_RegisterNewGift("ShareDamages", "ShareDamages", true, true, 100.0, -1, ADMFLAG_CUSTOM1|ADMFLAG_ROOT);
+	g_iGift = Gift_RegisterNewGift("ShareDamages", "ShareDamages", Gift_GetConfigBool("sharedmg.ini", "active t"), Gift_GetConfigBool("sharedmg.ini", "active ct"), Gift_GetConfigFloat("sharedmg.ini", "chance"), Gift_GetConfigInt("sharedmg.ini", "numb"), ADMFLAG_CUSTOM1|ADMFLAG_ROOT);
 }
 public Action Gift_OnRandomGift(int client, int gift) {
 	if(gift != g_iGift)
