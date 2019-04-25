@@ -17,13 +17,13 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 		GetMapTimeLeft(iTimeleft);
 		GetNextMap(szNextMap, sizeof(szNextMap));
 		if(iTimeleft <= 0)
-			FormatEx(buffer, sizeof(buffer), "Dernière manche !\nNextmap : %s", szNextMap);
+			FormatEx(buffer, sizeof(buffer), "**** Timeleft ****\n* Dernière manche !\n\n**** Nextmap ****\n* %s", szNextMap);
 		else if(iTimeleft < 60)
-			FormatEx(buffer, sizeof(buffer), "Timeleft: %is\nNextmap : %s", iTimeleft, szNextMap);
+			FormatEx(buffer, sizeof(buffer), "**** Timeleft ****\n* %i seconde%s\n\n**** Nextmap ****\n* %s", iTimeleft, iTimeleft <= 1 ? "":"s", szNextMap);
 		else if(iTimeleft <= 480)
-			FormatEx(buffer, sizeof(buffer), "Timeleft: %im\nNextmap : %s", iTimeleft/60, szNextMap);
+			FormatEx(buffer, sizeof(buffer), "**** Timeleft ****\n* %i minute%s\n\n**** Nextmap ****\n* %s", iTimeleft/60, iTimeleft < 120 ? "":"s", szNextMap);
 		else if(iTimeleft > 540)
-			FormatEx(buffer, sizeof(buffer), "Timeleft: %im", iTimeleft/60);
+			FormatEx(buffer, sizeof(buffer), "**** Timeleft ****\n* %i minutes", iTimeleft/60);
 
 		SetHudTextParams(0.01, 0.4, 0.1, 255, 255, 255, 255, 0, 0.0, 0.0, 0.0);
 		ShowSyncHudText(client, g_hHudSync, buffer);
