@@ -426,9 +426,6 @@ public OnMapStart()
 	}
 	
 	PrecacheModel("models/props_junk/wood_crate001a.mdl", true);
-	
-	if(GetEngineVersion() == Engine_CSGO)
-		ServerCommand("mp_endmatch_votenextmap 0;mp_endmatch_votenextleveltime 5;mp_maxrounds 1;mp_match_end_changelevel 1;mp_match_can_clinch 0;mp_halftime 0;mp_match_restart_delay 10");
 }
 
 //Saving current position of players to check for teleport cheating
