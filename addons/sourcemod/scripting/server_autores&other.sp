@@ -14,7 +14,7 @@
 public Plugin myinfo = {
 	name = "[Server] Autorespawn & Other",
 	author = "NeoX^",
-	version = "1.0",
+	version = "1.5",
 	description = "Autorespawn (with command & config file), Give knife on race&fight maps, Anti late spawn, Delete AFK Killer on Harero, 10k$, Change cvars values differs maps, Unlimited time to choose team, HUD Server Record",
 };
 
@@ -25,7 +25,6 @@ float g_fRespawnTime, g_fServerRecordTime;
 
 ConVar g_cvRoundTime;
 ConVar g_cvRoundTime_defuse;
-ConVar g_cvRoundTime_deployment;
 ConVar g_cvRoundTime_hostage;
 ConVar g_cvGravity;
 ConVar g_cvAutoBhop;
@@ -46,15 +45,14 @@ public void OnPluginStart() {
 
 	HookConVarChange(FindConVar("mp_roundtime"), OnRoundTimeChanged);
 	HookConVarChange(FindConVar("mp_roundtime_defuse"), OnRoundTimeChanged);
-	HookConVarChange(FindConVar("mp_roundtime_deployment"), OnRoundTimeChanged);
 	HookConVarChange(FindConVar("mp_roundtime_hostage"), OnRoundTimeChanged);
 	HookConVarChange(FindConVar("mp_maxrounds"), OnMaxRoundsChanged);
 	HookConVarChange(FindConVar("mp_freezetime"), OnFreezeTimeChanged);
 	HookConVarChange(FindConVar("sv_airaccelerate"), OnSvAirAccelerateChanged);
 	HookConVarChange(FindConVar("bot_quota"), OnBotQuotaChanged);
+	HookConVarChange(FindConVar("sv_full_alltalk"), OnFullAlltalkChanged);
 	g_cvRoundTime = FindConVar("mp_roundtime");
 	g_cvRoundTime_defuse = FindConVar("mp_roundtime_defuse");
-	g_cvRoundTime_deployment = FindConVar("mp_roundtime_deployment");
 	g_cvRoundTime_hostage = FindConVar("mp_roundtime_hostage");
 	g_cvTimeLimit = FindConVar("mp_timelimit");
 	g_cvGravity = FindConVar("sv_gravity");
@@ -178,20 +176,35 @@ public Action Timer_RespawnPlayerByTime(Handle timer) {
 
 public Action Event_RoundEnd(Event event, const char[] name, bool dontBroadcast) {
 	FlashTimer(g_hTimeForRespawn);
-
 	if(GetConVarInt(g_cvAutoBhop) == 0)
 		SetConVarInt(g_cvAutoBhop, 1, false, false);
 }
 
 public Action Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast) {
 	int client = GetClientOfUserId(event.GetInt("userid"));
-	if(Valid_Client(client) && GetClientTeam(client) > 1 && Valid_RunMap() || g_hTimeForRespawn != null)
+	if(Valid_Client(client) && GetClientTeam(client) > 1 && (Valid_RunMap() || g_hTimeForRespawn != null))
 		CreateTimer(0.2, Timer_RespawnClient, client);
 }
 
 public Action Timer_RespawnClient(Handle timer, int client) {
-	if(Valid_Client(client) && !IsPlayerAlive(client) && GetClientTeam(client) > 1 && Valid_RunMap() || g_hTimeForRespawn != null)
+	if(!Valid_Client(client))
+		return Plugin_Handled;
+
+	if(!(GetClientTeam(client) == CS_TEAM_T || GetClientTeam(client) == CS_TEAM_CT))
+		return Plugin_Handled;
+
+	if(IsPlayerAlive(client))
+		return Plugin_Handled;
+
+	if(Valid_RunMap()) {
 		CS_RespawnPlayer(client);
+		return Plugin_Handled;
+	}
+	else if(g_hTimeForRespawn != null) {
+		CS_RespawnPlayer(client);
+		return Plugin_Handled;
+	}
+	return Plugin_Handled;
 }
 
 public Action Event_PlayerSpawn(Event event, const char[] name, bool dontBroadcast) {
@@ -219,11 +232,15 @@ public Action Event_PlayerFullConnect(Event event, const char[] name, bool dontB
 public Action Event_PlayerTeam(Event event, const char[] name, bool dontBroadcast) {
 	int client = GetClientOfUserId(event.GetInt("userid"));
 	if(!Valid_Client(client))
-		return;
+		return Plugin_Handled;
 
-	int newTeam = event.GetInt("team");
-	if(newTeam > 1 && GetClientTeam(client) > 1 && !IsPlayerAlive(client) && Valid_RunMap() || g_hTimeForRespawn != null)
-		CreateTimer(0.2, Timer_RespawnClient, client);
+	int team = GetEventInt(event, "team");
+	int oldTeam = GetEventInt(event, "oldteam");
+	if(team > 1 && oldTeam <= 1) {
+		if(Valid_RunMap() || g_hTimeForRespawn != null)
+			CreateTimer(0.2, Timer_RespawnClient, client);
+	}
+	return Plugin_Continue;
 }
 
 public Action Timer_KillPlayer(Handle timer, int client) {
@@ -286,20 +303,22 @@ public void OnBotQuotaChanged(ConVar convar, const char[] oldValue, const char[]
 		SetConVarInt(convar, 0, false, false);
 }
 
-stock int GetRoundTimesValue() {
-	int value = GetConVarInt(g_cvRoundTime) + GetConVarInt(g_cvRoundTime_hostage) + GetConVarInt(g_cvRoundTime_deployment) + GetConVarInt(g_cvRoundTime_defuse);
-	return value/4;
+public void OnFullAlltalkChanged(ConVar convar, const char[] oldValue, const char[] newValue) {
+	if(StringToInt(newValue) != 1)
+		SetConVarInt(convar, 1, false, false);
 }
 
-stock void SetRoundTimesValue(int value) {
+int GetRoundTimesValue() {
+	int value = GetConVarInt(g_cvRoundTime) + GetConVarInt(g_cvRoundTime_hostage) + GetConVarInt(g_cvRoundTime_defuse);
+	return value/3;
+}
+
+void SetRoundTimesValue(int value) {
 	if(GetConVarInt(g_cvRoundTime) != value)
 		SetConVarInt(g_cvRoundTime, value, false, false);
 
 	if(GetConVarInt(g_cvRoundTime_hostage) != value)
 		SetConVarInt(g_cvRoundTime_hostage, value, false, false);
-
-	if(GetConVarInt(g_cvRoundTime_deployment) != value)
-		SetConVarInt(g_cvRoundTime_deployment, value, false, false);
 
 	if(GetConVarInt(g_cvRoundTime_defuse) != value)
 		SetConVarInt(g_cvRoundTime_defuse, value, false, false);
@@ -308,13 +327,13 @@ stock void SetRoundTimesValue(int value) {
 		SetConVarInt(g_cvTimeLimit, value, false, false);
 }
 
-stock void FlashTimer(Handle &timer) {
+void FlashTimer(Handle &timer) {
 	if(timer != null)
 		delete timer;
 	timer = null;
 }
 
-stock void DisarmClient(int id) {
+void DisarmClient(int id) {
 	int index;
 	for(int i = 0; i <= 6; i++) {
 		if(i < 6 && (index = GetPlayerWeaponSlot(id, i)) != -1)
@@ -322,12 +341,12 @@ stock void DisarmClient(int id) {
 	}
 }
 
-stock bool Valid_RunMap() {
-	if(g_fRespawnTime == 0.0)
+bool Valid_RunMap() {
+	if(RoundFloat(g_fRespawnTime) == 0)
 		return true;
 	return false;
 }
 
-stock bool Valid_Client(int id) {
+bool Valid_Client(int id) {
 	return (id > 0 && id <= MaxClients && IsClientInGame(id) && IsClientConnected(id) && !IsClientInKickQueue(id));
 }
