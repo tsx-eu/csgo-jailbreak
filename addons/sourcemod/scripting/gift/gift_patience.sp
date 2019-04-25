@@ -22,7 +22,7 @@ public Plugin myinfo = {
 };
 
 public void Gift_OnGiftStart() {
-	g_iGift = Gift_RegisterNewGift("Patience", "Patience", true, false, 100.0, -1, ADMFLAG_CUSTOM1|ADMFLAG_ROOT);
+	g_iGift = Gift_RegisterNewGift("Patience", "Patience", Gift_GetConfigBool("patience.ini", "active t"), Gift_GetConfigBool("patience.ini", "active ct"), Gift_GetConfigFloat("patience.ini", "chance"), Gift_GetConfigInt("patience.ini", "numb"), ADMFLAG_CUSTOM1|ADMFLAG_ROOT);
 }
 public void OnPluginStart() {
 	HookEvent("round_start", 		OnRoundStart, 			EventHookMode_Post);
