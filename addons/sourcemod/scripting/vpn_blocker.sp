@@ -1,7 +1,7 @@
 #pragma semicolon 1
 
 #include <sourcemod>
-#include <steamworks>
+#include <SteamWorks>
 
 #pragma newdecls required
 
