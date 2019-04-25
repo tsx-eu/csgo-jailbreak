@@ -26,7 +26,7 @@ public Plugin myinfo = {
 };
 
 public void Gift_OnGiftStart() {
-	g_iGift = Gift_RegisterNewGift("Patience", "Patience", Gift_GetConfigBool("patience.ini", "active t"), Gift_GetConfigBool("patience.ini", "active ct"), Gift_GetConfigFloat("patience.ini", "chance"), Gift_GetConfigInt("patience.ini", "numb"), ADMFLAG_CUSTOM1|ADMFLAG_ROOT);
+	g_iGift = Gift_RegisterNewGift("Pédeux", "pédeux", Gift_GetConfigBool("patience.ini", "active t"), Gift_GetConfigBool("patience.ini", "active ct"), Gift_GetConfigFloat("patience.ini", "chance"), Gift_GetConfigInt("patience.ini", "numb"), ADMFLAG_CUSTOM1|ADMFLAG_ROOT);
 	
 	g_fIncTime = Gift_GetConfigFloat("patience.ini", "incrementation_time");
 	g_iAmmo = Gift_GetConfigInt("patience.ini", "add_ammo");
