@@ -7,7 +7,7 @@
 #include <sdktools>
 #include <rsc_utils>
 
-#define MAX_GIFT 50
+#define MAX_GIFT 128
 #define PREFIX "[Gift]"
 
 /*
