@@ -292,7 +292,7 @@ bool Valid_Client(int id) {
 	return (id > 0 && id <= MaxClients && IsClientInGame(id) && IsClientConnected(id) && !IsClientInKickQueue(id));
 }
 
-stock bool IsNoAdminConnected() {
+bool IsNoAdminConnected() {
 	for(int i = 1; i <= MaxClients; i++) {
 		if(!Valid_Client(i))
 			continue;
@@ -303,7 +303,7 @@ stock bool IsNoAdminConnected() {
 	return true;
 }
 
-stock int menu_AddPlayers(Menu menu, int client) {
+int menu_AddPlayers(Menu menu, int client) {
 	char user_id[12], name[MAX_NAME_LENGTH], display[MAX_NAME_LENGTH+12];
 	int num_clients;
 	
