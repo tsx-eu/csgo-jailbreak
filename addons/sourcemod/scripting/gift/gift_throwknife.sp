@@ -105,7 +105,8 @@ public void OnTouch(int entity, int client) {
 	
 	if( client > 0 && client < MaxClients ) {
 		AcceptEntityInput(entity, "Kill");
-		Entity_SetHealth(client, GetClientHealth(client) - g_iHealth);
+		
+		Entity_Hurt(client, g_iHealth, owner);
 		SlapPlayer(client, 0);
 	}
 	else {
