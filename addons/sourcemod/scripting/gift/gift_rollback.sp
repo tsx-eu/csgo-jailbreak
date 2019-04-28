@@ -44,6 +44,12 @@ public Action Gift_OnRandomGift(int client, int gift) {
 	
 	return Plugin_Handled;
 }
+
+public Action Gift_OnRemoveGift(int client)
+{
+	g_iRollback[client] = 0;
+}
+
 public Action Cmd_Rollback(int client, int args) {
 	
 	if( g_iRollback[client] == 1 ) {
@@ -53,6 +59,8 @@ public Action Cmd_Rollback(int client, int args) {
 		GetClientAbsOrigin(client, g_flPositions[client]);
 		
 		g_iRollback[client] = 2;
+		
+		Gift_ClientUseGift(client, g_iGift);
 	}
 	else if( g_iRollback[client] == 2 ) {
 		TeleportEntity(client, g_flPositions[client], NULL_VECTOR, NULL_VECTOR);
