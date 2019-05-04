@@ -31,7 +31,7 @@ public void OnPluginStart() {
 	
 	CreateTimer(QUEUE_SPEED, Timer_TICK, _, TIMER_REPEAT);
 	
-	g_hCvarScore = CreateConVar("sv_autoban_vpn_score", "0.95");
+	g_hCvarScore = CreateConVar("sv_autoban_vpn_score", "0.99");
 	AutoExecConfig();
 	
 	for (int i = 1; i < MaxClients; i++)
