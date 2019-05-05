@@ -8,7 +8,7 @@
 #include <rsc_utils>
 
 #define MAX_GIFT 128
-#define PREFIX "[Gift]"
+#define PREFIX "{lightgreen}[ {default}GIFT {lightgreen}]"
 
 /*
  * Appeller quand le gift se lance 

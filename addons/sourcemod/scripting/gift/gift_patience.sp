@@ -40,14 +40,18 @@ public Action Gift_OnRandomGift(int client, int gift) {
 	if(gift != g_iGift)
 		return Plugin_Handled;
 	
-	CPrintToChat(client, "{lightgreen}%s {green} Vous êtes PATIENT!", PREFIX);
+	CPrintToChat(client, "{lightgreen}%s {green} Vous avez un Pédeux!", PREFIX);
 	
 	int wpnId = GetPlayerWeaponSlot(client, CS_SLOT_SECONDARY);
-	if( wpnId > 0 )
+	if( wpnId > 0 ) {
+		CS_DropWeapon(client, wpnId, true, false);
 		AcceptEntityInput(wpnId, "Kill");
+	}
 	
-	wpnId = EntIndexToEntRef(Client_GiveWeaponAndAmmo(client, "weapon_p250", true, 0, 0, g_iAmmo, 0));
-	
+	wpnId = GivePlayerItem(client, "weapon_p250");
+	SetEntProp(wpnId, Prop_Send, "m_iClip1", g_iAmmo);
+	SetEntProp(wpnId, Prop_Send, "m_iPrimaryReserveAmmoCount", 0);
+
 	Handle dp;
 	g_hWeapon[client] = CreateDataTimer(g_fIncTime, Timer_IncrementAmmunition, dp, TIMER_REPEAT);
 	WritePackCell(dp, client);
@@ -55,6 +59,7 @@ public Action Gift_OnRandomGift(int client, int gift) {
 	
 	return Plugin_Handled;
 }
+
 public Action Timer_IncrementAmmunition(Handle timer, Handle dp) {
 	ResetPack(dp);
 	int client = ReadPackCell(dp);
@@ -66,9 +71,10 @@ public Action Timer_IncrementAmmunition(Handle timer, Handle dp) {
 	}
 	
 	if( client == Weapon_GetOwner(wpnId) ) {
-		int ammo = Weapon_GetPrimaryClip(wpnId) + g_iAmmo;
+		int ammo = GetEntProp(wpnId, Prop_Send, "m_iClip1") + g_iAmmo;
+	
 		if( ammo <= g_iMaxAmmo ) {
-			Weapon_SetPrimaryClip(wpnId, ammo);
+			SetEntProp(wpnId, Prop_Send, "m_iClip1", ammo);
 			CPrintToChat(client, "{lightgreen}%s {green} Une nouvelle balle est disponible dans votre chargeur!", PREFIX);
 		}
 	}

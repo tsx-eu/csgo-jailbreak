@@ -1,4 +1,4 @@
-// Dump of all classes for "csgo" as at 2019/04/12
+// Dump of all classes for "csgo" as at 2019/05/01
 //
 
 CFireSmoke - _firesmoke
@@ -41,6 +41,7 @@ CBaseAnimating - baseprojectile
 CBeam - beam
 CBeamSpotlight - beam_spotlight
 CBreachChargeProjectile - breachcharge_projectile
+CBumpMineProjectile - bumpmine_projectile
 CFEPlayerDecal - cfe_player_decal
 CChicken - chicken
 CColorCorrection - color_correction
@@ -286,6 +287,7 @@ CParticleSystem - info_particle_system
 CBaseEntity - info_player_counterterrorist
 CBaseEntity - info_player_deathmatch
 CBaseEntity - info_player_logo
+CPlayerPing - info_player_ping
 CBaseEntity - info_player_start
 CBaseEntity - info_player_teamspawn
 CBaseEntity - info_player_terrorist
@@ -447,6 +449,7 @@ CPhysicsProp - prop_physics_override
 CPhysicsProp - prop_physics_respawnable
 CRagdollProp - prop_ragdoll
 CRagdollPropAttached - prop_ragdoll_attached
+CPhysPropLootCrate - prop_respawn_crate
 CPhysicsProp - prop_sphere
 CBaseFlex - prop_talker
 CBaseAnimating - prop_vehicle
@@ -455,6 +458,7 @@ CPhysPropWeaponUpgrade - prop_weapon_upgrade_armor
 CPhysPropWeaponUpgrade - prop_weapon_upgrade_armor_helmet
 CPhysPropWeaponUpgrade - prop_weapon_upgrade_chute
 CPhysPropWeaponUpgrade - prop_weapon_upgrade_contractkill
+CPhysPropWeaponUpgrade - prop_weapon_upgrade_exojump
 CPhysPropWeaponUpgrade - prop_weapon_upgrade_helmet
 CPhysPropWeaponUpgrade - prop_weapon_upgrade_tablet_droneintel
 CPhysPropWeaponUpgrade - prop_weapon_upgrade_tablet_highres
@@ -535,6 +539,7 @@ CWeaponAWP - weapon_awp
 CBaseCSGrenade - weapon_basecsgrenade
 CWeaponBizon - weapon_bizon
 CBreachCharge - weapon_breachcharge
+CBumpMine - weapon_bumpmine
 CC4 - weapon_c4
 CWeaponCSBase - weapon_cs_base
 CWeaponCSBaseGun - weapon_csbase_gun
@@ -577,6 +582,7 @@ CWeaponScout - weapon_scout
 CWeaponSG550 - weapon_sg550
 CWeaponSG552 - weapon_sg552
 CWeaponSG556 - weapon_sg556
+CWeaponShield - weapon_shield
 CSmokeGrenade - weapon_smokegrenade
 CSnowball - weapon_snowball
 CWeaponSSG08 - weapon_ssg08

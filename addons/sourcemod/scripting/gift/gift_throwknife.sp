@@ -22,7 +22,8 @@ int g_iHealth;
 public void OnPluginStart() {
 	HookEvent("weapon_fire",		EventShoot,			EventHookMode_Post);
 }
-public void JB_OnPluginReady() {
+
+public void Gift_OnGiftStart() {
 	g_iGift = Gift_RegisterNewGift("Lancé de couteau", "knifethrow", Gift_GetConfigBool("throw.ini", "active t"), Gift_GetConfigBool("throw.ini", "active ct"), Gift_GetConfigFloat("throw.ini", "chance"), Gift_GetConfigInt("throw.ini", "numb"), ADMFLAG_CUSTOM1|ADMFLAG_ROOT);
 	
 	g_iMaxThrow = Gift_GetConfigInt("throw.ini", "max_throw");
@@ -105,7 +106,8 @@ public void OnTouch(int entity, int client) {
 	
 	if( client > 0 && client < MaxClients ) {
 		AcceptEntityInput(entity, "Kill");
-		Entity_SetHealth(client, GetClientHealth(client) - g_iHealth);
+		
+		Entity_Hurt(client, g_iHealth, owner);
 		SlapPlayer(client, 0);
 	}
 	else {

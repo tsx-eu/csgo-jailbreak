@@ -7,7 +7,7 @@
 
 #define SERVICE_URL	"http://check.getipintel.net/check.php?ip=%s&contact=kossolax@gmail.com&flags=f"
 #define	BAN_TIME	60
-#define	QUEUE_SPEED	5.0
+#define	QUEUE_SPEED	10.0
 
 public Plugin myinfo = {
 	name = "VPN Blocker",
@@ -31,8 +31,12 @@ public void OnPluginStart() {
 	
 	CreateTimer(QUEUE_SPEED, Timer_TICK, _, TIMER_REPEAT);
 	
-	g_hCvarScore = CreateConVar("sv_autoban_vpn_score", "0.95");
+	g_hCvarScore = CreateConVar("sv_autoban_vpn_score", "0.99");
 	AutoExecConfig();
+	
+	for (int i = 1; i < MaxClients; i++)
+		if( IsClientInGame(i) )
+			OnClientPostAdminCheck(i);
 }
 
 public void OnClientPostAdminCheck(int client) {
@@ -67,45 +71,52 @@ public Action Timer_TICK(Handle timer, any none) {
 			g_bProcessing = true;		
 			Handle req = SteamWorks_CreateHTTPRequest(k_EHTTPMethodGET, URL);
 			SteamWorks_SetHTTPCallbacks(req, OnSteamWorksHTTPComplete);
+			SteamWorks_SetHTTPRequestContextValue(req, dp);
 			SteamWorks_SendHTTPRequest(req);
 		}
 	}
 }
 
-public int OnSteamWorksHTTPComplete(Handle hRequest, bool fail, bool success, EHTTPStatusCode statusCode, any dp) {
-	char IP[16], body[32];
+public int OnSteamWorksHTTPComplete(Handle req, bool fail, bool success, EHTTPStatusCode statusCode, any dp) {
+	
+	if( success && statusCode == k_EHTTPStatusCode200OK ) {
+		SteamWorks_GetHTTPResponseBodyCallback(req, HttpRequestData, dp);
+	}
+	else {
+		LogToGame("[VPN Blocker] Something went wrong with.");
+	}
+	
+	CloseHandle(req);
+	g_bProcessing = false;
+}
+
+public int HttpRequestData(const char[] body, any dp) {
+	char IP[16], tmp[16];
 	
 	ResetPack(dp);
 	ReadPackString(dp, IP, sizeof(IP));
-	
-	
-	if( success && statusCode == k_EHTTPStatusCode200OK ) {
-		SteamWorks_GetHTTPResponseBodyData(hRequest, body, sizeof(body));
+	CloseHandle(dp);
 		
-		float score = StringToFloat(body);
+	float score = StringToFloat(body);
+	
+	if( score <= -1.0 ) {
+		LogToGame("[VPN Blocker] Something went wrong with: %s --> %f", IP, score);
+	}
+	else {
+		LogToGame("[VPN Blocker] IP Result: %s = %f.", IP, score);
+		g_hScoring.SetValue(IP, score);	
 		
-		if( score <= -1.0 ) {
-			LogToGame("[VPN Blocker] Something went wrong with: %s --> %f", IP, score);
-		}
-		else {
-			g_hScoring.SetValue(IP, score);	
-			
-			if( score >= GetConVarFloat(g_hCvarScore) ) {
-				for (int i = 1; i <= MaxClients; i++) {
-					if( !IsClientInGame(i) )
-						continue;
-					
-					GetClientIP(i, body, sizeof(body));
-					
-					if( StrEqual(IP, body) ) {
-						BanClient(i, BAN_TIME, BANFLAG_IP, "VPN", "VPN are not allowed on this server");
-					}
+		if( score >= GetConVarFloat(g_hCvarScore) ) {
+			for (int i = 1; i <= MaxClients; i++) {
+				if( !IsClientInGame(i) )
+					continue;
+				
+				GetClientIP(i, tmp, sizeof(tmp));
+				
+				if( StrEqual(IP, tmp) ) {
+					BanClient(i, BAN_TIME, BANFLAG_IP, "VPN", "VPN are not allowed on this server");
 				}
 			}
 		}
 	}
-	
-	CloseHandle(hRequest);
-	CloseHandle(dp);
-	g_bProcessing = false;
 }

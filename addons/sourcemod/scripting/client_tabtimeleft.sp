@@ -9,12 +9,11 @@ public void OnPluginStart() {
 
 public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3], float angles[3], int &weapon, int &subtype, int &cmdnum, int &tickcount, int &seed, int mouse[2]) {
 	static char szNextMap[32], buffer[128];
+	static int lastButton[65];
 	static int lastTime = -1;
 	
 	if( IsFakeClient(client) )
 		return Plugin_Continue;
-	
-	
 	
 	if(buttons & IN_SCORE) {
 		int iTimeleft;
@@ -38,5 +37,12 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 		ShowSyncHudText(client, g_hHudSync, buffer);
 		return Plugin_Continue;
 	}
+	
+	if( lastButton[client] & IN_SCORE && !(buttons & IN_SCORE) ) {
+		ClearSyncHud(client, g_hHudSync);
+	}
+	
+	lastButton[client] = buttons;
+	
 	return Plugin_Continue;
 }
