@@ -1,19 +1,14 @@
-#pragma semicolon 1
-
-
-public Plugin myinfo = {
-	name = "[Client] Votekick/ban",
-	author = "NeoX^ - Rebel's Corporation",
-	version = "2.4",
-	description = "Menu votekick&ban avancé des joueurs.",
-};
-
 #include <sourcemod>
 #include <cstrike>
 #include <csgocolors>
 #include <sourcebanspp>
 
-#pragma newdecls required
+public Plugin myinfo = {
+	name = "[Client] Votekick/ban",
+	author = "NeoX^ - Rebel's Corporation",
+	version = "2.5",
+	description = "Menu votekick&ban avancé des joueurs.",
+};
 
 #define PREFIX "{green}[ {white}VOTE {green}] "
 #define VOTE_YES "###yes###"
@@ -36,12 +31,16 @@ int g_banTime,
 	g_voteOwnerUserID;
 
 char g_voteReason[256];
-char g_voteClientName[65];
-char g_voteOwnerName[65];
+char g_voteClientName[64];
+char g_voteOwnerName[64];
+char g_voteClientSteamID[32];
+char g_voteOwnerSteamID[32];
 
 public void OnPluginStart() {
 	RegConsoleCmd("say", Cmd_Say);
 	RegConsoleCmd("say_team", Cmd_Say);
+
+	HookEvent("player_disconnect", Event_OnPlayerDisconnect);
 }
 
 public void OnMapStart() {
@@ -68,6 +67,27 @@ public void OnMapStart() {
 public void OnMapEnd() {
 	delete g_fileVoteKickReason;
 	delete g_fileVoteBanReason;
+}
+
+public Action Event_OnPlayerDisconnect(Event event, const char[] name, bool dontBroadcast) {
+	char clientSteamID[32];
+	GetEventString(event, "networkid", clientSteamID, sizeof(clientSteamID));
+	if(!IsVoteInProgress())
+		return Plugin_Continue;
+
+	if(strncmp(clientSteamID, "STEAM_", 6) != 0)
+		return Plugin_Continue;
+
+	if(g_voteType != ban)
+		return Plugin_Continue;
+
+	if(StrEqual(clientSteamID, g_voteClientSteamID)) {
+		ServerCommand("sm_addban %i %s [VoteBan]", g_banTime*2, g_voteClientSteamID);
+		CancelVote();
+		CPrintToChatAll("%s Le joueur %s s'est déconnecté pendant son jugement ! Sa sentence est multipliée par deux. (%i minutes)", g_voteClientName, g_banTime*2);
+		LogToFile(g_pathLogKb, "Le joueur %s s'est déconnecté pendant son voteban ! Sa sentence est multipliée par 2 (%i minutes)\n", g_voteClientName, g_banTime*2);
+	}
+	return Plugin_Continue;
 }
 
 public Action Cmd_Say(int client, int args) {
@@ -106,7 +126,7 @@ public Action Cmd_Say(int client, int args) {
 		if(StrEqual(inText, "cancelvote") && GetClientOfUserId(g_voteOwnerUserID) == client) {
 			CancelVote();
 			CPrintToChatAll("%s Le vote a été annulé !", PREFIX);
-			LogToFile(g_pathLogKb, "%N a annulé le vote !\n", client);
+			LogToFile(g_pathLogKb, "%N [%s] a annulé le vote !\n", client, g_voteOwnerSteamID);
 		}
 	}
 	return Plugin_Continue;
@@ -124,10 +144,11 @@ int PerformVote(int voteOwner) {
 			menu_AddPlayers(menu_choosePlayer, voteOwner);
 			menu_choosePlayer.ExitButton = true;
 			menu_choosePlayer.Display(voteOwner, 30);
+			g_timeBetweenVotes = GetTime();
 		}
 	}
 	else {
-		LogToFile(g_pathLogKb, "%N a essayé de lancer un vote en présence d'admin(s) !\n", voteOwner);
+		LogToFile(g_pathLogKb, "%N [%s] a essayé de lancer un vote en présence d'admin(s) !\n", voteOwner, g_voteOwnerSteamID);
 		CPrintToChat(voteOwner, "%s Des admins sont connectés, tu ne peux pas lancer de vote !", PREFIX);
 		CPrintToChatAll("{darkred}[ {white}VOTE {darkred}] L'utilisation du voteban/votekick abusive est sévèrement puni ! ({white}un {darkred}ou {white}plusieurs {darkred}jours de ban)");
 
@@ -158,6 +179,8 @@ public int MenuHandler_ChooseReason(Menu menu, MenuAction action, int param1, in
 			CPrintToChat(param1, "%s Le joueur que vous souhaitez exclure n'est pas valide !", PREFIX);
 		else {
 			GetClientName(g_voteClientUserID, g_voteClientName, sizeof(g_voteClientName));
+			GetClientAuthId(g_voteClientUserID, AuthId_Steam2, g_voteClientSteamID, sizeof(g_voteClientSteamID));
+			GetClientAuthId(param1, AuthId_Steam2, g_voteOwnerSteamID, sizeof(g_voteOwnerSteamID));
 
 			Menu menu_chooseReason = new Menu(MenuHandler_SendVoteToAll);
 			menu_chooseReason.SetTitle("Choisissez la raison :");
@@ -206,7 +229,7 @@ public int MenuHandler_SendVoteToAll(Menu menu, MenuAction action, int param1, i
 			case(kick): { 
 				menu_sendVoteToAll.SetTitle("Exclure %s ?", g_voteClientName, g_voteReason);
 				CPrintToChatAll("%s Le joueur {white}%s {green}souhaite exclure {white}%s {green}pour {white}%s {green}!", PREFIX, g_voteOwnerName, g_voteClientName, g_voteReason);
-				LogToFile(g_pathLogKb, "%s a lancé un votekick contre %s pour %s.", g_voteOwnerName, g_voteClientName, g_voteReason);
+				LogToFile(g_pathLogKb, "%s [%s] a lancé un votekick contre %s [%s] pour %s.", g_voteOwnerName, g_voteOwnerSteamID, g_voteClientName, g_voteClientSteamID, g_voteReason);
 			}
 			case(ban): {
 				char fileLine[128], reason[128], time;
@@ -219,15 +242,13 @@ public int MenuHandler_SendVoteToAll(Menu menu, MenuAction action, int param1, i
 
 				menu_sendVoteToAll.SetTitle("Bannir %s ?", g_voteClientName, g_voteReason);
 				CPrintToChatAll("%s Le joueur {white}%s {green}souhaite bannir {white}%s {green}pour {white}%s {green}!", PREFIX, g_voteOwnerName, g_voteClientName, g_voteReason);
-				LogToFile(g_pathLogKb, "%s a lancé un voteban contre %s pour %s.", g_voteOwnerName, g_voteClientName, g_voteReason);
+				LogToFile(g_pathLogKb, "%s [%s] a lancé un voteban contre %s [%s] pour %s.", g_voteOwnerName, g_voteOwnerSteamID, g_voteClientName, g_voteClientSteamID, g_voteReason);
 			}
 		}
 		CPrintToChat(param1, "%s Vous pouvez annuler votre vote avant la fin de ce dernier en tapant {white}cancelvote {green}dans le chat !", PREFIX);
 		menu_sendVoteToAll.AddItem(VOTE_YES, "Oui");
 		menu_sendVoteToAll.AddItem(VOTE_NO, "Non");
 		menu_sendVoteToAll.DisplayVoteToAll(15);
-
-		g_timeBetweenVotes = GetTime();
 	}
 }
 
@@ -243,13 +264,11 @@ public int MenuHandler_ReceiveVotes(Menu menu, MenuAction action, int param1, in
 
 		GetMenuVoteInfo(param2, votes, totalVotes);
 		menu.GetItem(param1, item, sizeof(item), _, display, sizeof(display));
-		
 		if(strcmp(item, VOTE_NO) == 0 && param1 == 1)
 			votes = totalVotes - votes;
 		
 		percent = GetVotePercent(votes, totalVotes);
 		limit = 0.80;
-
 		if((strcmp(item, VOTE_YES) == 0 && FloatCompare(percent, limit) < 0 && param1 == 0) || (strcmp(item, VOTE_NO) == 0 && param1 == 1))
 		{
 			LogToFile(g_pathLogKb, "Le vote que %s a lancé contre %s a échoué ! (Raison : %s), le joueur a été exclu du serveur.\n", g_voteOwnerName, g_voteClientName, g_voteReason);
@@ -282,7 +301,6 @@ float GetVotePercent(int votes, int totalVotes) {
 
 bool AdmUser(int id, int flags = ADMFLAG_GENERIC) {
 	AdminId adminId = GetUserAdmin(id);
-
 	if(adminId == INVALID_ADMIN_ID)
 		return false;
 
@@ -296,6 +314,9 @@ bool Valid_Client(int id) {
 bool IsNoAdminConnected() {
 	for(int i = 1; i <= MaxClients; i++) {
 		if(!Valid_Client(i))
+			continue;
+
+		if(GetClientTeam(i) == CS_TEAM_NONE || GetClientTeam(i) == CS_TEAM_SPECTATOR)
 			continue;
 
 		if(AdmUser(i, ADMFLAG_GENERIC))
