@@ -1,4 +1,4 @@
-// Dump of all classes for "csgo" as at 2019/05/01
+// Dump of all classes for "csgo" as at 2019/05/08
 //
 
 CFireSmoke - _firesmoke
@@ -283,6 +283,7 @@ CBaseEntity - info_node_link
 CBaseEntity - info_node_link_controller
 CBaseEntity - info_null
 CInfoOverlayAccessor - info_overlay_accessor
+CBaseEntity - info_paradrop_denial
 CParticleSystem - info_particle_system
 CBaseEntity - info_player_counterterrorist
 CBaseEntity - info_player_deathmatch
