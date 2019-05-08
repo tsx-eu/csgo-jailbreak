@@ -461,13 +461,6 @@ public OnTimerResumed(client)
 	RestoreAntiBhop(client);
 }
 
-public OnClientStartTouchZoneType(client, MapZoneType:type)
-{
-	if(!Timer_GetStatus(client) && !Timer_GetPauseStatus(client)) // Timer stopped
-		if(type == ZtStart || type == ZtBonusStart || type == ZtBonus2Start || type == ZtBonus3Start || type == ZtBonus4Start || type == ZtBonus5Start)
-			TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, Float:{0.0,0.0,-100.0});
-}
-
 public Native_SaveLastJumps(Handle:plugin, numParams)
 {
 	StoreAntiBhop(GetNativeCell(1));
@@ -1390,7 +1383,7 @@ ApplyDifficulty(client)
 		#endif
 
 		if(!StrEqual(g_Physics[style][StyleDesc], ""))
-			CPrintToChat(client, "%s %s", PREFIX, g_Physics[style][StyleDesc]);
+			CPrintToChat(client, "%s %s", PLUGIN_PREFIX, g_Physics[style][StyleDesc]);
 
 		if(g_Settings[TeleportOnStyleChanged])
 		{
