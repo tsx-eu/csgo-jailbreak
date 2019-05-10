@@ -1,6 +1,3 @@
-#pragma semicolon 1
-#pragma tabsize 0
-
 #include <sourcemod>
 #include <sdktools>
 #include <cstrike>
@@ -8,20 +5,20 @@
 #include <smlib>
 #include <timer-stocks>
 #include <timer-worldrecord>
+#include <autores_time>
 
 #define PREFIX "{purple}[ {white}MG {purple}]"
 
 public Plugin myinfo = {
 	name = "[Server] Autorespawn & Other",
-	author = "NeoX^",
+	author = "NeoX^ - Rebel's Corporation",
 	version = "1.5",
-	description = "Autorespawn (with command & config file), Give knife on race&fight maps, Anti late spawn, Delete AFK Killer on Harero, 10k$, Change cvars values differs maps, Unlimited time to choose team, HUD Server Record",
+	description = "Autorespawn, Knife, Late spawn, Delete useless stuff, 10k$, Cvars values, Unlimited time to choose team, HUD Server Record",
 };
 
-File g_fileAutoRespawnConfig;
-char g_szActualMapName[64], g_szSRRecord[64], g_szSRRecordName[64];
+char g_szSRRecord[64], g_szSRRecordName[64];
 Handle g_hTimeForRespawn, g_hHudSyncSR, g_hTimerSyncHUD;
-float g_fRespawnTime, g_fServerRecordTime;
+float g_fServerRecordTime;
 
 ConVar g_cvRoundTime;
 ConVar g_cvRoundTime_defuse;
@@ -29,10 +26,9 @@ ConVar g_cvRoundTime_hostage;
 ConVar g_cvGravity;
 ConVar g_cvAutoBhop;
 ConVar g_cvTimeLimit;
+ConVar g_cvRoundWinConditions;
 
 public void OnPluginStart() {
-	RegAdminCmd("sm_addrestime", Cmd_AddAutorespawnTime, ADMFLAG_ROOT);
-	RegAdminCmd("sm_addknife", Cmd_AddKnife, ADMFLAG_ROOT);
 	RegAdminCmd("sm_statauto", Cmd_StatAuto, ADMFLAG_VOTE);
 	RegAdminCmd("sm_getrestime", Cmd_GetResTime, ADMFLAG_VOTE);
 	
@@ -57,82 +53,28 @@ public void OnPluginStart() {
 	g_cvTimeLimit = FindConVar("mp_timelimit");
 	g_cvGravity = FindConVar("sv_gravity");
 	g_cvAutoBhop = FindConVar("sv_autobunnyhopping");
+	g_cvRoundWinConditions = FindConVar("mp_ignore_round_win_conditions");
 
 	g_hHudSyncSR = CreateHudSynchronizer();
 }
 
 public void OnMapStart() {
-	GetCurrentMap(g_szActualMapName, sizeof(g_szActualMapName));
-
-	g_fileAutoRespawnConfig = OpenFile("addons/sourcemod/configs/autorespawn.ini", "a+");
-	if(g_fileAutoRespawnConfig == null) {
-		SetFailState("Impossible d'ouvrir le fichier \"addons/sourcemod/configs/autorespawn.ini\" !");
-		return;
-	}
-
-	char fileLine[128], mapName[64], timeRespawn;
-	while(!IsEndOfFile(g_fileAutoRespawnConfig) && ReadFileLine(g_fileAutoRespawnConfig, fileLine, sizeof(fileLine))) {
-		timeRespawn = BreakString(fileLine, mapName, sizeof(mapName));
-		if(StrEqual(mapName, g_szActualMapName)) {
-			g_fRespawnTime = StringToFloat(fileLine[timeRespawn]);
-			break;
-		}
-		else
-			g_fRespawnTime = -2.0;
-	}
-
-	if(g_fRespawnTime < 0.0)
+	SetAutoRespawnTime();
+	if(!IsTimerMap())
 		ServerCommand("sm plugins unload timer/timer-hud_csgo.smx");
-
-	if(g_fRespawnTime >= 0.0)
+	else
 		g_hTimerSyncHUD = CreateTimer(1.0, Timer_SyncHUDSR, _, TIMER_REPEAT);
 }
 
 public void OnMapEnd() {
-	delete g_fileAutoRespawnConfig;
 	FlashTimer(g_hTimerSyncHUD);
 }
 
 public void OnConfigsExecuted() {
-	if(Valid_RunMap() && GetRoundTimesValue() != 60)
+	if(IsRunMap() && GetRoundTimesValue() != 60)
 		SetRoundTimesValue(60);
-	else if(!Valid_RunMap() && GetRoundTimesValue() != 20)
+	else if(!IsRunMap() && GetRoundTimesValue() != 20)
 		SetRoundTimesValue(20);
-}
-
-public Action Cmd_AddAutorespawnTime(int client, int args) {
-	if(args != 1) {
-		ReplyToCommand(client, "Usage : sm_addrestime <time> (0 = infinite respawn, white = -2)");
-		return Plugin_Handled;
-	}
-
-	if(g_fRespawnTime >= 0.0) {
-		CPrintToChat(client, "%s Impossible de rajouter un temps de respawn, il en existe déjà un ! ({white}%f {purple}secondes)", PREFIX, g_fRespawnTime);
-		return Plugin_Handled;
-	}
-
-	char buffer[16];
-	GetCmdArgString(buffer, sizeof(buffer));
-	int timeRespawn = StringToInt(buffer);
-
-	if(timeRespawn >= 0) {
-		WriteFileLine(g_fileAutoRespawnConfig, "\"%s\" %i", g_szActualMapName, timeRespawn);
-		CPrintToChat(client, "%s Vous avez rajouté {white}%i {purple}seconde(s) de respawn pour la map {white}%s {purple}!", PREFIX, timeRespawn, g_szActualMapName);
-		g_fRespawnTime = float(timeRespawn);
-	}
-	else 
-		CPrintToChat(client, "%s Le temps de respawn doit être supérieur ou égal à 0 ! (0 = temps infini)", PREFIX);
-	return Plugin_Handled;
-}
-
-public Action Cmd_AddKnife(int client, int args) {
-	if(g_fRespawnTime != -1.0) {
-		WriteFileLine(g_fileAutoRespawnConfig, "\"%s\" -1", g_szActualMapName);
-		g_fRespawnTime = -1.0;
-	}
-	else
-		CPrintToChat(client, "%s Les couteaux sont déjà autorisés sur cette map !", PREFIX);
-	return Plugin_Handled;
 }
 
 public Action Cmd_StatAuto(int client, int args) {
@@ -143,24 +85,24 @@ public Action Cmd_StatAuto(int client, int args) {
 }
 
 public Action Cmd_GetResTime(int client, int args) {
-	CPrintToChat(client, "%s Le temps d'autorespawn sur cette map est de : {white}%.0f {purple}secondes.", PREFIX, g_fRespawnTime);
+	CPrintToChat(client, "%s Le temps d'autorespawn sur cette map est de : {white}%.0f {purple}secondes.", PREFIX, g_fResTime);
 	return Plugin_Handled;
 }
 
 public Action Event_RoundStart(Event event, const char[] name, bool dontBroadcast) {
-	if(g_fRespawnTime > 0.0) {
-		g_hTimeForRespawn = CreateTimer(g_fRespawnTime, Timer_RespawnPlayerByTime);
-		CPrintToChatAll("%s Le temps d'autorespawn est de {white}%.0f {purple}secondes !", PREFIX, g_fRespawnTime);
+	if(IsTimerMap() && !IsRunMap()) {
+		g_hTimeForRespawn = CreateTimer(g_fResTime, Timer_RespawnPlayerByTime);
+		CPrintToChatAll("%s Le temps d'autorespawn est de {white}%.0f {purple}secondes !", PREFIX, g_fResTime);
 	}
-	else if(Valid_RunMap())
+	else if(IsRunMap())
 		CPrintToChatAll("%s Vous serez respawn jusqu'à la fin de la partie en cas de mort.", PREFIX);
 
-	if(StrEqual(g_szActualMapName, "mg_harero_v2")) {
+	if(IsMapNameEqual("mg_harero_v3")) {
 		int afkTrigger = Entity_FindByName("afk", "trigger_multiple");
 		AcceptEntityInput(afkTrigger, "Kill");
 	}
 
-	if(StrEqual(g_szActualMapName, "mg_100traps_v4_1")) {
+	if(IsMapNameEqual("mg_100traps_v4_1")) {
 		int buttonHelpGravity = Entity_FindByName("helpbutts2", "func_button");
 		AcceptEntityInput(buttonHelpGravity, "Kill");
 	}
@@ -170,6 +112,9 @@ public Action Event_RoundStart(Event event, const char[] name, bool dontBroadcas
 }
 
 public Action Timer_RespawnPlayerByTime(Handle timer) {
+	if(GetConVarInt(g_cvRoundWinConditions) != 0)
+		SetConVarInt(g_cvRoundWinConditions, 0, false, false);
+
 	CPrintToChatAll("%s Vous n'êtes plus autorisé à respawn !", PREFIX);
 	g_hTimeForRespawn = null;
 }
@@ -182,7 +127,7 @@ public Action Event_RoundEnd(Event event, const char[] name, bool dontBroadcast)
 
 public Action Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast) {
 	int client = GetClientOfUserId(event.GetInt("userid"));
-	if(Valid_Client(client) && GetClientTeam(client) > 1 && (Valid_RunMap() || g_hTimeForRespawn != null))
+	if(Valid_Client(client) && GetClientTeam(client) > 1 && (IsRunMap() || g_hTimeForRespawn != null))
 		CreateTimer(0.2, Timer_RespawnClient, client);
 }
 
@@ -196,7 +141,7 @@ public Action Timer_RespawnClient(Handle timer, int client) {
 	if(IsPlayerAlive(client))
 		return Plugin_Handled;
 
-	if(Valid_RunMap()) {
+	if(IsRunMap()) {
 		CS_RespawnPlayer(client);
 		return Plugin_Handled;
 	}
@@ -209,18 +154,26 @@ public Action Timer_RespawnClient(Handle timer, int client) {
 
 public Action Event_PlayerSpawn(Event event, const char[] name, bool dontBroadcast) {
 	int client = GetClientOfUserId(event.GetInt("userid"));
-	if(Valid_Client(client) && !IsFakeClient(client) && GetClientTeam(client) > 1 && GetPlayerWeaponSlot(client, CS_SLOT_KNIFE) == -1 && g_fRespawnTime >= -1.0) {
+	if(!Valid_Client(client))
+		return;
+
+	if(!IsFakeClient(client) && GetClientTeam(client) > 1 && GetPlayerWeaponSlot(client, CS_SLOT_KNIFE) == -1 && (IsFightMap() || IsTimerMap()))
 		GivePlayerItem(client, "weapon_knife");
+
+	if(GetClientTeam(client) > 1) {
+		if((IsTimerMap() && !IsRunMap()) && g_hTimeForRespawn == null)
+			CreateTimer(0.2, Timer_KillPlayer, client);
+		else if(IsMultigameMap())
+			DisarmClient(client);
+
 		if(GetEntProp(client, Prop_Send, "m_iAccount") != 10000)
 			SetEntProp(client, Prop_Send, "m_iAccount", 10000);
 	}
 
-	if(Valid_Client(client) && GetClientTeam(client) > 1) {
-		if(g_fRespawnTime > 0.0 && g_hTimeForRespawn == null)
-			CreateTimer(0.2, Timer_KillPlayer, client);
-		else if(g_fRespawnTime == -2.0)
-			DisarmClient(client);
-	}
+	if(IsTimerMap() && CountPlayerAlive() == 1)
+		SetConVarInt(g_cvRoundWinConditions, 1, false, false);
+	else if(GetConVarInt(g_cvRoundWinConditions) != 0)
+		SetConVarInt(g_cvRoundWinConditions, 0, false, false);
 }
 
 public Action Event_PlayerFullConnect(Event event, const char[] name, bool dontBroadcast) {
@@ -237,14 +190,14 @@ public Action Event_PlayerTeam(Event event, const char[] name, bool dontBroadcas
 	int team = GetEventInt(event, "team");
 	int oldTeam = GetEventInt(event, "oldteam");
 	if(team > 1 && oldTeam <= 1) {
-		if(Valid_RunMap() || g_hTimeForRespawn != null)
+		if(IsRunMap() || g_hTimeForRespawn != null)
 			CreateTimer(0.2, Timer_RespawnClient, client);
 	}
 	return Plugin_Continue;
 }
 
 public Action Timer_KillPlayer(Handle timer, int client) {
-	if(Valid_Client(client) && IsPlayerAlive(client) && g_fRespawnTime > 0.0 && g_hTimeForRespawn == null) {
+	if(Valid_Client(client) && IsPlayerAlive(client) && g_fResTime > 0.0 && g_hTimeForRespawn == null) {
 		ForcePlayerSuicide(client);
 		CPrintToChat(client, "%s Vous n'êtes pas autorisé à respawn !", PREFIX);
 	}
@@ -277,9 +230,9 @@ public int OnTimerRecord(int client, int track, int style, float newTime, float 
 }
 
 public void OnRoundTimeChanged(ConVar convar, const char[] oldValue, const char[] newValue) {
-	if(Valid_RunMap() && StringToInt(newValue) < 60)
+	if(IsRunMap() && StringToInt(newValue) < 60)
 		SetConVarInt(convar, 60, false, false);
-	else if(!Valid_RunMap() && StringToInt(newValue) < 20)
+	else if(!IsRunMap() && StringToInt(newValue) < 20)
 		SetConVarInt(convar, 20, false, false);
 }
 
@@ -309,8 +262,8 @@ public void OnFullAlltalkChanged(ConVar convar, const char[] oldValue, const cha
 }
 
 int GetRoundTimesValue() {
-	int value = GetConVarInt(g_cvRoundTime) + GetConVarInt(g_cvRoundTime_hostage) + GetConVarInt(g_cvRoundTime_defuse);
-	return value/3;
+	int value = GetConVarInt(g_cvRoundTime) + GetConVarInt(g_cvRoundTime_hostage) + GetConVarInt(g_cvRoundTime_defuse) + GetConVarInt(g_cvTimeLimit);
+	return value/4;
 }
 
 void SetRoundTimesValue(int value) {
@@ -341,12 +294,23 @@ void DisarmClient(int id) {
 	}
 }
 
-bool Valid_RunMap() {
-	if(RoundFloat(g_fRespawnTime) == 0)
-		return true;
-	return false;
-}
-
 bool Valid_Client(int id) {
 	return (id > 0 && id <= MaxClients && IsClientInGame(id) && IsClientConnected(id) && !IsClientInKickQueue(id));
+}
+
+int CountPlayerAlive() {
+	int count = 0;
+	for(int i = 1; i <= MaxClients; i++) {
+		if(!Valid_Client(i))
+			continue;
+
+		if(GetClientTeam(i) != CS_TEAM_CT || GetClientTeam(i) != CS_TEAM_T)
+			continue;
+
+		if(!IsPlayerAlive(i))
+			continue;
+
+		count++;
+	}
+	return count;
 }
