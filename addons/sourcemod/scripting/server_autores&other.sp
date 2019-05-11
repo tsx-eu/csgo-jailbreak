@@ -24,9 +24,9 @@ ConVar g_cvRoundTime;
 ConVar g_cvRoundTime_defuse;
 ConVar g_cvRoundTime_hostage;
 ConVar g_cvGravity;
-ConVar g_cvAutoBhop;
 ConVar g_cvTimeLimit;
 ConVar g_cvRoundWinConditions;
+ConVar g_cvAutoBhop;
 
 public void OnPluginStart() {
 	RegAdminCmd("sm_statauto", Cmd_StatAuto, ADMFLAG_VOTE);
@@ -52,8 +52,8 @@ public void OnPluginStart() {
 	g_cvRoundTime_hostage = FindConVar("mp_roundtime_hostage");
 	g_cvTimeLimit = FindConVar("mp_timelimit");
 	g_cvGravity = FindConVar("sv_gravity");
-	g_cvAutoBhop = FindConVar("sv_autobunnyhopping");
 	g_cvRoundWinConditions = FindConVar("mp_ignore_round_win_conditions");
+	g_cvAutoBhop = FindConVar("sv_autobunnyhopping");
 
 	g_hHudSyncSR = CreateHudSynchronizer();
 }
@@ -121,8 +121,6 @@ public Action Timer_RespawnPlayerByTime(Handle timer) {
 
 public Action Event_RoundEnd(Event event, const char[] name, bool dontBroadcast) {
 	FlashTimer(g_hTimeForRespawn);
-	if(GetConVarInt(g_cvAutoBhop) == 0)
-		SetConVarInt(g_cvAutoBhop, 1, false, false);
 }
 
 public Action Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast) {
