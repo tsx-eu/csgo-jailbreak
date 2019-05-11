@@ -867,7 +867,7 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 		Block_MovementControl(client, true);
 	}
 
-	if (buttons & IN_JUMP)
+	/*if (buttons & IN_JUMP)
 	{
 		if(!onground)
 		{
@@ -896,7 +896,7 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 				}
 			}
 		}
-	}
+	}*/
 
 	new oldjumps = g_iFullJumpCount[client];
 	new bool:perfect = false;
@@ -1383,7 +1383,7 @@ ApplyDifficulty(client)
 		#endif
 
 		if(!StrEqual(g_Physics[style][StyleDesc], ""))
-			CPrintToChat(client, "%s %s", PLUGIN_PREFIX, g_Physics[style][StyleDesc]);
+			CPrintToChat(client, "%s %s", PREFIX, g_Physics[style][StyleDesc]);
 
 		if(g_Settings[TeleportOnStyleChanged])
 		{
