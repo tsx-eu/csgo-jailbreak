@@ -8,6 +8,7 @@
 #include <cstrike>
 #include <smlib>
 #include <smart-menu>
+#include <CustomPlayerSkins>
 
 #pragma newdecls required
 
@@ -28,7 +29,8 @@ Function g_fStackCondition[MAX_LR], g_fStackStart[MAX_LR], g_fStackEnd[MAX_LR];
 Handle g_hStackPlugin[MAX_LR];
 int g_iStackFlag[MAX_LR], g_iStackTeam[MAX_LR][4], g_iSorted[MAX_LR]; // CS_TEAM_T == 2 CS_TEAM_CT == 3 
 Handle g_hPluginReady = INVALID_HANDLE, g_hOnStartLR = INVALID_HANDLE, g_hOnStopLR = INVALID_HANDLE;
-Handle g_hCvar = INVALID_HANDLE;
+Handle g_hCvarEnable = INVALID_HANDLE;
+Handle g_hCvarStripWeapon = INVALID_HANDLE;
 bool g_bPluginEnabled;
 
 int g_iDoingDV = -1;
@@ -38,9 +40,11 @@ int g_iCurrentTeam[4][MAX_PLAYERS], g_iCurrentTeamCount[4], g_iInitialTeam[4][MA
 int g_cLaser, g_cArrow;
 
 public void OnPluginStart() {
-	g_hCvar = CreateConVar("sm_hosties_lr", "1");
-	g_bPluginEnabled = GetConVarInt(g_hCvar) == 1;
-	HookConVarChange(g_hCvar, OnConVarChange);
+	g_hCvarEnable = CreateConVar("sm_hosties_lr", "1");
+	g_hCvarStripWeapon = CreateConVar("sm_hosties_strip_weapons", "1");
+	
+	g_bPluginEnabled = GetConVarInt(g_hCvarEnable) == 1;
+	HookConVarChange(g_hCvarEnable, OnConVarChange);
 	
 	RegConsoleCmd("sm_dv", 			cmd_DV);
 	RegConsoleCmd("sm_lr", 			cmd_DV);
@@ -55,7 +59,7 @@ public void OnPluginStart() {
 	CreateTimer(1.0, EventSecondElapsed, _, TIMER_REPEAT);
 }
 public void OnConVarChange(Handle cvar, const char[] oldVal, const char[] newVal) {
-	if( cvar == g_hCvar ) {
+	if( cvar == g_hCvarEnable ) {
 		g_bPluginEnabled = StringToInt(newVal) == 1;
 	}
 }
@@ -74,7 +78,7 @@ public void OnMapStart() {
 	Call_StartForward(g_hPluginReady);
 	Call_Finish();
 }
-public void OnClientPostAdminCheck(int client) {
+public void OnClientPutInServer(int client) {
 	SDKHook(client, SDKHook_OnTakeDamage, EventTakeDamage);
 }
 public void OnClientDisconnect(int client) {
@@ -104,6 +108,13 @@ public Action EventRoundStart(Handle ev, const char[] name, bool  bd) {
 		PrintToChatAll("WARNING - Please report the following issue:");
 		PrintToChatAll(" -\t EventRoundStart @ g_iDoingDV >= 0");		
 	}
+	
+	if( GetConVarBool(g_hCvarStripWeapon) ) {
+		for (int i = 1; i <= MaxClients; i++) {
+			if( IsClientInGame(i) && IsPlayerAlive(i) )
+				DV_CleanClient(i);
+		}
+	}
 }
 public Action EventRoundEnd(Handle ev, const char[] name, bool  bd) {
 	if( g_iDoingDV >= 0 )
@@ -117,7 +128,6 @@ public Action EventTakeDamage(int victim, int& attacker, int& inflictor, float& 
 	
 	bool victimInDV = DV_IsClientInsideTeam(victim);
 	bool attackerInDV = DV_IsClientInsideTeam(attacker);
-	
 	
 	if( victimInDV && attackerInDV ) {
 		if( g_iStackFlag[g_iDoingDV] & JB_NODAMAGE )
@@ -149,8 +159,8 @@ public Action EventSecondElapsed(Handle timer, any none) {
 				dst[2] += 16.0;
 				
 				if( GetVectorDistance(src, dst, true) > MAX_DISTANCE*MAX_DISTANCE ) {
-					DV_BeamEffect(src, dst, {255, 0, 0, 200});
-					DV_BeamEffect(dst, src, { 0, 0, 255, 200});
+					DV_BeamEffect(src, dst, {255, 0, 0, 100});
+					DV_BeamEffect(dst, src, { 0, 0, 255, 100});
 					
 					EmitSoundToClientAny(client, "buttons/blip1.wav", target);
 					EmitSoundToClientAny(target, "buttons/blip1.wav", client);
@@ -285,11 +295,11 @@ public int menuDV(Menu menu, MenuAction action, int client, int params) {
 	return;
 }
 public int menuDVchooseCT(SmartMenu menu, MenuAction action, int client, int params) {
-	static char options[64], data[2][16];
+	static char options[64];
 	if( action == MenuAction_Select ) {
 		GetMenuItem(menu, params, options, sizeof(options));
 		int id = menu.GetCell("id");
-		int teamCount = StringToInt(data[1]);
+		int teamCount = StringToInt(options);
 		
 		g_iCurrentTeam[CS_TEAM_CT][g_iCurrentTeamCount[CS_TEAM_CT]] = teamCount;
 		g_iCurrentTeamCount[CS_TEAM_CT]++;
@@ -418,13 +428,13 @@ void DV_BeamEffect(float src[3], float dst[3], int color[4]) {
 	if (TR_DidHit(trace)) {
 		TR_GetEndPosition(vel, trace);
 		
-		TE_SetupBeamPoints(dir, vel, g_cArrow, g_cArrow, 0, 12, 1.0, 16.0, 16.0, 0, 0.0, color, 10);
+		TE_SetupBeamPoints(dir, vel, g_cLaser, g_cLaser, 0, 12, 1.0, 2.0, 2.0, 0, 0.0, color, 10);
 		TE_SendToAll();
-		TE_SetupBeamPoints(vel, ang, g_cArrow, g_cArrow, 0, 12, 1.0, 16.0, 16.0, 0, 0.0, color, 10);
+		TE_SetupBeamPoints(vel, ang, g_cLaser, g_cLaser, 0, 12, 1.0, 2.0, 2.0, 0, 0.0, color, 10);
 		TE_SendToAll();
 	}
 	else {
-		TE_SetupBeamPoints(dir, ang, g_cArrow, g_cArrow, 0, 12, 1.0, 16.0, 16.0, 0, 0.0, color, 10);
+		TE_SetupBeamPoints(dir, ang, g_cLaser, g_cLaser, 0, 12, 1.0, 2.0, 2.0, 0, 0.0, color, 10);
 		TE_SendToAll();
 	}
 	CloseHandle(trace);
@@ -440,7 +450,7 @@ public bool TR_FilterClients(int entity, int mask, any client) {
 bool DV_CanBePlayed(int id, int targetCount=1) {
 	bool can;
 	
-	if( g_iStackTeam[id][CS_TEAM_CT] > targetCount ) {
+	if( g_iStackFlag[id] & JB_SHOULD_SELECT_CT && g_iStackTeam[id][CS_TEAM_CT] > targetCount ) {
 		can = false;
 	}
 	else if( g_fStackCondition[id] == INVALID_FUNCTION ) {
@@ -487,6 +497,11 @@ bool DV_Start(int id) {
 	Call_PushCell(g_iInitialTeam[CS_TEAM_CT][0]);	
 	Call_Finish();
 	
+	for (int i = 0; i < g_iInitialTeamCount[CS_TEAM_T]; i++)
+		Effect_Glow(g_iInitialTeam[CS_TEAM_T][i], 255, 0, 0, 200);
+	for (int i = 0; i < g_iInitialTeamCount[CS_TEAM_CT]; i++)
+		Effect_Glow(g_iInitialTeam[CS_TEAM_CT][i], 0, 0, 255, 200);
+	
 	return false;
 }
 void DV_Stop(int id) {
@@ -499,6 +514,11 @@ void DV_Stop(int id) {
 	Call_PushCell(g_iInitialTeam[CS_TEAM_T][0]);
 	Call_PushCell(g_iInitialTeam[CS_TEAM_CT][0]);	
 	Call_Finish();
+	
+	for (int i = 0; i < g_iInitialTeamCount[CS_TEAM_T]; i++)
+		Effect_GlowStop(g_iInitialTeam[CS_TEAM_T][i]);
+	for (int i = 0; i < g_iInitialTeamCount[CS_TEAM_CT]; i++)
+		Effect_GlowStop(g_iInitialTeam[CS_TEAM_CT][i]);
 	
 	DV_CleanTeams();
 	g_iInitialTeamCount[CS_TEAM_CT] = g_iInitialTeamCount[CS_TEAM_T] = g_iCurrentTeamCount[CS_TEAM_T] = g_iCurrentTeamCount[CS_TEAM_CT] = 0;
@@ -596,4 +616,30 @@ public int Native_JB_IsDvActive(Handle plugin, int numParams) {
 			return view_as<int>(true);
 	}
 	return view_as<int>(false);
+}
+
+
+void Effect_Glow(int client, int r, int g, int b, int a) {
+	static char model[PLATFORM_MAX_PATH];
+	
+	Entity_GetModel(client, model, sizeof(model));
+	CPS_RemoveSkin(client);
+	CPS_SetSkin(client, model, CPS_RENDER);
+	
+	int entity = CPS_GetSkin(client);
+	SetEntProp(entity, Prop_Send, "m_bShouldGlow", true, true);
+	SetEntProp(entity, Prop_Send, "m_nGlowStyle", 0);
+	SetEntPropFloat(entity, Prop_Send, "m_flGlowMaxDist", 100000.0);
+	
+	int offset = GetEntSendPropOffs(entity, "m_clrGlow");
+	SetEntData(entity, offset + 0, r, _, true);
+	SetEntData(entity, offset + 1, g, _, true);
+	SetEntData(entity, offset + 2, b, _, true);
+	SetEntData(entity, offset + 3, a, _, true);
+}
+
+void Effect_GlowStop(int client) {
+	int entity = CPS_GetSkin(client);
+	if( entity > 0 )
+		CPS_RemoveSkin(client);
 }

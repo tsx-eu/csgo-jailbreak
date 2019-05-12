@@ -14,9 +14,11 @@ public void JB_OnPluginReady() {
 }
 public void DV_Start(int client, int[] targets, int targetCount) {
 	DV_StripWeapon(client);
-	
 	GivePlayerItem(client, "weapon_knife");
-	Client_GiveWeaponAndAmmo(client, "weapon_awp", true, 1, 0, 0, 0);
+	
+	int wpnId = GivePlayerItem(client, "weapon_awp");
+	SetEntProp(wpnId, Prop_Send, "m_iClip1", 1);
+	SetEntProp(wpnId, Prop_Send, "m_iPrimaryReserveAmmoCount", 0);
 	
 	for (int i = 0; i < targetCount; i++) {
 		DV_StripWeapon(targets[i]);

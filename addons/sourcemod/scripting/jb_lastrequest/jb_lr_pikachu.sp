@@ -30,6 +30,9 @@ public void DV_Start(int client, int target) {
 	SetEntityHealth(client, 100);
 	SetEntityHealth(target, 100);
 	
+	Client_SetArmor(client, 0);
+	Client_SetArmor(target, 0);
+	
 	DV_StripWeapon(client);
 	DV_StripWeapon(target);
 	
@@ -48,23 +51,22 @@ public Action EventShoot(Handle ev, const char[] name, bool broadcast) {
 			GetClientEyeAngles(client, ang);
 			
 			int target = -1;
-			Effect(client, src, ang, view_as<float>({ -32.0, 0.0, -14.0 }), {255, 128, 40, 128}, 4.0, 128.0, target);
-			Effect(client, src, ang, view_as<float>({   0.0, 0.0,  -6.0 }), {255, 128, 40, 128}, 4.0, 128.0, target);
-			Effect(client, src, ang, view_as<float>({  32.0, 0.0, -14.0 }), {255, 128, 40, 128}, 4.0, 128.0, target);
-			Effect(client, src, ang, view_as<float>({   0.0, 0.0, -22.0 }), {255, 128, 40, 128}, 4.0, 128.0, target);
+			Effect(client, src, ang, view_as<float>({ -16.0, 0.0,  -7.0 }), {255, 128, 40, 128}, 2.0, 128.0, target);
+			Effect(client, src, ang, view_as<float>({   0.0, 0.0,  -3.0 }), {255, 128, 40, 128}, 2.0, 128.0, target);
+			Effect(client, src, ang, view_as<float>({  16.0, 0.0,  -7.0 }), {255, 128, 40, 128}, 2.0, 128.0, target);
+			Effect(client, src, ang, view_as<float>({   0.0, 0.0, -11.0 }), {255, 128, 40, 128}, 2.0, 128.0, target);
 			
-			Effect(client, src, ang, view_as<float>({ -16.0, 0.0,  -6.0 }), {255, 255, 0, 128}, 2.0, 256.0, target);
-			Effect(client, src, ang, view_as<float>({   0.0, 0.0,  -6.0 }), {255, 255, 0, 128}, 2.0, 256.0, target);
-			Effect(client, src, ang, view_as<float>({  16.0, 0.0,  -6.0 }), {255, 255, 0, 128}, 2.0, 256.0, target);
+			Effect(client, src, ang, view_as<float>({  -8.0, 0.0,  -3.0 }), {255, 255, 0, 128}, 1.0, 256.0, target);
+			Effect(client, src, ang, view_as<float>({   0.0, 0.0,  -3.0 }), {255, 255, 0, 128}, 1.0, 256.0, target);
+			Effect(client, src, ang, view_as<float>({   8.0, 0.0,  -3.0 }), {255, 255, 0, 128}, 1.0, 256.0, target);
 			
-			Effect(client, src, ang, view_as<float>({ -16.0, 0.0, -14.0 }), {255, 255, 0, 128}, 2.0, 256.0, target);
-			Effect(client, src, ang, view_as<float>({   0.0, 0.0, -14.0 }), {255, 255, 128, 128}, 8.0, 32.0, target);
-			Effect(client, src, ang, view_as<float>({  16.0, 0.0, -14.0 }), {255, 255, 0, 128}, 2.0, 256.0, target);
+			Effect(client, src, ang, view_as<float>({  -8.0, 0.0,  -7.0 }), {255, 255, 0, 128}, 	1.0, 256.0, target);
+			Effect(client, src, ang, view_as<float>({   0.0, 0.0,  -7.0 }), {255, 255, 128, 128},	4.0,  32.0, target);
+			Effect(client, src, ang, view_as<float>({   8.0, 0.0,  -7.0 }), {255, 255, 0, 128}, 	1.0, 256.0, target);
 			
-			
-			Effect(client, src, ang, view_as<float>({ -16.0, 0.0, -22.0 }), {255, 255, 0, 128}, 2.0, 256.0, target);
-			Effect(client, src, ang, view_as<float>({   0.0, 0.0, -22.0 }), {255, 255, 0, 128}, 2.0, 256.0, target);
-			Effect(client, src, ang, view_as<float>({  16.0, 0.0, -22.0 }), {255, 255, 0, 128}, 2.0, 256.0, target);
+			Effect(client, src, ang, view_as<float>({  -8.0, 0.0, -11.0 }), {255, 255, 0, 128}, 1.0, 256.0, target);
+			Effect(client, src, ang, view_as<float>({   0.0, 0.0, -11.0 }), {255, 255, 0, 128}, 1.0, 256.0, target);
+			Effect(client, src, ang, view_as<float>({   8.0, 0.0, -11.0 }), {255, 255, 0, 128}, 1.0, 256.0, target);
 			
 			if( target == g_iTarget || target == g_iClient ) {
 				Entity_SetHealth(target, GetClientHealth(target) - 25);

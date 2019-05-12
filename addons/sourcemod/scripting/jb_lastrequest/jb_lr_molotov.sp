@@ -18,6 +18,9 @@ public void DV_Start(int client, int target) {
 	SetEntityHealth(client, 50);
 	SetEntityHealth(target, 50);
 	
+	Client_SetArmor(client, 0);
+	Client_SetArmor(target, 0);
+	
 	DV_StripWeapon(client);
 	DV_StripWeapon(target);
 	

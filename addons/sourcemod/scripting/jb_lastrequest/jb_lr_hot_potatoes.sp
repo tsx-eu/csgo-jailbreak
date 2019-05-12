@@ -38,7 +38,10 @@ public void DV_Start(int client, int target) {
 	GivePlayerItem(client, "weapon_knife");
 	GivePlayerItem(target, "weapon_knife");
 	
-	int id = Client_GiveWeaponAndAmmo(client, "weapon_deagle", true, 0, 0, 0, 0);	
+	
+	int id = GivePlayerItem(client, "weapon_deagle");	
+	SetEntProp(id, Prop_Send, "m_iClip1", 0);
+	SetEntProp(id, Prop_Send, "m_iPrimaryReserveAmmoCount", 0);
 	float timeLeft = GetGameTime() + Math_GetRandomFloat(20.0, 30.0);
 	
 	g_iDeagleDATA[0] = client;

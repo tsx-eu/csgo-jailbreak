@@ -38,6 +38,9 @@ public int selectWeapon(SmartMenu menu, MenuAction action, int client, int param
 		SetEntityHealth(client, hp);
 		SetEntityHealth(target, hp);
 		
+		Client_SetArmor(client, 0);
+		Client_SetArmor(target, 0);
+		
 		DV_StripWeapon(client);
 		DV_StripWeapon(target);
 		
