@@ -21,6 +21,7 @@ int g_iHealth;
 
 public void OnPluginStart() {
 	HookEvent("weapon_fire",		EventShoot,			EventHookMode_Post);
+	HookEvent("round_start", EventRoundStart);
 }
 
 public void Gift_OnGiftStart() {
@@ -29,19 +30,29 @@ public void Gift_OnGiftStart() {
 	g_iMaxThrow = Gift_GetConfigInt("throw.ini", "max_throw");
 	g_iHealth = Gift_GetConfigInt("throw.ini", "health");
 }
+
 public void OnMapStart() {
 	g_cLaser = PrecacheModel("materials/sprites/laserbeam.vmt", true);
 	PrecacheModel(MODEL);
 }
+
 public Action Gift_OnRandomGift(int client, int gift) {
 	if(gift != g_iGift)
 		return Plugin_Handled;
-	
 	
 	CPrintToChat(client, "{lightgreen}%s {green} Vous pouvez lancer %i couteau%s!", PREFIX, g_iMaxThrow, g_iMaxThrow > 1 ? "x":"");
 	g_iClient[client] = g_iMaxThrow;
 	return Plugin_Continue;
 }
+
+public Action EventRoundStart(Event event, const char[] name, bool dontbroadcast) {
+	for (int i = i; i <= MaxClients; i++) {
+		if(IsClientValid(i)) {
+			g_iClient[i] = 0;
+		}
+	}
+}
+
 public Action EventShoot(Handle ev, const char[] name, bool broadcast) {
 	int client = GetClientOfUserId(GetEventInt(ev, "userid"));
 	char wepname[32];
@@ -59,6 +70,7 @@ public Action EventShoot(Handle ev, const char[] name, bool broadcast) {
 		}
 	}
 }
+
 public bool TR_FilterSelf(int entity, int mask, any client) {
 	if (entity == client)
 		return false;
@@ -99,6 +111,7 @@ int Effect(int client, float origin[3], float angle[3], float offset[3], int col
 	TE_SetupBeamFollow(ent, g_cLaser, 0, 0.5, 2.0, 0.1, 1, color);
 	TE_SendToAll();
 }
+
 public void OnTouch(int entity, int client) {
 	int owner = Entity_GetOwner(entity);
 	if( owner == client || owner == 0  )
