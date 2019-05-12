@@ -97,7 +97,7 @@ public Action Event_RoundStart(Event event, const char[] name, bool dontBroadcas
 	else if(IsRunMap())
 		CPrintToChatAll("%s Vous serez respawn jusqu'à la fin de la partie en cas de mort.", PREFIX);
 
-	if(IsMapNameEqual("mg_harero_v3")) {
+	if(IsMapNameEqual("mg_harero_v2")) {
 		int afkTrigger = Entity_FindByName("afk", "trigger_multiple");
 		AcceptEntityInput(afkTrigger, "Kill");
 	}
