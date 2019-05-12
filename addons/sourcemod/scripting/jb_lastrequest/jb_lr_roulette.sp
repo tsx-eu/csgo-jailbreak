@@ -35,10 +35,11 @@ public int selectWeapon(SmartMenu menu, MenuAction action, int client, int param
 		menu.GetItem(params, options, sizeof(options));
 		int target = menu.GetCell("target");
 		
-		if( GetClientHealth(client) < 100 )
-			SetEntityHealth(client, 100);
-		if( GetClientHealth(target) < 100 )
-			SetEntityHealth(target, 100);
+		SetEntityHealth(client, 100);
+		SetEntityHealth(target, 100);
+		
+		Client_SetArmor(client, 0);
+		Client_SetArmor(target, 0);
 		
 		DV_StripWeapon(client);
 		DV_StripWeapon(target);

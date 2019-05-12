@@ -61,8 +61,15 @@ public Action OnWeaponCanUse(int client, int wepID) {
 }
 
 public void DV_Start(int client, int target) {
-	g_wpnClient = EntIndexToEntRef(Client_GiveWeaponAndAmmo(client, "weapon_deagle", true, 0, 0, 0, 0));
-	g_wpnTarget = EntIndexToEntRef(Client_GiveWeaponAndAmmo(target, "weapon_deagle", true, 0, 0, 0, 0));
+	int wpnId = GivePlayerItem(client, "weapon_deagle");
+	SetEntProp(wpnId, Prop_Send, "m_iClip1", 0);
+	SetEntProp(wpnId, Prop_Send, "m_iPrimaryReserveAmmoCount", 0);
+	g_wpnClient = EntIndexToEntRef(wpnId);
+	
+	wpnId = GivePlayerItem(target, "weapon_deagle");
+	SetEntProp(wpnId, Prop_Send, "m_iClip1", 0);
+	SetEntProp(wpnId, Prop_Send, "m_iPrimaryReserveAmmoCount", 0);
+	g_wpnTarget = EntIndexToEntRef(wpnId);
 	
 	SetEntityRenderMode(g_wpnClient, RENDER_TRANSCOLOR);
 	SetEntityRenderMode(g_wpnTarget, RENDER_TRANSCOLOR);

@@ -57,8 +57,14 @@ public Action CheckDistance(Handle timer, any none) {
 				DV_StripWeapon(g_iClient);
 				DV_StripWeapon(g_iTarget);
 				
-				g_iWeapons[g_iClient] = Client_GiveWeaponAndAmmo(g_iClient, "weapon_deagle", true, 0, 0, 0, 0);
-				g_iWeapons[g_iTarget] = Client_GiveWeaponAndAmmo(g_iTarget, "weapon_deagle", true, 0, 0, 0, 0);
+				g_iWeapons[g_iClient] = GivePlayerItem(g_iClient, "weapon_deagle");
+				g_iWeapons[g_iTarget] = GivePlayerItem(g_iTarget, "weapon_deagle");
+				
+				SetEntProp(g_iWeapons[g_iClient], Prop_Send, "m_iClip1", 0);
+				SetEntProp(g_iWeapons[g_iClient], Prop_Send, "m_iPrimaryReserveAmmoCount", 0);
+				
+				SetEntProp(g_iWeapons[g_iTarget], Prop_Send, "m_iClip1", 0);
+				SetEntProp(g_iWeapons[g_iTarget], Prop_Send, "m_iPrimaryReserveAmmoCount", 0);
 				
 				g_iState = 2;
 				g_hMain = CreateTimer(5.0, Start);

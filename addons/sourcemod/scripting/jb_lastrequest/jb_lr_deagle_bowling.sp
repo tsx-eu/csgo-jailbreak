@@ -14,6 +14,7 @@ int g_cLaser;
 int g_iPlaying, g_iState;
 int g_iLastOwner[2049];
 int g_iClient;
+int g_iWeaponToThrow = 0;
 int g_iWeapons[MAX_PLAYERS];
 bool g_bThrowed[MAX_PLAYERS], g_bTossed[MAX_PLAYERS];
 float g_flPositions[MAX_PLAYERS][3], g_flTarget[3];
@@ -56,19 +57,33 @@ public void DV_StartMulti(int[] clients, int clientCount, int[] targets, int tar
 		int client = clients[i];
 		
 		DV_StripWeapon(client);
+		GivePlayerItem(client, "weapon_knife");
+		
 		SDKHook(client, SDKHook_WeaponDropPost, OnWeaponDrop);
-		g_iWeapons[client] = EntIndexToEntRef(Client_GiveWeaponAndAmmo(client, "weapon_deagle", true, 0, 0, 0, 0));
+		int wpnId = GivePlayerItem(client, "weapon_deagle");
+		SetEntProp(wpnId, Prop_Send, "m_iClip1", 0);
+		SetEntProp(wpnId, Prop_Send, "m_iPrimaryReserveAmmoCount", 0);
+		g_iWeapons[client] = EntIndexToEntRef(wpnId);
 		SetEntityRenderMode(g_iWeapons[client], RENDER_TRANSCOLOR);
 		CreateTimer(0.01, DV_DeagleThrow_Task,g_iWeapons[client] );
+		
+		g_iWeaponToThrow++;
 	}
 	for (int i = 0; i < targetCount; i++) {
-		int client = clients[i];
+		int client = targets[i];
 		
 		DV_StripWeapon(client);
+		GivePlayerItem(client, "weapon_knife");
+		
 		SDKHook(client, SDKHook_WeaponDropPost, OnWeaponDrop);
-		g_iWeapons[client] = EntIndexToEntRef(Client_GiveWeaponAndAmmo(client, "weapon_deagle", true, 0, 0, 0, 0));
+		int wpnId = GivePlayerItem(client, "weapon_deagle");
+		SetEntProp(wpnId, Prop_Send, "m_iClip1", 0);
+		SetEntProp(wpnId, Prop_Send, "m_iPrimaryReserveAmmoCount", 0);
+		g_iWeapons[client] = EntIndexToEntRef(wpnId);
 		SetEntityRenderMode(g_iWeapons[client], RENDER_TRANSCOLOR);
 		CreateTimer(0.01, DV_DeagleThrow_Task,g_iWeapons[client] );
+		
+		g_iWeaponToThrow++;
 	}	
 	
 	g_hMain = CreateTimer(0.1, DV_TASK, _, TIMER_REPEAT);
@@ -103,7 +118,6 @@ public Action EventShoot(Handle ev, const char[] name, bool broadcast) {
 			
 			for (int i = 1; i < MaxClients; i++) {
 				g_bThrowed[i] = g_bTossed[i] = false;
-				
 			}
 			
 			g_iPlaying = 2;
@@ -149,7 +163,9 @@ public Action DV_DeagleThrow_Task(Handle timer, any entity) {
 			TE_SendToAll();
 			
 			g_bTossed[client] = true;
-			DV_CheckWinner();
+			g_iWeaponToThrow--;
+			if( g_iWeaponToThrow == 0 )
+				DV_CheckWinner();
 			
 			return Plugin_Handled;
 		}
@@ -193,10 +209,12 @@ public void DV_StopMulti(int[] clients, int clientCount, int[] targets, int targ
 	g_iPlaying = 0;
 	g_iState = 0;
 	
-	for (int i = 0; i < MaxClients; i++) {
-		if( IsValidEdict(g_iWeapons[i]) && IsValidEntity(g_iWeapons[i]) ) {
-			AcceptEntityInput(g_iWeapons[i], "Kill");
-		}
+	for (int i = 0; i < MaxClients; i++) {		
+		int idx = EntRefToEntIndex(g_iWeapons[i]);
+		if( idx > 0 )
+			AcceptEntityInput(idx, "Kill");
+		
+		g_iWeapons[i] = 0;
 	}
 	
 	KillTimer(g_hMain);

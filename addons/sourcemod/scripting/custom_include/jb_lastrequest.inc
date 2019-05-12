@@ -67,21 +67,23 @@ stock bool DV_CAN_VIP(int client) {
 stock bool DV_CAN_Cupidon(int[] clients, int clientCount) {
 	if( clientCount != 2 )
 		return false;
-	static char tmp[32];
+	
+	static char tmp[64];
+	int cpt = 0;
 
-	int i = 0;
-	while ( (i = FindEntityByClassname(i, "info_particle_system")) != INVALID_ENT_REFERENCE ) {
-		GetEntPropString(i, Prop_Data, "m_iTargetName", tmp, sizeof(tmp)); 
-		PrintToChatAll("%d -> %s -> %d", i, tmp, Entity_GetParent(i));
-	}
-
-	for (i = 0; i < clientCount; i++) {
-		Format(tmp, sizeof(tmp), "particlecupidon%d", clients[i]);
-		if( Entity_FindByName(tmp, "info_particle_system") == INVALID_ENT_REFERENCE )
-			return false;
+	for (int i = 0; i < clientCount; i++) {
+		
+		int j = 0;
+		while ( (j = FindEntityByClassname(j, "info_particle_system")) != INVALID_ENT_REFERENCE ) {
+			if( Entity_GetParent(j) == clients[i] ) {
+				GetEntPropString(j, Prop_Data, "m_iszEffectName", tmp, sizeof(tmp));
+				if( StrEqual(tmp, "coeur_cupi") )
+					cpt++;
+			}
+		}
 	}
 	
-	return true;
+	return cpt == 2;
 }
 stock void DV_StripWeapon(int client, bool drop = false) {
 	int wepIdx = -1;
