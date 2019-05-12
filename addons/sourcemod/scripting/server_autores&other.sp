@@ -29,8 +29,8 @@ ConVar g_cvRoundWinConditions;
 ConVar g_cvAutoBhop;
 
 public void OnPluginStart() {
-	RegAdminCmd("sm_statauto", Cmd_StatAuto, ADMFLAG_VOTE);
-	RegAdminCmd("sm_getrestime", Cmd_GetResTime, ADMFLAG_VOTE);
+	RegAdminCmd("sm_statauto", Cmd_StatAuto, ADMFLAG_GENERIC);
+	RegAdminCmd("sm_getrestime", Cmd_GetResTime, ADMFLAG_GENERIC);
 	
 	HookEvent("round_start", Event_RoundStart);
 	HookEvent("round_end", Event_RoundEnd);
@@ -155,17 +155,27 @@ public Action Event_PlayerSpawn(Event event, const char[] name, bool dontBroadca
 	if(!Valid_Client(client))
 		return;
 
-	if(!IsFakeClient(client) && GetClientTeam(client) > 1 && GetPlayerWeaponSlot(client, CS_SLOT_KNIFE) == -1 && (IsFightMap() || IsTimerMap()))
+	if(GetClientTeam(client) == CS_TEAM_NONE || GetClientTeam(client) == CS_TEAM_SPECTATOR)
+		return;
+
+	if(!IsFakeClient(client) && GetPlayerWeaponSlot(client, CS_SLOT_KNIFE) == -1 && (IsFightMap() || IsTimerMap()))
 		GivePlayerItem(client, "weapon_knife");
 
-	if(GetClientTeam(client) > 1) {
-		if((IsTimerMap() && !IsRunMap()) && g_hTimeForRespawn == null)
-			CreateTimer(0.2, Timer_KillPlayer, client);
-		else if(IsMultigameMap())
-			DisarmClient(client);
+	if((IsTimerMap() && !IsRunMap()) && g_hTimeForRespawn == null)
+		CreateTimer(0.2, Timer_KillPlayer, client);
+	else if(IsMultigameMap())
+		DisarmClient(client);
 
-		if(GetEntProp(client, Prop_Send, "m_iAccount") != 10000)
-			SetEntProp(client, Prop_Send, "m_iAccount", 10000);
+	if(GetEntProp(client, Prop_Send, "m_iAccount") != 10000)
+		SetEntProp(client, Prop_Send, "m_iAccount", 10000);
+
+	if(IsClientVip(client)) {
+		SetEntProp(client, Prop_Send, "m_ArmorValue", 40);
+		SetEntProp(client, Prop_Send, "m_bHasHelmet", 0);
+	}
+	else {
+		SetEntProp(client, Prop_Send, "m_ArmorValue", 0);
+		SetEntProp(client, Prop_Send, "m_bHasHelmet", 0);
 	}
 
 	if(IsTimerMap() && CountPlayerAlive() == 1)
@@ -311,4 +321,10 @@ int CountPlayerAlive() {
 		count++;
 	}
 	return count;
+}
+
+bool IsClientVip(int client) {
+	if(GetUserFlagBits(client) & ADMFLAG_CUSTOM1)
+		return true;
+	return false;
 }
