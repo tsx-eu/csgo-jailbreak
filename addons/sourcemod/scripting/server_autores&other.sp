@@ -169,11 +169,17 @@ public Action Event_PlayerSpawn(Event event, const char[] name, bool dontBroadca
 	if(GetEntProp(client, Prop_Send, "m_iAccount") != 10000)
 		SetEntProp(client, Prop_Send, "m_iAccount", 10000);
 
-	if(IsClientVip(client)) {
-		SetEntProp(client, Prop_Send, "m_ArmorValue", 40);
-		SetEntProp(client, Prop_Send, "m_bHasHelmet", 0);
+	if(IsMultigameMap() || IsFightMap()) {
+		if(IsClientVip(client)) {
+			SetEntProp(client, Prop_Send, "m_ArmorValue", 40);
+			SetEntProp(client, Prop_Send, "m_bHasHelmet", 0);
+		}
+		else {
+			SetEntProp(client, Prop_Send, "m_ArmorValue", 0);
+			SetEntProp(client, Prop_Send, "m_bHasHelmet", 0);
+		}
 	}
-	else {
+	else if(IsTimerMap()) {
 		SetEntProp(client, Prop_Send, "m_ArmorValue", 0);
 		SetEntProp(client, Prop_Send, "m_bHasHelmet", 0);
 	}
