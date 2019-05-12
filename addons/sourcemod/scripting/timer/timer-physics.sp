@@ -461,13 +461,6 @@ public OnTimerResumed(client)
 	RestoreAntiBhop(client);
 }
 
-public OnClientStartTouchZoneType(client, MapZoneType:type)
-{
-	if(!Timer_GetStatus(client) && !Timer_GetPauseStatus(client)) // Timer stopped
-		if(type == ZtStart || type == ZtBonusStart || type == ZtBonus2Start || type == ZtBonus3Start || type == ZtBonus4Start || type == ZtBonus5Start)
-			TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, Float:{0.0,0.0,-100.0});
-}
-
 public Native_SaveLastJumps(Handle:plugin, numParams)
 {
 	StoreAntiBhop(GetNativeCell(1));
@@ -874,7 +867,7 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 		Block_MovementControl(client, true);
 	}
 
-	if (buttons & IN_JUMP)
+	/*if (buttons & IN_JUMP)
 	{
 		if(!onground)
 		{
@@ -903,7 +896,7 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 				}
 			}
 		}
-	}
+	}*/
 
 	new oldjumps = g_iFullJumpCount[client];
 	new bool:perfect = false;

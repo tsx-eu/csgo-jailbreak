@@ -329,8 +329,7 @@ int menu_AddPlayers(Menu menu, int client) {
 	char user_id[12], name[MAX_NAME_LENGTH], display[MAX_NAME_LENGTH+12];
 	int num_clients;
 	
-	for(int i = 1; i <= MaxClients; i++)
-	{
+	for(int i = 1; i <= MaxClients; i++) {
 		if(!Valid_Client(i))
 			continue;
 
@@ -338,6 +337,9 @@ int menu_AddPlayers(Menu menu, int client) {
 			continue;
 
 		if(IsFakeClient(i))
+			continue;
+
+		if(AdmUser(i, ADMFLAG_GENERIC) || AdmUser(i, ADMFLAG_ROOT))
 			continue;
 
 		IntToString(GetClientUserId(i), user_id, sizeof(user_id));
