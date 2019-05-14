@@ -37,6 +37,9 @@ public void OnEntityDestroyed(int entity) {
 		g_iOwner[entity] = 0;
 }
 public void OnTakeDamage( int victim, int attacker, int inflictor, float damage, int damagetype, int weapon, const float damageForce[3], const float damageOrigin[3]) {
+	if(!Valid_Client(attacker))
+		return;
+
 	if(!IsClientVip(attacker))
 		return;
 
@@ -116,4 +119,8 @@ bool IsClientVip(int client) {
 	if(GetUserFlagBits(client) & ADMFLAG_CUSTOM1)
 		return true;
 	return false;
+}
+
+bool Valid_Client(int id) {
+	return (id > 0 && id <= MaxClients && IsClientInGame(id) && IsClientConnected(id) && !IsClientInKickQueue(id));
 }
