@@ -53,6 +53,8 @@ public void DV_StartMulti(int[] clients, int clientCount, int[] targets, int tar
 	g_iClient = clients[0];
 	g_flTarget[2] = 9999999.9;
 	
+	g_iWeaponToThrow = 0;
+	
 	for (int i = 0; i < clientCount; i++) {
 		int client = clients[i];
 		
