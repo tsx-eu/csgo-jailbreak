@@ -4,6 +4,7 @@
 #include <sdktools>
 #include <smlib>
 #include <emitsoundany>
+#include <rsc_utils>
 
 #pragma newdecls required
 
@@ -45,7 +46,7 @@ public Action EventShoot(Handle ev, const char[] name, bool broadcast) {
 	GetEventString(ev, "weapon", wepname, sizeof(wepname));
 	
 	if( (client == g_iTarget || client == g_iClient) ) {
-		if( StrContains(wepname, "knife") >= 0 ) {
+		if (KnifeWeapon(wepname) ) {
 			float src[3], ang[3];
 			GetClientEyePosition(client, src);
 			GetClientEyeAngles(client, ang);
