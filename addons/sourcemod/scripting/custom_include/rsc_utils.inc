@@ -67,6 +67,17 @@ stock void TimeToMinuts(int time, char[] buffer, int size)
 	Format(buffer, size, "%s%i'%s%i", (minutes < 10 ? "0":""), minutes, (seconds < 10 ? "0":""), seconds);
 }
 
+public bool KnifeWeapon(const char[] weapon) {
+	if(StrContains(weapon, "knife") != -1) {
+		return true;
+	}
+	
+	if(StrContains(weapon, "bayonet") != -1) {
+		return true;
+	}
+	
+	return false;
+}
 
 /* ---------------------------------------------------------------------- */
 
