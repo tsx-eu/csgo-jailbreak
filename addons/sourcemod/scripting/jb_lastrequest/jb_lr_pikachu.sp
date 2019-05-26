@@ -17,7 +17,7 @@ public void OnPluginStart() {
 	HookEvent("weapon_fire",		EventShoot,			EventHookMode_Post);
 }
 public void JB_OnPluginReady() {
-	JB_CreateLastRequest("Pikachu", 	JB_SELECT_CT_UNTIL_DEAD|JB_BEACON|JB_NODAMAGE, DV_CAN_Always, DV_Start, DV_Stop);
+	JB_CreateLastRequest("Pikachu", 	JB_SELECT_CT_UNTIL_DEAD|JB_BEACON|JB_NODAMAGE|JB_RESTORE_HEAL, DV_CAN_Always, DV_Start, DV_Stop);
 }
 public void OnMapStart() {
 	g_cLaser = PrecacheModel("materials/sprites/laserbeam.vmt", true);
@@ -27,9 +27,6 @@ public void OnMapStart() {
 public void DV_Start(int client, int target) {
 	g_iClient = client;
 	g_iTarget = target;
-	
-	SetEntityHealth(client, 100);
-	SetEntityHealth(target, 100);
 	
 	Client_SetArmor(client, 0);
 	Client_SetArmor(target, 0);

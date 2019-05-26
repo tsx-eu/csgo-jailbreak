@@ -14,7 +14,7 @@ int g_iClient, g_iTarget, g_iWpnClient, g_iWpnTarget;
 
 
 public void JB_OnPluginReady() {
-	JB_CreateLastRequest("Unscope", 	JB_SELECT_CT_UNTIL_DEAD|JB_BEACON, DV_CAN_Always, DV_Start, DV_Stop);	
+	JB_CreateLastRequest("Unscope", 	JB_SELECT_CT_UNTIL_DEAD|JB_BEACON|JB_RESTORE_HEAL|JB_STIP_WEAPONS, DV_CAN_Always, DV_Start, DV_Stop);	
 }
 public void DV_Start(int client, int target) {
 	SmartMenu menu = new SmartMenu(selectWeapon);
@@ -33,12 +33,6 @@ public int selectWeapon(SmartMenu menu, MenuAction action, int client, int param
 	if( action == MenuAction_Select ) {
 		menu.GetItem(params, options, sizeof(options));
 		int target = menu.GetCell("target");
-		
-		SetEntityHealth(client, 100);
-		SetEntityHealth(target, 100);
-		
-		Client_SetArmor(client, 0);
-		Client_SetArmor(target, 0);
 		
 		DV_StripWeapon(client);
 		DV_StripWeapon(target);

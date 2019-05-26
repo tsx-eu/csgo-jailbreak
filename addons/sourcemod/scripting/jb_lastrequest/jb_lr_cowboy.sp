@@ -19,7 +19,7 @@ int g_iState;
 Handle g_hMain = INVALID_HANDLE;
 
 public void JB_OnPluginReady() {
-	JB_CreateLastRequest("Roulette CowBoy", 	JB_SELECT_CT_UNTIL_DEAD|JB_BEACON, DV_CAN_Always, DV_Start, DV_Stop);
+	JB_CreateLastRequest("Roulette CowBoy", 	JB_SELECT_CT_UNTIL_DEAD|JB_BEACON|JB_RESTORE_HEAL, DV_CAN_Always, DV_Start, DV_Stop);
 }
 public void OnMapStart() {
 	PrecacheSoundAny("rsc/jailbreak/taunt_bell.wav");

@@ -497,10 +497,28 @@ bool DV_Start(int id) {
 	Call_PushCell(g_iInitialTeam[CS_TEAM_CT][0]);	
 	Call_Finish();
 	
-	for (int i = 0; i < g_iInitialTeamCount[CS_TEAM_T]; i++)
+	for (int i = 0; i < g_iInitialTeamCount[CS_TEAM_T]; i++) {
 		Effect_Glow(g_iInitialTeam[CS_TEAM_T][i], 255, 0, 0, 200);
-	for (int i = 0; i < g_iInitialTeamCount[CS_TEAM_CT]; i++)
+		
+		if( g_iStackFlag[id] & JB_RESTORE_HEAL ) {
+			SetEntityHealth(g_iInitialTeam[CS_TEAM_T][i], 100);
+			Client_SetArmor(g_iInitialTeam[CS_TEAM_T][i], 0);
+		}
+		if( g_iStackFlag[id] & JB_STRIP_WEAPONS ) {
+			DV_StripWeapon(g_iInitialTeam[CS_TEAM_T][i]);
+		}
+	}
+	for (int i = 0; i < g_iInitialTeamCount[CS_TEAM_CT]; i++) {
 		Effect_Glow(g_iInitialTeam[CS_TEAM_CT][i], 0, 0, 255, 200);
+		
+		if( g_iStackFlag[id] & JB_RESTORE_HEAL ) {
+			SetEntityHealth(g_iInitialTeam[CS_TEAM_CT][i], 100);
+			Client_SetArmor(g_iInitialTeam[CS_TEAM_CT][i], 0);
+		}
+		if( g_iStackFlag[id] & JB_STRIP_WEAPONS ) {
+			DV_StripWeapon(g_iInitialTeam[CS_TEAM_CT][i]);
+		}
+	}
 	
 	return false;
 }
