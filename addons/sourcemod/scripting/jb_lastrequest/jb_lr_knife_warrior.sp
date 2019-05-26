@@ -29,5 +29,5 @@ public void DV_Start(int client) {
 		cpt++;
 	}
 	
-	SetEntityHealth(client, 100 + 50*cpt);
+	SetEntityHealth(client, 100 + 75*cpt);
 }
