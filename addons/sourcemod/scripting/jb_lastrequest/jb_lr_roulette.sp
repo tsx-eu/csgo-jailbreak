@@ -16,7 +16,7 @@ public void OnPluginStart() {
 	HookEvent("weapon_fire",		EventPlayerShot,			EventHookMode_Post);
 }
 public void JB_OnPluginReady() {
-	JB_CreateLastRequest("Roulette", 	JB_SELECT_CT_UNTIL_DEAD|JB_BEACON|JB_RESTORE_HEAL, DV_CAN_Always, DV_Start, DV_Stop);	
+	JB_CreateLastRequest("Roulette", 	JB_SELECT_CT_UNTIL_DEAD|JB_BEACON, DV_CAN_Always, DV_Start, DV_Stop);	
 }
 public void DV_Start(int client, int target) {
 	SmartMenu menu = new SmartMenu(selectWeapon);

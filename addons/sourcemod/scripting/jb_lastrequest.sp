@@ -209,8 +209,6 @@ void initTeam(int team) {
 void displayDV(int client) {
 	static char tmp[8];
 	
-	PrintToChatAll("hi");
-	
 	int t = DV_CanBeStarted();
 	int dv = 0;
 	
@@ -417,12 +415,26 @@ int DV_CountTeam(int team) {
 	return t;
 }
 stock void DV_CleanTeams(int team = 0) {
-	for (int i = 0; i < g_iCurrentTeamCount[team]; i++)
-		DV_CleanClient(g_iCurrentTeam[team][i]);
+	if( team > 0 ) {
+		for (int i = 0; i < g_iCurrentTeamCount[team]; i++)
+			DV_CleanClient(g_iCurrentTeam[team][i]);
+	}
+	else {
+		for (int i = 0; i < g_iCurrentTeamCount[CS_TEAM_T]; i++)
+			DV_CleanClient(g_iCurrentTeam[CS_TEAM_T][i]);
+		for (int i = 0; i < g_iCurrentTeamCount[CS_TEAM_CT]; i++)
+			DV_CleanClient(g_iCurrentTeam[CS_TEAM_CT][i]);
+	}
 }
 void DV_CleanClient(int client) {
-	DV_StripWeapon(client);
-	GivePlayerItem(client, "weapon_knife");
+	if( !(g_iStackFlag[g_iDoingDV] & JB_NODAMAGE) ) {
+		DV_StripWeapon(client);
+		GivePlayerItem(client, "weapon_knife");
+	}
+	if( !(g_iStackFlag[g_iDoingDV] & JB_DONT_HEAL) ) {
+		SetEntityHealth(client, 100);
+		Client_SetArmor(client, 0);
+	}
 }
 void DV_BeamEffect(float src[3], float dst[3], int color[4]) {
 	TE_SetupBeamRingPoint(src, 32.0, MAX_DISTANCE/2, g_cLaser, g_cLaser, 0, 12, 2.0, 16.0, 0.0, color, 0, 0);
@@ -505,6 +517,7 @@ bool DV_Start(int id) {
 	g_iInitialTeamCount[CS_TEAM_CT] = g_iCurrentTeamCount[CS_TEAM_CT];
 	
 	DV_CleanTeams();
+	
 	if( g_fStackStart[id] != INVALID_FUNCTION )
 		DV_Call(id, g_fStackStart[id]);
 	
@@ -513,28 +526,10 @@ bool DV_Start(int id) {
 	Call_PushCell(g_iInitialTeam[CS_TEAM_CT][0]);	
 	Call_Finish();
 	
-	for (int i = 0; i < g_iInitialTeamCount[CS_TEAM_T]; i++) {
+	for (int i = 0; i < g_iInitialTeamCount[CS_TEAM_T]; i++)
 		Effect_Glow(g_iInitialTeam[CS_TEAM_T][i], 255, 0, 0, 200);
-		
-		if( g_iStackFlag[id] & JB_RESTORE_HEAL ) {
-			SetEntityHealth(g_iInitialTeam[CS_TEAM_T][i], 100);
-			Client_SetArmor(g_iInitialTeam[CS_TEAM_T][i], 0);
-		}
-		if( g_iStackFlag[id] & JB_STRIP_WEAPONS ) {
-			DV_StripWeapon(g_iInitialTeam[CS_TEAM_T][i]);
-		}
-	}
-	for (int i = 0; i < g_iInitialTeamCount[CS_TEAM_CT]; i++) {
+	for (int i = 0; i < g_iInitialTeamCount[CS_TEAM_CT]; i++)
 		Effect_Glow(g_iInitialTeam[CS_TEAM_CT][i], 0, 0, 255, 200);
-		
-		if( g_iStackFlag[id] & JB_RESTORE_HEAL ) {
-			SetEntityHealth(g_iInitialTeam[CS_TEAM_CT][i], 100);
-			Client_SetArmor(g_iInitialTeam[CS_TEAM_CT][i], 0);
-		}
-		if( g_iStackFlag[id] & JB_STRIP_WEAPONS ) {
-			DV_StripWeapon(g_iInitialTeam[CS_TEAM_CT][i]);
-		}
-	}
 	
 	return false;
 }

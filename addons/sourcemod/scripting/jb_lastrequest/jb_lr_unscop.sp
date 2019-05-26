@@ -14,7 +14,7 @@ int g_iClient, g_iTarget, g_iWpnClient, g_iWpnTarget;
 
 
 public void JB_OnPluginReady() {
-	JB_CreateLastRequest("Unscope", 	JB_SELECT_CT_UNTIL_DEAD|JB_BEACON|JB_RESTORE_HEAL|JB_STRIP_WEAPONS, DV_CAN_Always, DV_Start, DV_Stop);	
+	JB_CreateLastRequest("Unscope", 	JB_SELECT_CT_UNTIL_DEAD|JB_BEACON, DV_CAN_Always, DV_Start, DV_Stop);	
 }
 public void DV_Start(int client, int target) {
 	SmartMenu menu = new SmartMenu(selectWeapon);
