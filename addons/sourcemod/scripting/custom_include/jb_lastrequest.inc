@@ -88,15 +88,27 @@ stock bool DV_CAN_Cupidon(int[] clients, int clientCount) {
 	return cpt == 2;
 }
 stock void DV_StripWeapon(int client, bool drop = false) {
-	int wepIdx = -1;
-	for( int i = 0; i < 5; i++ ) {
-		while( ( wepIdx = GetPlayerWeaponSlot( client, i ) ) != -1 ) {
-			if( i == CS_SLOT_KNIFE || i == CS_SLOT_GRENADE || !drop ) {
-				RemovePlayerItem( client, wepIdx );
-				RemoveEdict( wepIdx );
+	static char classname[65];
+	
+	for (int i = MaxClients; i <= 2048; i++) {
+		if( !IsValidEdict(i) || !IsValidEntity(i) )
+			continue;
+		
+		if( !HasEntProp(i, Prop_Data, "m_hOwnerEntity") )
+			continue;
+		
+		if( GetEntPropEnt(i, Prop_Data, "m_hOwnerEntity") != client )
+			continue;
+		
+		GetEdictClassname(i, classname, sizeof(classname));
+		
+		if( StrContains(classname, "weapon_") >= 0 ) {
+			if( !drop ) {
+				RemovePlayerItem( client, i );
+				RemoveEdict( i );
 			}
 			else {
-				CS_DropWeapon(client, wepIdx, true);
+				CS_DropWeapon(client, i, true);
 			}
 		}
 	}
