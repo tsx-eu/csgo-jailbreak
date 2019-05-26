@@ -29,6 +29,7 @@ Function g_fStackCondition[MAX_LR], g_fStackStart[MAX_LR], g_fStackEnd[MAX_LR];
 Handle g_hStackPlugin[MAX_LR];
 int g_iStackFlag[MAX_LR], g_iStackTeam[MAX_LR][4], g_iSorted[MAX_LR]; // CS_TEAM_T == 2 CS_TEAM_CT == 3 
 Handle g_hPluginReady = INVALID_HANDLE, g_hOnStartLR = INVALID_HANDLE, g_hOnStopLR = INVALID_HANDLE;
+int g_iOpenMenu = -1;
 Handle g_hCvarEnable = INVALID_HANDLE;
 Handle g_hCvarStripWeapon = INVALID_HANDLE;
 bool g_bPluginEnabled;
@@ -92,10 +93,13 @@ public void OnClientDisconnect(int client) {
 }
 // -------------------------------------------------------------------------------------------------------------------------------
 public Action EventDeath(Handle ev, const char[] name, bool broadcast) {
+	int client = GetClientOfUserId(GetEventInt(ev, "userid"));
+	if( g_iOpenMenu == client && client > 0 )
+		CloseMenu(client);
+	
 	if( g_iDoingDV == -1 )
 		return;
 	
-	int client = GetClientOfUserId(GetEventInt(ev, "userid"));
 	bool endOfDV = DV_RemoveClientFromTeam(client, false);
 	
 	if( endOfDV )
@@ -108,6 +112,9 @@ public Action EventRoundStart(Handle ev, const char[] name, bool  bd) {
 		PrintToChatAll("WARNING - Please report the following issue:");
 		PrintToChatAll(" -\t EventRoundStart @ g_iDoingDV >= 0");		
 	}
+	
+	if( g_iOpenMenu > 0 && IsClientInGame(g_iOpenMenu) )
+		CloseMenu(g_iOpenMenu);
 	
 	if( GetConVarBool(g_hCvarStripWeapon) ) {
 		for (int i = 1; i <= MaxClients; i++) {
@@ -202,6 +209,8 @@ void initTeam(int team) {
 void displayDV(int client) {
 	static char tmp[8];
 	
+	PrintToChatAll("hi");
+	
 	int t = DV_CanBeStarted();
 	int dv = 0;
 	
@@ -230,6 +239,7 @@ void displayDV(int client) {
 	
 	if( dv >  0) {
 		menu.Display(client, MENU_TIME_FOREVER);
+		g_iOpenMenu = client;
 		PrintHintTextToAll("%N\nchoisis sa dernière volonté", client);
 		EmitSoundToAllAny("ui/bonus_alert_start.wav");
 	}
@@ -272,6 +282,7 @@ void displayDV_SelectCT(int client, int id) {
 	
 	menu.ExitButton = false;
 	menu.Display(client, MENU_TIME_FOREVER);
+	g_iOpenMenu = client;
 }
 public int menuDV(Menu menu, MenuAction action, int client, int params) {
 	static char options[64];
@@ -469,12 +480,17 @@ bool DV_CanBePlayed(int id, int targetCount=1) {
 	return can;
 }
 bool DV_Start(int id) {
+	if( !DV_CanBeStarted() ) {
+		CPrintToChatAll("%s La {blue}DV{default} n'est plus disponible.", MOD_TAG);
+		return false;
+	}
 	if( !DV_CanBePlayed(id, g_iCurrentTeamCount[CS_TEAM_CT]) ) {
 		CPrintToChatAll("%s La {blue}DV{default} n'est plus disponible.", MOD_TAG);
 		displayDV(g_iCurrentTeam[CS_TEAM_T][0]);
 		return false;
 	}
 	
+	g_iOpenMenu = -1;
 	PrintHintTextToAll("Dernière volonté:\n%s", g_cStackName[id]);
 		
 	if( g_iCurrentTeamCount[CS_TEAM_CT] > 0 )
