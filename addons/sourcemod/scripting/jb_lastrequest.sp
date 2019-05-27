@@ -427,11 +427,11 @@ stock void DV_CleanTeams(int team = 0) {
 	}
 }
 void DV_CleanClient(int client) {
-	if( !(g_iStackFlag[g_iDoingDV] & JB_NODAMAGE) ) {
+	if( g_iDoingDV == -1 || !(g_iStackFlag[g_iDoingDV] & JB_DONT_STRIP) ) {
 		DV_StripWeapon(client);
 		GivePlayerItem(client, "weapon_knife");
 	}
-	if( !(g_iStackFlag[g_iDoingDV] & JB_DONT_HEAL) ) {
+	if( g_iDoingDV == -1 || !(g_iStackFlag[g_iDoingDV] & JB_DONT_HEAL) ) {
 		SetEntityHealth(client, 100);
 		Client_SetArmor(client, 0);
 	}
