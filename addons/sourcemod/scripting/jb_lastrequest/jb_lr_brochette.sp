@@ -9,7 +9,7 @@
 #include <jb_lastrequest>
 
 public void JB_OnPluginReady() {
-	int id = JB_CreateLastRequest("Brochette", 			JB_SELECT_CT_UNTIL_DEAD|JB_BEACON, 				DV_CAN_Min3CT, DV_Start);
+	int id = JB_CreateLastRequest("Brochette", 			JB_SELECT_CT_UNTIL_DEAD|JB_BEACON, 				DV_CAN_Min4CT, DV_Start);
 	JB_SetTeamCount(id, CS_TEAM_CT, 3);
 }
 public void DV_Start(int client, int[] targets, int targetCount) {

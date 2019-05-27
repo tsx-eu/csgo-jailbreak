@@ -55,6 +55,14 @@ typeset JB_Event {
 stock bool DV_CAN_Always(int client) {
 	return true;
 }
+stock bool DV_CAN_Min2CT(int client) {
+	int cpt = 0;
+	for (int i = 1; i <= MaxClients; i++)
+		if( IsClientInGame(i) &&  IsPlayerAlive(i) && GetClientTeam(i) == CS_TEAM_CT )
+			cpt++;
+	
+	return (cpt>=2);
+}
 stock bool DV_CAN_Min3CT(int client) {
 	int cpt = 0;
 	for (int i = 1; i <= MaxClients; i++)
@@ -62,6 +70,22 @@ stock bool DV_CAN_Min3CT(int client) {
 			cpt++;
 	
 	return (cpt>=3);
+}
+stock bool DV_CAN_Min4CT(int client) {
+	int cpt = 0;
+	for (int i = 1; i <= MaxClients; i++)
+		if( IsClientInGame(i) &&  IsPlayerAlive(i) && GetClientTeam(i) == CS_TEAM_CT )
+			cpt++;
+	
+	return (cpt>=4);
+}
+stock bool DV_CAN_Min5CT(int client) {
+	int cpt = 0;
+	for (int i = 1; i <= MaxClients; i++)
+		if( IsClientInGame(i) &&  IsPlayerAlive(i) && GetClientTeam(i) == CS_TEAM_CT )
+			cpt++;
+	
+	return (cpt>=5);
 }
 stock bool DV_CAN_VIP(int client) {
 	return view_as<bool>(GetUserFlagBits(client) & ADMFLAG_CUSTOM1);
