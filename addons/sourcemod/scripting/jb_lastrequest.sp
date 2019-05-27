@@ -136,8 +136,11 @@ public Action EventTakeDamage(int victim, int& attacker, int& inflictor, float& 
 	if( !(g_iStackFlag[g_iDoingDV] & JB_SHOULD_SELECT_CT) )
 		return Plugin_Continue;
 	
-	bool victimInDV = DV_IsClientInsideTeam(victim);
-	bool attackerInDV = DV_IsClientInsideTeam(attacker);
+	if( attacker > MaxClients && HasEntProp(attacker, Prop_Data, "m_hOwnerEntity") )
+		attacker = GetEntProp(attacker, Prop_Data, "m_hOwnerEntity");
+	
+	bool victimInDV = DV_IsClientInsideTeam(victim);	
+	bool attackerInDV = (attacker > 0 && attacker <= MaxClients) ? DV_IsClientInsideTeam(attacker) : false;
 	
 	if( victimInDV && attackerInDV ) {
 		if( g_iStackFlag[g_iDoingDV] & JB_NODAMAGE )
