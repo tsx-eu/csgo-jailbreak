@@ -75,6 +75,9 @@ public void OnMapStart() {
 	g_cLaser = PrecacheModel("materials/sprites/laserbeam.vmt", true);
 	g_cArrow = PrecacheModel("materials/vgui/hud/icon_arrow_up.vmt", true);
 	PrecacheSoundAny("buttons/blip1.wav", true);
+	PrecacheSoundAny("rsc/jailbreak/lr1.mp3", true);
+	
+	AddFileToDownloadsTable("sound/rsc/jailbreak/lr1.mp3");
 	
 	Call_StartForward(g_hPluginReady);
 	Call_Finish();
@@ -148,6 +151,17 @@ public Action EventTakeDamage(int victim, int& attacker, int& inflictor, float& 
 	return Plugin_Continue;
 }
 public Action EventSecondElapsed(Handle timer, any none) {
+	static bool lastWasAvailable = false;
+	
+	if( g_iDoingDV == -1 ) {
+		bool now = (DV_CanBeStarted() != -1);
+		
+		if( now && !lastWasAvailable )
+			EmitSoundToAllAny("rsc/jailbreak/lr1.mp3");
+		
+		lastWasAvailable = now;
+	}
+	
 	
 	if( g_iDoingDV >= 0 && g_iStackFlag[g_iDoingDV] & JB_BEACON ) {
 		float src[3], dst[3];
