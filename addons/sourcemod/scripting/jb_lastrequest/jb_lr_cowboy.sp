@@ -38,13 +38,20 @@ public void DV_Start(int client, int target) {
 }
 
 public Action CheckDistance(Handle timer, any none) {
-	float dist = Entity_GetDistance(g_iClient, g_iTarget);
+	float src[3], dst[3];
+	GetClientAbsOrigin(g_iClient, src);
+	GetClientAbsOrigin(g_iTarget, dst);
+	
+	float dist = GetVectorDistance(src, dst);
 	
 	
 	if( dist < 256.0 ) {
 		PrintHintTextToAll("Reculez-vous");
 	}
 	else if( dist <= 512.0 ) {
+		PrintHintTextToAll("Rapprochez-vous");
+	}
+	else if ( FloatAbs(src[2] - dst[2]) > 128.0 ) {
 		PrintHintTextToAll("Rapprochez-vous");
 	}
 	else {
