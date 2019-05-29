@@ -121,8 +121,12 @@ public Action EventRoundStart(Handle ev, const char[] name, bool  bd) {
 	
 	if( GetConVarBool(g_hCvarStripWeapon) ) {
 		for (int i = 1; i <= MaxClients; i++) {
-			if( IsClientInGame(i) && IsPlayerAlive(i) )
+			if( IsClientInGame(i) && IsPlayerAlive(i) ) {
 				DV_CleanClient(i);
+				
+				if( GetClientTeam(i) == CS_TEAM_CT )
+					Client_SetArmor(i, 100);
+			}
 		}
 	}
 }
