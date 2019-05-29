@@ -28,6 +28,9 @@ public void DV_Start(int client, int target) {
 	g_iClient = client;
 	g_iTarget = target;
 	
+	Entity_SetCollisionGroup(client, COLLISION_GROUP_DEBRIS_TRIGGER);
+	Entity_SetCollisionGroup(target, COLLISION_GROUP_DEBRIS_TRIGGER);
+			
 	GetClientAbsOrigin(client, g_flJumpStart[client]);
 	GetClientAbsOrigin(client, g_flJumpEnd[client]);
 	
