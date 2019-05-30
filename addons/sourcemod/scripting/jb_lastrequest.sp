@@ -54,6 +54,7 @@ public void OnPluginStart() {
 	RegAdminCmd("sm_cancellr", 		cmd_AdminCancel,	ADMFLAG_KICK);
 	
 	HookEvent("player_death", 		EventDeath, 		EventHookMode_Pre);
+	HookEvent("player_spawn", 		EventSpawn, 		EventHookMode_Post);
 	HookEvent("round_start",		EventRoundStart,	EventHookMode_Post);
 	HookEvent("round_end",			EventRoundEnd,		EventHookMode_Post);
 	
@@ -95,6 +96,13 @@ public void OnClientDisconnect(int client) {
 		DV_Stop(g_iDoingDV);
 }
 // -------------------------------------------------------------------------------------------------------------------------------
+public Action EventSpawn(Handle ev, const char[] name, bool broadcast) {
+	int client = GetClientOfUserId(GetEventInt(ev, "userid"));
+	int team = GetClientTeam(client);
+	
+	if( team == CS_TEAM_T && DV_CAN_VIP(client) )
+		Client_SetArmor(client, 100);
+}
 public Action EventDeath(Handle ev, const char[] name, bool broadcast) {
 	int client = GetClientOfUserId(GetEventInt(ev, "userid"));
 	if( g_iOpenMenu == client && client > 0 )
@@ -125,6 +133,8 @@ public Action EventRoundStart(Handle ev, const char[] name, bool  bd) {
 				DV_CleanClient(i);
 				
 				if( GetClientTeam(i) == CS_TEAM_CT )
+					Client_SetArmor(i, 100);
+				if( GetClientTeam(i) == CS_TEAM_T && DV_CAN_VIP(i) )
 					Client_SetArmor(i, 100);
 			}
 		}
