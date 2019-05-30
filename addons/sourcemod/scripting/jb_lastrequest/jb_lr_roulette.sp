@@ -41,7 +41,7 @@ public int selectWeapon(SmartMenu menu, MenuAction action, int client, int param
 		GivePlayerItem(client, "weapon_knife");
 		GivePlayerItem(target, "weapon_knife");
 		
-		g_iWeaponId = GivePlayerItem(client, options);
+		g_iWeaponId = GivePlayerItem( GetRandomInt(0, 1) ? client : target, options);
 		g_iClient = client;
 		g_iTarget = target;
 		SetEntProp(g_iWeaponId, Prop_Send, "m_iClip1", 1);
