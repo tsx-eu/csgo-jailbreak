@@ -66,7 +66,6 @@ public Action EventSpawn(Handle ev, const char[] name, bool broadcast) {
 	int client = GetClientOfUserId(GetEventInt(ev, "userid"));
 	int team = GetClientTeam(client);
 	
-	PrintToChat(client, "spawn");
 	if( g_bFirstSpawner[client] && (team == CS_TEAM_CT || team == CS_TEAM_T) ) {
 		g_bFirstSpawner[client] = false;
 		
