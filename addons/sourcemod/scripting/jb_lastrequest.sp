@@ -100,8 +100,17 @@ public Action EventSpawn(Handle ev, const char[] name, bool broadcast) {
 	int client = GetClientOfUserId(GetEventInt(ev, "userid"));
 	int team = GetClientTeam(client);
 	
-	if( team == CS_TEAM_T && DV_CAN_VIP(client) )
-		Client_SetArmor(client, 100);
+	if( GetConVarBool(g_hCvarStripWeapon) ) {
+		DV_CleanClient(client);
+		
+		if( team == CS_TEAM_CT )
+			Client_SetArmor(client, 100);
+		if( team == CS_TEAM_T && DV_CAN_VIP(client) )
+			Client_SetArmor(client, 100);
+	}
+	
+	if( g_iOpenMenu > 0 && IsClientInGame(g_iOpenMenu) )
+		CloseMenu(g_iOpenMenu);
 }
 public Action EventDeath(Handle ev, const char[] name, bool broadcast) {
 	int client = GetClientOfUserId(GetEventInt(ev, "userid"));
@@ -126,19 +135,6 @@ public Action EventRoundStart(Handle ev, const char[] name, bool  bd) {
 	
 	if( g_iOpenMenu > 0 && IsClientInGame(g_iOpenMenu) )
 		CloseMenu(g_iOpenMenu);
-	
-	if( GetConVarBool(g_hCvarStripWeapon) ) {
-		for (int i = 1; i <= MaxClients; i++) {
-			if( IsClientInGame(i) && IsPlayerAlive(i) ) {
-				DV_CleanClient(i);
-				
-				if( GetClientTeam(i) == CS_TEAM_CT )
-					Client_SetArmor(i, 100);
-				if( GetClientTeam(i) == CS_TEAM_T && DV_CAN_VIP(i) )
-					Client_SetArmor(i, 100);
-			}
-		}
-	}
 }
 public Action EventRoundEnd(Handle ev, const char[] name, bool  bd) {
 	if( g_iDoingDV >= 0 )
