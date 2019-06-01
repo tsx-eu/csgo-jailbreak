@@ -5,6 +5,7 @@
 #include <smlib>
 #include <smart-menu>
 #include <emitsoundany>
+#include <sdkhooks>
 
 #pragma newdecls required
 
@@ -12,10 +13,14 @@
 
 int g_iAirAccelerate, g_iGravity, g_iEnabledBunny, g_iAutoBunny;
 float g_flStart[3];
+float g_flDisabledDamage;
 char g_szOptions[64];
 
 public void JB_OnPluginReady() {
 	JB_CreateLastRequest("Combat de cut", 	JB_SELECT_CT_UNTIL_DEAD|JB_BEACON, DV_CAN_Always, DV_Start, DV_Stop);
+}
+public void OnClientPutInServer(int client) {
+	SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamage);
 }
 public void OnMapStart() {
 	PrecacheSoundAny("rsc/jailbreak/taunt_bell.wav");
@@ -23,6 +28,8 @@ public void OnMapStart() {
 	
 	AddFileToDownloadsTable("sound/rsc/jailbreak/taunt_bell.wav");
 	AddFileToDownloadsTable("sound/rsc/jailbreak/heavy_niceshot02.wav");
+	
+	g_flDisabledDamage = GetGameTime();
 }
 public void DV_Start(int client, int target) {
 	SmartMenu menu = new SmartMenu(selectStyle);
@@ -102,6 +109,7 @@ public int selectWeapon(SmartMenu menu, MenuAction action, int client, int param
 		}
 		
 		if( StrEqual(g_szOptions, "slide") ) {
+			
 			Entity_SetCollisionGroup(client, COLLISION_GROUP_DEBRIS_TRIGGER);
 			Entity_SetCollisionGroup(target, COLLISION_GROUP_DEBRIS_TRIGGER);
 		
@@ -138,8 +146,8 @@ public Action TIMER_DisableGodmod(Handle timer, any client) {
 	EmitSoundToAllAny("rsc/jailbreak/taunt_bell.wav", client);
 }
 public void DV_Stop(int client, int target) {
-	
 	CloseMenu(client);
+	
 	
 	if( StrEqual(g_szOptions, "bunny") ) {
 		if( client > 0 )
@@ -148,6 +156,7 @@ public void DV_Stop(int client, int target) {
 			Entity_SetCollisionGroup(target, COLLISION_GROUP_PLAYER);
 	}
 	if( StrEqual(g_szOptions, "slide") ) {
+		g_flDisabledDamage = GetGameTime() + 5.0;
 		if( client > 0 ) {
 			Entity_SetCollisionGroup(client, COLLISION_GROUP_PLAYER);
 			TeleportEntity(client, g_flStart, NULL_VECTOR, NULL_VECTOR);
@@ -160,4 +169,12 @@ public void DV_Stop(int client, int target) {
 	
 	ServerCommand("sv_enablebunnyhopping %d;sv_autobunnyhopping %d", g_iEnabledBunny, g_iAutoBunny);
 	ServerCommand("sv_airaccelerate %d;sv_gravity %d", g_iAirAccelerate, g_iGravity);	
+}
+
+public Action OnTakeDamage(int client, int& attacker, int& inflictor, float& damage, int& damagetype) {
+	if(g_flDisabledDamage > GetGameTime() && damagetype & DMG_FALL) {
+		damage *= 0.0;
+		return Plugin_Changed;
+	}
+	return Plugin_Continue;
 }
