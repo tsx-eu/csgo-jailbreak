@@ -166,14 +166,11 @@ public Action EventTakeDamage(int victim, int& attacker, int& inflictor, float& 
 public Action EventSecondElapsed(Handle timer, any none) {
 	static bool lastWasAvailable = false;
 	
-	if( g_iDoingDV == -1 ) {
-		bool now = (DV_CanBeStarted() != -1);
-		
-		if( now && !lastWasAvailable )
-			EmitSoundToAllAny("rsc/jailbreak/lr1.mp3");
-		
-		lastWasAvailable = now;
-	}
+	bool now = (DV_CanBeStarted() != -1);
+	
+	if( g_iDoingDV == -1 && now && !lastWasAvailable )
+		EmitSoundToAllAny("rsc/jailbreak/lr1.mp3");
+	lastWasAvailable = now;
 	
 	
 	if( g_iDoingDV >= 0 && g_iStackFlag[g_iDoingDV] & JB_BEACON ) {
