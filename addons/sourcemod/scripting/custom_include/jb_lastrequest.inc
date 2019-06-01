@@ -88,7 +88,7 @@ stock bool DV_CAN_Min5CT(int client) {
 	return (cpt>=5);
 }
 stock bool DV_CAN_VIP(int client) {
-	return view_as<bool>(GetUserFlagBits(client) & ADMFLAG_CUSTOM1);
+	return view_as<bool>(GetUserFlagBits(client) & (ADMFLAG_ROOT|ADMFLAG_CUSTOM1));
 }
 stock bool DV_CAN_Cupidon(int[] clients, int clientCount) {
 	if( clientCount != 2 )
