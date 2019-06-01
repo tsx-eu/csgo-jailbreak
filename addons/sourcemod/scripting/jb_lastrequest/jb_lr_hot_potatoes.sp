@@ -38,8 +38,9 @@ public void DV_Start(int client, int target) {
 	GivePlayerItem(client, "weapon_knife");
 	GivePlayerItem(target, "weapon_knife");
 	
+	int victim = GetRandomInt(0, 1) ? client : target;
 	
-	int id = GivePlayerItem(client, "weapon_deagle");	
+	int id = GivePlayerItem(victim, "weapon_deagle");	
 	SetEntProp(id, Prop_Send, "m_iClip1", 0);
 	SetEntProp(id, Prop_Send, "m_iPrimaryReserveAmmoCount", 0);
 	float timeLeft = GetGameTime() + Math_GetRandomFloat(20.0, 30.0);
@@ -47,7 +48,7 @@ public void DV_Start(int client, int target) {
 	g_iDeagleDATA[0] = client;
 	g_iDeagleDATA[1] = target;
 	g_iDeagleDATA[2] = id;
-	g_iDeagleDATA[3] = client;
+	g_iDeagleDATA[3] = victim;
 	
 	CreateTimer(0.1, DV_DeagleExplosif_TASK, timeLeft);
 }
@@ -69,6 +70,12 @@ public Action DV_DeagleExplosif_TASK(Handle timer, any dp) {
 	float timeLeft = view_as<float>(dp);
 	int client = Weapon_GetOwner(g_iDeagleDATA[2]);
 	int target = g_iDeagleDATA[3];
+	
+	float clientSpeed = g_iDeagleDATA[0] == g_iDeagleDATA[3] ? 1.1 : 1.0;
+	float targetSpeed = g_iDeagleDATA[1] == g_iDeagleDATA[3] ? 1.1 : 1.0;
+	
+	SetEntPropFloat(g_iDeagleDATA[0], Prop_Send, "m_flLaggedMovementValue", clientSpeed);
+	SetEntPropFloat(g_iDeagleDATA[1], Prop_Send, "m_flLaggedMovementValue", targetSpeed);
 	
 	if( timeLeft < GetGameTime() ) {
 		GetClientEyePosition(target, vecPos);
