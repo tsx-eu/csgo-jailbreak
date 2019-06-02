@@ -27,18 +27,6 @@
 #define JB_DEFAULT				JB_RUN_UNTIL_DEAD
 #define JB_SELECT_CT_UNTIL_DEAD	JB_SHOULD_SELECT_CT|JB_RUN_UNTIL_DEAD
 
-forward void JB_OnPluginReady();
-forward void OnStartLR(int terro, int ct, int lr);
-forward void OnStopLR(int terro, int ct, int lr);
-
-native int JB_CreateLastRequest(const char name[128], int flags = JB_DEFAULT, JB_Condition condition = INVALID_FUNCTION, JB_Event start = INVALID_FUNCTION, JB_Event end = INVALID_FUNCTION);
-native int JB_SetTeamCount(int id, int team, int count);
-native int JB_AddClientInDV(int client);
-
-native bool JB_IsDvActive(Handle plugin = INVALID_HANDLE);
-native void JB_End();
-native void DV_CleanTeam(int team = 0);
-
 typeset JB_Condition {
 	function bool(int client);
 	function bool(int[] clients, int clientCount);
@@ -51,6 +39,18 @@ typeset JB_Event {
 	function void(int[] clients, int clientCount, int target);
 	function void(int[] clients, int clientCount, int[] targets, int targetCount);
 }
+
+forward void JB_OnPluginReady();
+forward void OnStartLR(int terro, int ct, int lr);
+forward void OnStopLR(int terro, int ct, int lr);
+
+native int JB_CreateLastRequest(const char name[128], int flags = JB_DEFAULT, JB_Condition condition = INVALID_FUNCTION, JB_Event start = INVALID_FUNCTION, JB_Event end = INVALID_FUNCTION);
+native int JB_SetTeamCount(int id, int team, int count);
+native int JB_AddClientInDV(int client);
+
+native bool JB_IsDvActive(Handle plugin = INVALID_HANDLE);
+native void JB_End();
+native void DV_CleanTeam(int team = 0);
 
 stock bool DV_CAN_Always(int client) {
 	return true;
