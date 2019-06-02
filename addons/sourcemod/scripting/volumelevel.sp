@@ -20,7 +20,7 @@ public void OnPluginStart()
 }
 
 public APLRes AskPluginLoad2(Handle plugin, bool late, char[] error, int err_max) {
-	RegPluginLibrary("JB_LastRequest");
+	RegPluginLibrary("VolumeLevel");
 	
 	CreateNative("Volume_GetLevel", Native_GetLevel);
 }
@@ -62,10 +62,10 @@ public int MenuHandler_Volume(Menu menu, MenuAction action, int client, int para
 		char szParam[2];
 		GetMenuItem(menu, param, szParam, sizeof(szParam));
 		
-		if(StrEqual(szParam, "a")) {
+		if(szParam[0] == 'a') {
 			g_fVolume[client] += 0.10;
 		}
-		if(StrEqual(szParam, "s")) {
+		if(szParam[0] == 's') {
 			g_fVolume[client] -= 0.10;
 		}
 		
