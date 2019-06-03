@@ -128,9 +128,14 @@ public Action EventShoot(Handle ev, const char[] name, bool broadcast) {
 }
 public Action OnWeaponDrop(int client, int wpnid) {
 	if( g_iWeapons[client] == EntIndexToEntRef(wpnid) ) {
+		if(g_iPlaying !=2) {
+			return Plugin_Handled;
+		}
+		
 		g_bThrowed[client] = true;
 		g_iLastOwner[wpnid] = client;
 	}
+	return Plugin_Continue;
 }
 public Action DV_DeagleThrow_Task(Handle timer, any entity) {
 	static int offset = -1;	
