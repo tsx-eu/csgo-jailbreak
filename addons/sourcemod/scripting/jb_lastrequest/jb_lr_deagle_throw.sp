@@ -214,8 +214,6 @@ void DV_CheckWinner() {
 		TE_SetupBeamPoints(g_flPositions[i][VEC_SRCFIX], g_flPositions[i][VEC_DSTFIX], g_cLaser, g_cLaser, 0, 30, 60.0, 1.0, 16.0, 1, 0.0, color[GetClientTeam(i)-2], 0);
 		TE_SendToAll();
 		
-		PrintToChatAll("%N: %f %f", i, g_flPositions[i][VEC_SRCFIX][0], g_flPositions[i][VEC_DSTFIX][0]);
-		
 		TE_SetupBeamRingPoint(g_flPositions[i][VEC_SRCFIX], 1.0, 64.0, g_cLaser, g_cLaser, 0, 0, 60.0, 1.0, 0.0, color[GetClientTeam(i)-2], 0, 0);
 		TE_SendToAll();
 		
