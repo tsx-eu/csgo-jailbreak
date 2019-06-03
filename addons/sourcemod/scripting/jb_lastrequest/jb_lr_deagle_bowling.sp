@@ -128,7 +128,7 @@ public Action EventShoot(Handle ev, const char[] name, bool broadcast) {
 }
 public Action OnWeaponDrop(int client, int wpnid) {
 	if( g_iWeapons[client] == EntIndexToEntRef(wpnid) ) {
-		if(g_iPlaying !=2) {
+		if(g_iState !=2) {
 			return Plugin_Handled;
 		}
 		
