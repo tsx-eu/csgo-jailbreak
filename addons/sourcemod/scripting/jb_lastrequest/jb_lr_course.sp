@@ -137,8 +137,17 @@ public Action DV_COURSE_TASK(Handle timer, Handle dp) {
 			Entity_SetCollisionGroup(client, COLLISION_GROUP_DEBRIS_TRIGGER);
 			Entity_SetCollisionGroup(target, COLLISION_GROUP_DEBRIS_TRIGGER);
 			
+			
 			TeleportEntity(client, g_flCourseStart, vec2, vec3);
 			TeleportEntity(target, g_flCourseStart, vec2, vec3);
+			
+			SetEntityMoveType(client, MOVETYPE_NONE);
+			SetEntityMoveType(target, MOVETYPE_NONE);
+			
+			CreateTimer(5.0, TIMER_DisableGodmod, client);
+			CreateTimer(5.0, TIMER_DisableGodmod, target);
+			
+			PrintHintTextToAll("Début de la course dans 5 secondes");
 			
 			maxTime = -1.0;
 		}
@@ -200,3 +209,7 @@ public void DV_End(int client, int target) {
 		Entity_SetCollisionGroup(target, COLLISION_GROUP_PLAYER);
 }
 
+public Action TIMER_DisableGodmod(Handle timer, any client) {
+	SetEntityMoveType(client, MOVETYPE_WALK);
+	EmitSoundToAllAny("rsc/jailbreak/taunt_bell.wav", client);
+}

@@ -5,6 +5,7 @@
 #include <sdkhooks>
 #include <smlib>
 #include <smart-menu>
+#include <emitsoundany>
 
 #pragma newdecls required
 
@@ -42,6 +43,14 @@ public int selectWeapon(SmartMenu menu, MenuAction action, int client, int param
 		
 		g_iClient = client;
 		g_iTarget = target;
+		
+		SetEntProp(client, Prop_Data, "m_takedamage", 0);
+		SetEntProp(target, Prop_Data, "m_takedamage", 0);
+		
+		CreateTimer(5.0, TIMER_DisableGodmod, client);
+		CreateTimer(5.0, TIMER_DisableGodmod, target);
+		
+		PrintHintTextToAll("Début du combat dans 5 secondes");
 	}
 	else if( action == MenuAction_Cancel && params == MenuCancel_Interrupted ) {
 		JB_DisplayMenu(DV_Start, client, menu.GetCell("target"));
@@ -79,4 +88,8 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 public void DV_Stop(int client, int target) {
 	CloseMenu(client);
 	g_iClient = g_iTarget = -1;
+}
+public Action TIMER_DisableGodmod(Handle timer, any client) {
+	SetEntProp(client, Prop_Data, "m_takedamage", 2);
+	EmitSoundToAllAny("rsc/jailbreak/taunt_bell.wav", client);
 }
