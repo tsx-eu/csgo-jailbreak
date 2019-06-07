@@ -3,6 +3,7 @@
 #include <sourcemod>
 #include <sdktools>
 #include <smlib>
+#include <emitsoundany>
 
 #pragma newdecls required
 
@@ -30,6 +31,14 @@ public void DV_Start(int client, int target) {
 	
 	Entity_SetCollisionGroup(client, COLLISION_GROUP_DEBRIS_TRIGGER);
 	Entity_SetCollisionGroup(target, COLLISION_GROUP_DEBRIS_TRIGGER);
+	
+	SetEntityMoveType(client, MOVETYPE_NONE);
+	SetEntityMoveType(target, MOVETYPE_NONE);
+	
+	CreateTimer(5.0, TIMER_DisableGodmod, client);
+	CreateTimer(5.0, TIMER_DisableGodmod, target);
+	
+	PrintHintTextToAll("Début de la course dans 5 secondes");
 			
 	GetClientAbsOrigin(client, g_flJumpStart[client]);
 	GetClientAbsOrigin(client, g_flJumpEnd[client]);
@@ -100,4 +109,8 @@ public void DV_Stop(int client, int target) {
 	
 	
 	g_iClient = g_iTarget = -1;
+}
+public Action TIMER_DisableGodmod(Handle timer, any client) {
+	SetEntityMoveType(client, MOVETYPE_WALK);
+	EmitSoundToAllAny("rsc/jailbreak/taunt_bell.wav", client);
 }
