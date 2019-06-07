@@ -550,10 +550,12 @@ bool DV_Start(int id) {
 	Call_PushCell(g_iInitialTeam[CS_TEAM_CT][0]);	
 	Call_Finish();
 	
-	for (int i = 0; i < g_iInitialTeamCount[CS_TEAM_T]; i++)
-		Effect_Glow(g_iInitialTeam[CS_TEAM_T][i], 255, 0, 0, 200);
-	for (int i = 0; i < g_iInitialTeamCount[CS_TEAM_CT]; i++)
-		Effect_Glow(g_iInitialTeam[CS_TEAM_CT][i], 0, 0, 255, 200);
+	if( g_iStackFlag[g_iDoingDV] & JB_BEACON ) {
+		for (int i = 0; i < g_iInitialTeamCount[CS_TEAM_T]; i++)
+			Effect_Glow(g_iInitialTeam[CS_TEAM_T][i], 255, 0, 0, 200);
+		for (int i = 0; i < g_iInitialTeamCount[CS_TEAM_CT]; i++)
+			Effect_Glow(g_iInitialTeam[CS_TEAM_CT][i], 0, 0, 255, 200);
+	}
 	
 	return false;
 }
@@ -568,10 +570,12 @@ void DV_Stop(int id) {
 	Call_PushCell(g_iInitialTeam[CS_TEAM_CT][0]);	
 	Call_Finish();
 	
-	for (int i = 0; i < g_iInitialTeamCount[CS_TEAM_T]; i++)
-		Effect_GlowStop(g_iInitialTeam[CS_TEAM_T][i]);
-	for (int i = 0; i < g_iInitialTeamCount[CS_TEAM_CT]; i++)
-		Effect_GlowStop(g_iInitialTeam[CS_TEAM_CT][i]);
+	if( g_iStackFlag[g_iDoingDV] & JB_BEACON ) {
+		for (int i = 0; i < g_iInitialTeamCount[CS_TEAM_T]; i++)
+			Effect_GlowStop(g_iInitialTeam[CS_TEAM_T][i]);
+		for (int i = 0; i < g_iInitialTeamCount[CS_TEAM_CT]; i++)
+			Effect_GlowStop(g_iInitialTeam[CS_TEAM_CT][i]);
+	}
 	
 	DV_CleanTeams();
 	g_iInitialTeamCount[CS_TEAM_CT] = g_iInitialTeamCount[CS_TEAM_T] = g_iCurrentTeamCount[CS_TEAM_T] = g_iCurrentTeamCount[CS_TEAM_CT] = 0;
