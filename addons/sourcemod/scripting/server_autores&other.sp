@@ -251,8 +251,14 @@ public void OnRoundTimeChanged(ConVar convar, const char[] oldValue, const char[
 }
 
 public void OnMaxRoundsChanged(ConVar convar, const char[] oldValue, const char[] newValue) {
-	if(StringToInt(newValue) != 0)
-		SetConVarInt(convar, 0, false, false);
+	if(StringToInt(newValue) != 0) {
+		char szMap[32];
+		GetCurrentMap(szMap, sizeof(szMap));
+		
+		if(!StrEqual(szMap, "mg_prison_escape_v1_2fix")) {
+			SetConVarInt(convar, 0, false, false);
+		}
+	}
 }
 
 public void OnFreezeTimeChanged(ConVar convar, const char[] oldValue, const char[] newValue) {

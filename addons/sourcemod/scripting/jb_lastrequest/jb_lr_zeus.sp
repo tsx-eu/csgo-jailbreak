@@ -24,8 +24,8 @@ public void DV_Start(int client, int target) {
 	DV_StripWeapon(client);
 	DV_StripWeapon(target);
 	
-	GivePlayerItem(client, "weapon_tazer");
-	GivePlayerItem(target, "weapon_tazer");
+	GivePlayerItem(client, "weapon_taser");
+	GivePlayerItem(target, "weapon_taser");
 	
 	Handle dp;
 	g_hMain = CreateDataTimer(1.0, EventSecondElapsed, dp, TIMER_REPEAT);
@@ -37,10 +37,10 @@ public Action EventSecondElapsed(Handle timer, Handle dp) {
 	int client = ReadPackCell(dp);
 	int target = ReadPackCell(dp);
 	
-	if(Client_GetWeapon(client, "weapon_tazer") == -1)
-		GivePlayerItem(client, "weapon_tazer");
-	if(Client_GetWeapon(target, "weapon_tazer") == -1)
-		GivePlayerItem(target, "weapon_tazer");
+	if(Client_GetWeapon(client, "weapon_taser") == -1)
+		GivePlayerItem(client, "weapon_taser");
+	if(Client_GetWeapon(target, "weapon_taser") == -1)
+		GivePlayerItem(target, "weapon_taser");
 }
 
 public void DV_Stop(int client, int target) {
