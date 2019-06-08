@@ -98,6 +98,8 @@ public void OnMapStart() {
 	
 	char error[1024];
 	g_hBDD = SQL_ConnectCustom(KV, error, sizeof(error), true);
+	
+	SQL_TQuery(g_hBDD, SQL_QueryCallBack, "SET NAMES 'utf8mb4'");
 }
 public void OnClientPutInServer(int client) {
 	SDKHook(client, SDKHook_OnTakeDamage, EventTakeDamage);
