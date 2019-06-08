@@ -20,6 +20,7 @@ bool g_bLastPosition[65];
 
 public void OnPluginStart() {
 	LoadTranslations("common.phrases");
+	RegAdminCmd("sm_1up", Cmd_Respawn, ADMFLAG_KICK);
 	RegAdminCmd("sm_oneup", Cmd_Respawn, ADMFLAG_KICK);
 	RegAdminCmd("sm_hrespawn", Cmd_Respawn, ADMFLAG_KICK);
 	
