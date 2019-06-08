@@ -35,7 +35,9 @@ public void DV_Start(int client, int target) {
 	DV_StripWeapon(target);
 	
 	GivePlayerItem(client, "weapon_flashbang");
-	GivePlayerItem(target, "weapon_flashbang");	
+	GivePlayerItem(target, "weapon_flashbang");
+	
+	JB_ShowHUDMessage("Vous avez 1hp, vous devez toucher l'adversaire en face avec votre flash pour le tuer, comme une balle au prisonnier.");
 	
 	Handle dp;
 	g_hMain = CreateDataTimer(1.0, EventSecondElapsed, dp, TIMER_REPEAT);

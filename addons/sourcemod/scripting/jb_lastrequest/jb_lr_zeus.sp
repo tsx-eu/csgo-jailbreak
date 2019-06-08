@@ -31,6 +31,9 @@ public void DV_Start(int client, int target) {
 	g_hMain = CreateDataTimer(1.0, EventSecondElapsed, dp, TIMER_REPEAT);
 	WritePackCell(dp, client);
 	WritePackCell(dp, target);
+	
+	JB_ShowHUDMessage("Tuez votre adversaire à coup de taser.﻿");
+	
 }
 public Action EventSecondElapsed(Handle timer, Handle dp) {
 	ResetPack(dp);

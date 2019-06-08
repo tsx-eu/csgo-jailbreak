@@ -123,6 +123,11 @@ public int selectWeapon(SmartMenu menu, MenuAction action, int client, int param
 		
 			TeleportEntity(client, g_flStart, NULL_VECTOR, vel);
 			TeleportEntity(target, g_flStart, NULL_VECTOR, vel);
+			
+			JB_ShowHUDMessage("Vo﻿us devez cuter votre adversaire pour le tue﻿r. Vous allez être au plafond et devez strafe pour prendre de la vitesse.﻿﻿﻿﻿");
+		}
+		else {
+			JB_ShowHUDMessage("Vo﻿us devez cuter votre adversaire pour le tue﻿r.﻿﻿﻿﻿");
 		}
 		
 		SetEntProp(client, Prop_Data, "m_takedamage", 0);

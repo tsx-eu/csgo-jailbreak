@@ -19,6 +19,7 @@
 #define JB_SHOULD_SELECT_T		(1<<1)			// Not implemented, yet.
 #define JB_RUN_UNTIL_DEAD		(1<<2)
 #define JB_RUN_UNTIL_ROUND_END	(1<<3)
+#define JB_ONLY_VIP				(1<<4)
 #define JB_BEACON				(1<<10)
 #define JB_NODAMAGE				(1<<11)
 #define JB_DONT_HEAL			(1<<12)
@@ -26,6 +27,7 @@
 
 #define JB_DEFAULT				JB_RUN_UNTIL_DEAD
 #define JB_SELECT_CT_UNTIL_DEAD	JB_SHOULD_SELECT_CT|JB_RUN_UNTIL_DEAD
+
 
 typeset JB_Condition {
 	function bool(int client);
@@ -52,6 +54,42 @@ native bool JB_IsDvActive(Handle plugin = INVALID_HANDLE);
 native void JB_End();
 native void DV_CleanTeam(int team = 0);
 
+stock bool JB_ShowHUDMessage(char[] message, int team = 0, float time = 10.0, int warpLine=50) {
+	static Handle sync = INVALID_HANDLE;
+	if( sync == INVALID_HANDLE )
+		sync = CreateHudSynchronizer();
+	
+	String_WordWrap(message, warpLine);
+	
+	for (int i = 1; i < MaxClients; i++) {
+		if( !IsClientInGame(i) )
+			continue;
+		
+		int pteam = GetClientTeam(i);
+		if( team == 0 || pteam == team ) {
+			SetHudTextParams(-1.0, 0.9, time, 255, 255, 255, 255, 1, time/25.0, time/25.0, time/25.0);
+			ShowSyncHudText(i, sync, message);
+		}
+	}
+}
+
+stock void String_WordWrap(char[] s, int warpLine) {
+	int i, k, wraploc, lastwrap;
+	
+	for (i = 0; s[i] != '\0'; ++i, ++wraploc) {
+		if (wraploc >= warpLine) {
+			for (k = i; k > 0; --k) {
+				if (k - lastwrap <= warpLine && s[k] == ' ') {
+					s[k] = '\n';
+					lastwrap = k + 1;
+					break;
+				}
+			}
+			wraploc = i - lastwrap;
+		}
+	}
+}
+	
 stock bool DV_CAN_Always(int client) {
 	return true;
 }

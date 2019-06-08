@@ -28,6 +28,7 @@ public void DV_Start(int client, int target) {
 	g_iTarget = target;
 	g_bClient = g_bTarget = false;
 	
+	JB_ShowHUDMessage("F﻿aites E (ou utiliser) sur une surface pour tagger le plus haut possible.﻿﻿");	
 }
 public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3], float angles[3], int &weapon) {
 	static lastButtons[65];

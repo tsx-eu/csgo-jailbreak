@@ -27,6 +27,8 @@ public void DV_Start(int client, int target) {
 	
 	menu.ExitButton = false;
 	menu.Display(client, MENU_TIME_FOREVER);
+	
+	JB_ShowHUDMessage("Vous devez vous entre-tuer ﻿avec des grenades.﻿﻿");
 }
 public int selectWeapon(SmartMenu menu, MenuAction action, int client, int params) {
 	static char options[64];

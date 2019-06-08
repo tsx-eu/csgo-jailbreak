@@ -26,20 +26,23 @@ public Action EventSpawn(Handle ev, const char[] name, bool broadcast) {
 	}
 }
 public void JB_OnPluginReady() {
-	JB_CreateLastRequest("Rébellion", 	JB_RUN_UNTIL_ROUND_END, DV_CAN, DV_Start, DV_Stop);	
+	JB_CreateLastRequest("Rébellion", 	JB_RUN_UNTIL_ROUND_END|JB_ONLY_VIP, DV_CAN, DV_Start, DV_Stop);	
 }
 public void OnMapStart() {
 	g_bOnce = false;
 	g_bInit = false;
 }
 public bool DV_CAN(int client) {
-	return !g_bOnce && g_bInit && DV_CAN_VIP(client) && DV_CAN_Min3CT(client);
+	return !g_bOnce && g_bInit && DV_CAN_Min3CT(client);
 }
 
 public void DV_Start(int client) {
 	g_bOnce = true;
 	Client_SetArmor(client, 100);
 	TeleportEntity(client, g_flStart, NULL_VECTOR, NULL_VECTOR);
+	
+	JB_ShowHUDMessage("Tuez tous le monde.", CS_TEAM_T);
+	JB_ShowHUDMessage("Le dernier terro s'est rebellé, tuez le.﻿", CS_TEAM_CT);
 }
 public void DV_Stop(int client, int[] targets, int targetCount) {
 	

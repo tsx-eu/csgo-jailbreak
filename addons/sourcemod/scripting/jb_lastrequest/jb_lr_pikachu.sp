@@ -36,6 +36,8 @@ public void DV_Start(int client, int target) {
 	
 	GivePlayerItem(client, "weapon_knife");
 	GivePlayerItem(target, "weapon_knife");
+	
+	JB_ShowHUDMessage("C﻿utez dans le ﻿vide pour lancer un éclair qui infligera des dégats. Évitez aussi ceux de votre ad﻿versaire﻿");
 }
 public Action EventShoot(Handle ev, const char[] name, bool broadcast) {
 	int client = GetClientOfUserId(GetEventInt(ev, "userid"));

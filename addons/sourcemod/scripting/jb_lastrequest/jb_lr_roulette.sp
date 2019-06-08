@@ -28,6 +28,8 @@ public void DV_Start(int client, int target) {
 	
 	menu.ExitButton = false;
 	menu.Display(client, MENU_TIME_FOREVER);
+	
+	JB_ShowHUDMessage("Placez vous face à face le long d'une surface et celui qui n'a pas﻿ la balle devra l'éviter en faisait des droites gauches.");
 }
 public int selectWeapon(SmartMenu menu, MenuAction action, int client, int params) {
 	static char options[64];

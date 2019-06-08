@@ -83,6 +83,8 @@ public void DV_Start(int client, int target) {
 	SDKHook(client, SDKHook_WeaponDropPost, OnWeaponDrop);
 	SDKHook(target, SDKHook_WeaponDropPost, OnWeaponDrop);
 	
+	JB_ShowHUDMessage("C'est un lancer de deagle classique, vous devez lancer votre deagle le plus loin, au cut ou normalement d﻿epuis n'importe quel endroit. Le gagnant sera indiqué dans le chat.﻿﻿");
+	
 	for (int i = 1; i < MaxClients; i++)
 		g_bThrowed[i] = g_bTossed[i] = false;
 	

@@ -41,6 +41,8 @@ public void DV_Start(int client, int target) {
 	
 	GivePlayerItem(client, "weapon_knife");
 	GivePlayerItem(target, "weapon_knife");
+	
+	JB_ShowHUDMessage("Cutez dans le vid﻿e pour lancer des pastèques à votre adversaire, évitez aussi les siennes.");
 }
 public Action EventShoot(Handle ev, const char[] name, bool broadcast) {
 	int client = GetClientOfUserId(GetEventInt(ev, "userid"));

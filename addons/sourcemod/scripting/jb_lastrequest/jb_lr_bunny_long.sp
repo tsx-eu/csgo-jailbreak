@@ -50,6 +50,8 @@ public void DV_Start(int client, int target) {
 	g_flDistance[target] = 0.0;	
 	
 	CreateTimer(20.0, TIMER_Check);
+	
+	JB_ShowHUDMessage("Vous devez effectuer le plus long saut. Pour cela, l'auto-bunnyhop est activé: Vous n'avez qu'à rester appuyé sur espace.");
 }
 public Action TIMER_Check(Handle timer, any none) {
 	if( g_flDistance[g_iClient] > g_flDistance[g_iTarget] )

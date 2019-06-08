@@ -28,6 +28,8 @@ public void DV_Start(int client, int target) {
 	
 	menu.ExitButton = false;
 	menu.Display(client, MENU_TIME_FOREVER);
+	
+	JB_ShowHUDMessage("Vous devez vous affronter avec un sniper sans zoomer.﻿﻿");
 }
 public int selectWeapon(SmartMenu menu, MenuAction action, int client, int params) {
 	static char options[64];

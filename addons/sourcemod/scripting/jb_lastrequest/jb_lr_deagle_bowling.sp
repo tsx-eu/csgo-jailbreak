@@ -55,6 +55,10 @@ public void DV_StartMulti(int[] clients, int clientCount, int[] targets, int tar
 	
 	g_iWeaponToThrow = 0;
 	
+	JB_ShowHUDMessage("Cutez le sol pour choisir un endroit, une cible. Vous devrez lancer votre deagle le plus près du centre de la cible verte.", CS_TEAM_T);
+	JB_ShowHUDMessage("Le terro choisis une cible, vous devrez lan﻿cer votre deagle le plus près du centre de la cible verte. Bonne chance !", CS_TEAM_CT);
+	
+	
 	for (int i = 0; i < clientCount; i++) {
 		int client = clients[i];
 		
