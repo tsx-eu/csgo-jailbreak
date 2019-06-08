@@ -535,7 +535,7 @@ bool DV_CanBePlayed(int id, int targetCount=1) {
 	
 	if( can && g_iStackFlag[id] & JB_ONLY_VIP ) {
 		for (int i = 0; i < g_iCurrentTeamCount[CS_TEAM_T]; i++) {
-			if( !DV_CAN_VIP(i) )
+			if( !DV_CAN_VIP(g_iCurrentTeam[CS_TEAM_T][i]) )
 				can = false;
 		}
 	}
