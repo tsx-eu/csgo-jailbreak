@@ -39,6 +39,7 @@ int g_iCurrentTeam[4][MAX_PLAYERS], g_iCurrentTeamCount[4], g_iInitialTeam[4][MA
 
 
 int g_cLaser, g_cArrow;
+Handle g_hBDD = INVALID_HANDLE;
 
 public void OnPluginStart() {
 	g_hCvarEnable = CreateConVar("sm_hosties_lr", "1");
@@ -77,11 +78,26 @@ public void OnMapStart() {
 	g_cArrow = PrecacheModel("materials/vgui/hud/icon_arrow_up.vmt", true);
 	PrecacheSoundAny("buttons/blip1.wav", true);
 	PrecacheSoundAny("rsc/jailbreak/lr1.mp3", true);
+	PrecacheSoundAny("rsc/jailbreak/taunt_bell.wav");
 	
+	AddFileToDownloadsTable("sound/rsc/jailbreak/taunt_bell.wav");
 	AddFileToDownloadsTable("sound/rsc/jailbreak/lr1.mp3");
 	
 	Call_StartForward(g_hPluginReady);
 	Call_Finish();
+	
+	
+	Handle KV = CreateKeyValues("sql");
+	
+	KvSetString(KV, "driver",	"mysql");
+	KvSetString(KV, "host",		"localhost");
+	KvSetString(KV, "database",	"serverother");
+	KvSetString(KV,	"user",		"serverother");
+	KvSetString(KV,	"pass",		"iBEpewupbB");
+	KvSetString(KV,	"port",		"3306");
+	
+	char error[1024];
+	g_hBDD = SQL_ConnectCustom(KV, error, sizeof(error), true);
 }
 public void OnClientPutInServer(int client) {
 	SDKHook(client, SDKHook_OnTakeDamage, EventTakeDamage);
@@ -231,7 +247,7 @@ void initTeam(int team) {
 	}
 }
 void displayDV(int client) {
-	static char tmp[8];
+	static char tmp[8], tmp2[128];
 	
 	int t = DV_CanBeStarted();
 	int dv = 0;
@@ -249,9 +265,10 @@ void displayDV(int client) {
 		
 		if( g_iStackTeam[id][CS_TEAM_T] == t ) {
 			Format(tmp, sizeof(tmp), "%d", id);
+			Format(tmp2, sizeof(tmp2), "%s%s", (g_iStackFlag[id] & JB_ONLY_VIP ? "[VIP] " : ""), g_cStackName[id]);
 			
 			bool can = DV_CanBePlayed(id, targetCount);		
-			menu.AddItem(tmp, g_cStackName[id], can ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
+			menu.AddItem(tmp, tmp2, can ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
 			if( can )
 				dv++;
 		}
@@ -513,9 +530,18 @@ bool DV_CanBePlayed(int id, int targetCount=1) {
 			Call_PushCell(g_iCurrentTeam[CS_TEAM_T][0]);
 		Call_Finish(can);
 	}
+	
+	if( can && g_iStackFlag[id] & JB_ONLY_VIP ) {
+		for (int i = 0; i < g_iCurrentTeamCount[CS_TEAM_T]; i++) {
+			if( !DV_CAN_VIP(i) )
+				can = false;
+		}
+	}
+	
 	return can;
 }
 bool DV_Start(int id) {
+	static char query[512];
 	if( !DV_CanBeStarted() ) {
 		CPrintToChatAll("%s La {blue}DV{default} n'est plus disponible.", MOD_TAG);
 		return false;
@@ -556,7 +582,9 @@ bool DV_Start(int id) {
 		for (int i = 0; i < g_iInitialTeamCount[CS_TEAM_CT]; i++)
 			Effect_Glow(g_iInitialTeam[CS_TEAM_CT][i], 0, 0, 255, 200);
 	}
-	
+
+	Format(query, sizeof(query), "INSERT INTO `stats_dv` (`id`, `date`, `name`) VALUES (NULL, CURRENT_TIMESTAMP, '%s');", g_cStackName[id]);
+	SQL_TQuery(g_hBDD, SQL_QueryCallBack, query);
 	return false;
 }
 void DV_Stop(int id) {
@@ -699,4 +727,9 @@ void Effect_GlowStop(int client) {
 	int entity = CPS_GetSkin(client);
 	if( entity > 0 )
 		CPS_RemoveSkin(client);
+}
+public void SQL_QueryCallBack(Handle owner, Handle handle, const char[] error, any data) {
+	if( handle == INVALID_HANDLE ) {
+		LogError("[SQL] [ERROR] %s", error);
+	}
 }
