@@ -54,12 +54,14 @@ native bool JB_IsDvActive(Handle plugin = INVALID_HANDLE);
 native void JB_End();
 native void DV_CleanTeam(int team = 0);
 
-stock bool JB_ShowHUDMessage(char[] message, int team = 0, float time = 10.0, int warpLine=50) {
+stock bool JB_ShowHUDMessage(const char[] message, int team = 0, float time = 30.0, int warpLine=50) {
+	static char tmp[1024];
 	static Handle sync = INVALID_HANDLE;
 	if( sync == INVALID_HANDLE )
 		sync = CreateHudSynchronizer();
 	
-	String_WordWrap(message, warpLine);
+	strcopy(tmp, sizeof(tmp), message);
+	String_WordWrap(tmp, warpLine);
 	
 	for (int i = 1; i < MaxClients; i++) {
 		if( !IsClientInGame(i) )
@@ -68,7 +70,7 @@ stock bool JB_ShowHUDMessage(char[] message, int team = 0, float time = 10.0, in
 		int pteam = GetClientTeam(i);
 		if( team == 0 || pteam == team ) {
 			SetHudTextParams(-1.0, 0.9, time, 255, 255, 255, 255, 1, time/25.0, time/25.0, time/25.0);
-			ShowSyncHudText(i, sync, message);
+			ShowSyncHudText(i, sync, tmp);
 		}
 	}
 }
@@ -96,7 +98,7 @@ stock bool DV_CAN_Always(int client) {
 stock bool DV_CAN_Min2CT(int client) {
 	int cpt = 0;
 	for (int i = 1; i <= MaxClients; i++)
-		if( IsClientInGame(i) &&  IsPlayerAlive(i) && GetClientTeam(i) == CS_TEAM_CT )
+		if( IsClientInGame(i) && IsPlayerAlive(i) && GetClientTeam(i) == CS_TEAM_CT )
 			cpt++;
 	
 	return (cpt>=2);
@@ -104,7 +106,7 @@ stock bool DV_CAN_Min2CT(int client) {
 stock bool DV_CAN_Min3CT(int client) {
 	int cpt = 0;
 	for (int i = 1; i <= MaxClients; i++)
-		if( IsClientInGame(i) &&  IsPlayerAlive(i) && GetClientTeam(i) == CS_TEAM_CT )
+		if( IsClientInGame(i) && IsPlayerAlive(i) && GetClientTeam(i) == CS_TEAM_CT )
 			cpt++;
 	
 	return (cpt>=3);
@@ -112,7 +114,7 @@ stock bool DV_CAN_Min3CT(int client) {
 stock bool DV_CAN_Min4CT(int client) {
 	int cpt = 0;
 	for (int i = 1; i <= MaxClients; i++)
-		if( IsClientInGame(i) &&  IsPlayerAlive(i) && GetClientTeam(i) == CS_TEAM_CT )
+		if( IsClientInGame(i) && IsPlayerAlive(i) && GetClientTeam(i) == CS_TEAM_CT )
 			cpt++;
 	
 	return (cpt>=4);
@@ -120,7 +122,7 @@ stock bool DV_CAN_Min4CT(int client) {
 stock bool DV_CAN_Min5CT(int client) {
 	int cpt = 0;
 	for (int i = 1; i <= MaxClients; i++)
-		if( IsClientInGame(i) &&  IsPlayerAlive(i) && GetClientTeam(i) == CS_TEAM_CT )
+		if( IsClientInGame(i) && IsPlayerAlive(i) && GetClientTeam(i) == CS_TEAM_CT )
 			cpt++;
 	
 	return (cpt>=5);
