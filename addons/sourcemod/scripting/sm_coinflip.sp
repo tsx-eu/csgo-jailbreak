@@ -112,21 +112,25 @@ public int menu_CoinFLip_Confirm(Menu menu, MenuAction action, int owner, int pa
 			int target = StringToInt(buffer[2]);
 			
 			if( Gang_GetClientCash(client, WhiteCash) < money ) {
+				PrintToChat(client, "%N n'a plus assez d'argent.", client);
+				PrintToChat(target, "%N n'a plus assez d'argent.", client);
 				return;
 			}
 			if( Gang_GetClientCash(target, WhiteCash) < money ) {
+				PrintToChat(client, "%N n'a plus assez d'argent.", target);
+				PrintToChat(target, "%N n'a plus assez d'argent.", target);
 				return;
 			}
 			
-			Gang_SetClientCash(client, WhiteCash, -money, "coin flip");
-			Gang_SetClientCash(target, WhiteCash, -money, "coin flip");
+			Gang_SetClientCash(client, WhiteCash, Gang_GetClientCash(client, WhiteCash)-money, "coin flip");
+			Gang_SetClientCash(target, WhiteCash, Gang_GetClientCash(target, WhiteCash)-money, "coin flip");
 			
 			int winner = Math_GetRandomInt(0, 1) ? client : target;
 			int loser = client == winner ? target : client;
 			
 			CPrintToChatAll("{green}%N{default} a gagné un coin flip contre {green}%N{default} de {red}%d${default}!", winner, loser, money);
 			
-			Gang_SetClientCash(client, WhiteCash, RoundToCeil( (float(money)*2.0)*TAXE ), "coin flip");
+			Gang_SetClientCash(winner, WhiteCash, Gang_GetClientCash(winner, WhiteCash) + RoundToCeil( (float(money)*2.0)*TAXE ), "coin flip");
 		}
 	}
 	else if( action == MenuAction_End ) {
