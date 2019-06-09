@@ -26,6 +26,11 @@ public void OnPluginStart() {
 	
 	HookEvent("player_death", 		EventDeath, 		EventHookMode_Pre);
 }
+public Action EventPlayerTeam(Handle ev, const char[] name, bool broadcast) {
+	int client = GetClientOfUserId(GetEventInt(ev, "userid"));
+	g_bLastPosition[client] = false;
+	return Plugin_Continue;
+}
 public void OnClientPostAdminCheck(int client) {
 	g_bLastPosition[client] = false;
 }
@@ -33,6 +38,8 @@ public Action EventDeath(Handle ev, const char[] name, bool broadcast) {
 	int client = GetClientOfUserId(GetEventInt(ev, "userid"));
 	
 	Entity_GetAbsOrigin(client, g_flLastPosition[client]);
+	GetGroundOrigin(g_flLastPosition[client], g_flLastPosition[client]);
+	
 	g_bLastPosition[client] = true;
 }
 public Action Cmd_Respawn(int client, int args) {
@@ -55,4 +62,16 @@ public Action Cmd_Respawn(int client, int args) {
 	}
 	
 	return Plugin_Handled;
+}
+stock void GetGroundOrigin(float source[3], float pos[3]) {
+	static float target[3];
+	target[0] = source[0];
+	target[1] = source[1];
+	target[2] = source[2] - 999999.9;
+	
+	Handle tr;
+	tr = TR_TraceRayEx(source, target, MASK_SOLID, RayType_EndPoint);
+	if (tr)
+		TR_GetEndPosition(pos, tr);
+	delete tr;
 }
