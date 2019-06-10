@@ -60,7 +60,7 @@ public Action Cmd_Respawn(int client, int args) {
 		CS_RespawnPlayer(target);
 		if( g_bLastPosition[target] )
 			TeleportEntity(target, g_flLastPosition[target], NULL_VECTOR, NULL_VECTOR);
-		CPrintToChatAll("{default}[ {green}1UP {default}] {green}%N{default}a respawn {green}%N", client, target);
+		CPrintToChatAll("{default}[ {green}1UP {default}] {green}%N{default} a respawn {green}%N{default}.", client, target);
 	}
 	
 	return Plugin_Handled;
