@@ -132,7 +132,9 @@ public Action EventSpawn(Handle ev, const char[] name, bool broadcast) {
 	int team = GetClientTeam(client);
 	
 	if( GetConVarBool(g_hCvarStripWeapon) ) {
-		DV_CleanClient(client);
+		
+		if( team == CS_TEAM_T )
+			DV_CleanClient(client);
 		
 		if( team == CS_TEAM_CT )
 			Client_SetArmor(client, 100);
