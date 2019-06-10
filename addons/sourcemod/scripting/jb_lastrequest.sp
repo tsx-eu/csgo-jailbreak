@@ -659,6 +659,7 @@ public APLRes AskPluginLoad2(Handle hPlugin, bool isAfterMapLoaded, char[] error
 	CreateNative("JB_CeanTeam", Native_DV_CleanTeam);
 	CreateNative("JB_End", Native_JB_End);
 	CreateNative("JB_IsDvActive", Native_JB_IsDvActive);
+	CreateNative("JB_ShowHUDMessage", Native_JB_ShowHUDMessage);
 	
 	g_hPluginReady = CreateGlobalForward("JB_OnPluginReady", ET_Ignore);
 	g_hOnStartLR = CreateGlobalForward("OnStartLR", ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
@@ -725,7 +726,30 @@ public int Native_JB_IsDvActive(Handle plugin, int numParams) {
 	}
 	return view_as<int>(false);
 }
-
+public int Native_JB_ShowHUDMessage(Handle plugin, int numParams) {
+	static char tmp[1024];
+	static Handle sync = INVALID_HANDLE;
+	if( sync == INVALID_HANDLE )
+		sync = CreateHudSynchronizer();
+	
+	GetNativeString(1, tmp, sizeof(tmp));
+	int team = GetNativeCell(2);
+	float time = view_as<float>(GetNativeCell(3));
+	int warpLine = GetNativeCell(4);
+	
+	String_WordWrap(tmp, warpLine);
+	
+	for (int i = 1; i < MaxClients; i++) {
+		if( !IsClientInGame(i) )
+			continue;
+		
+		int pteam = GetClientTeam(i);
+		if( team == 0 || pteam == team ) {
+			SetHudTextParams(-1.0, 0.9, time, 255, 255, 255, 255, 1, time/25.0, time/25.0, time/25.0);
+			ShowSyncHudText(i, sync, tmp);
+		}
+	}
+}
 
 void Effect_Glow(int client, int r, int g, int b, int a) {
 	static char model[PLATFORM_MAX_PATH];
@@ -745,11 +769,26 @@ void Effect_Glow(int client, int r, int g, int b, int a) {
 	SetEntData(entity, offset + 2, b, _, true);
 	SetEntData(entity, offset + 3, a, _, true);
 }
-
 void Effect_GlowStop(int client) {
 	int entity = CPS_GetSkin(client);
 	if( entity > 0 )
 		CPS_RemoveSkin(client);
+}
+void String_WordWrap(char[] s, int warpLine) {
+	int i, k, wraploc, lastwrap;
+	
+	for (i = 0; s[i] != '\0'; ++i, ++wraploc) {
+		if (wraploc >= warpLine) {
+			for (k = i; k > 0; --k) {
+				if (k - lastwrap <= warpLine && s[k] == ' ') {
+					s[k] = '\n';
+					lastwrap = k + 1;
+					break;
+				}
+			}
+			wraploc = i - lastwrap;
+		}
+	}
 }
 public void SQL_QueryCallBack(Handle owner, Handle handle, const char[] error, any data) {
 	if( handle == INVALID_HANDLE ) {

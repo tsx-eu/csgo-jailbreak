@@ -54,44 +54,8 @@ native bool JB_IsDvActive(Handle plugin = INVALID_HANDLE);
 native void JB_End();
 native void DV_CleanTeam(int team = 0);
 
-stock bool JB_ShowHUDMessage(const char[] message, int team = 0, float time = 30.0, int warpLine=50) {
-	static char tmp[1024];
-	static Handle sync = INVALID_HANDLE;
-	if( sync == INVALID_HANDLE )
-		sync = CreateHudSynchronizer();
-	
-	strcopy(tmp, sizeof(tmp), message);
-	String_WordWrap(tmp, warpLine);
-	
-	for (int i = 1; i < MaxClients; i++) {
-		if( !IsClientInGame(i) )
-			continue;
-		
-		int pteam = GetClientTeam(i);
-		if( team == 0 || pteam == team ) {
-			SetHudTextParams(-1.0, 0.9, time, 255, 255, 255, 255, 1, time/25.0, time/25.0, time/25.0);
-			ShowSyncHudText(i, sync, tmp);
-		}
-	}
-}
+native void JB_ShowHUDMessage(const char[] message, int team = 0, float time = 30.0, int warpLine = 50);
 
-stock void String_WordWrap(char[] s, int warpLine) {
-	int i, k, wraploc, lastwrap;
-	
-	for (i = 0; s[i] != '\0'; ++i, ++wraploc) {
-		if (wraploc >= warpLine) {
-			for (k = i; k > 0; --k) {
-				if (k - lastwrap <= warpLine && s[k] == ' ') {
-					s[k] = '\n';
-					lastwrap = k + 1;
-					break;
-				}
-			}
-			wraploc = i - lastwrap;
-		}
-	}
-}
-	
 stock bool DV_CAN_Always(int client) {
 	return true;
 }
