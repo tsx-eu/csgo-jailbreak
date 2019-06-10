@@ -65,7 +65,7 @@ public void DV_StartMulti(int[] clients, int clientCount, int[] targets, int tar
 		DV_StripWeapon(client);
 		GivePlayerItem(client, "weapon_knife");
 		
-		SDKHook(client, SDKHook_WeaponDropPost, OnWeaponDrop);
+		SDKHook(client, SDKHook_WeaponDrop, OnWeaponDrop);
 		int wpnId = GivePlayerItem(client, "weapon_deagle");
 		SetEntProp(wpnId, Prop_Send, "m_iClip1", 0);
 		SetEntProp(wpnId, Prop_Send, "m_iPrimaryReserveAmmoCount", 0);
@@ -81,7 +81,7 @@ public void DV_StartMulti(int[] clients, int clientCount, int[] targets, int tar
 		DV_StripWeapon(client);
 		GivePlayerItem(client, "weapon_knife");
 		
-		SDKHook(client, SDKHook_WeaponDropPost, OnWeaponDrop);
+		SDKHook(client, SDKHook_WeaponDrop, OnWeaponDrop);
 		int wpnId = GivePlayerItem(client, "weapon_deagle");
 		SetEntProp(wpnId, Prop_Send, "m_iClip1", 0);
 		SetEntProp(wpnId, Prop_Send, "m_iPrimaryReserveAmmoCount", 0);
@@ -232,7 +232,7 @@ public void DV_StopMulti(int[] clients, int clientCount, int[] targets, int targ
 	g_hMain = null;
 	
 	for (int i = 0; i < clientCount; i++)
-		SDKUnhook(clients[i], SDKHook_WeaponDropPost, OnWeaponDrop);
+		SDKUnhook(clients[i], SDKHook_WeaponDrop, OnWeaponDrop);
 	for (int i = 0; i < targetCount; i++)
-		SDKUnhook(targets[i], SDKHook_WeaponDropPost, OnWeaponDrop);
+		SDKUnhook(targets[i], SDKHook_WeaponDrop, OnWeaponDrop);
 }
