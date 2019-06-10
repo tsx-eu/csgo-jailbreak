@@ -31,7 +31,7 @@ public void OnPluginStart() {
 	HookEvent("player_spawn", 		EventSpawn, 		EventHookMode_Post);
 	
 	RegConsoleCmd("sm_warmup", 	Cmd_Warmup);
-	RegConsoleCmd("sm_passive", Cmd_Passive);
+	RegConsoleCmd("sm_passif", Cmd_Passive);
 	
 	AutoExecConfig();
 }

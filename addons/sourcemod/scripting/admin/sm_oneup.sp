@@ -3,6 +3,7 @@
 #include <sourcemod>
 #include <sdktools>
 #include <cstrike>
+#include <csgocolors>
 #include <smlib>
 
 #pragma newdecls required
@@ -59,7 +60,7 @@ public Action Cmd_Respawn(int client, int args) {
 		CS_RespawnPlayer(target);
 		if( g_bLastPosition[target] )
 			TeleportEntity(target, g_flLastPosition[target], NULL_VECTOR, NULL_VECTOR);
-		ReplyToCommand(client, "%N a été respawn", target);
+		CPrintToChatAll("{default}[ {green}1UP {default}] {green}%N{default}a respawn {green}%N", client, target);
 	}
 	
 	return Plugin_Handled;
