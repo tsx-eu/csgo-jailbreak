@@ -25,6 +25,7 @@ public void OnPluginStart() {
 	RegAdminCmd("sm_hrespawn", Cmd_Respawn, ADMFLAG_KICK);
 	
 	HookEvent("player_death", 		EventDeath, 		EventHookMode_Pre);
+	HookEvent("player_team", 		EventPlayerTeam, 		EventHookMode_Post);
 }
 public Action EventPlayerTeam(Handle ev, const char[] name, bool broadcast) {
 	int client = GetClientOfUserId(GetEventInt(ev, "userid"));
