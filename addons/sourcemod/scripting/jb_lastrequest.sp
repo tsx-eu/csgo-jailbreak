@@ -32,7 +32,9 @@ Handle g_hPluginReady = INVALID_HANDLE, g_hOnStartLR = INVALID_HANDLE, g_hOnStop
 int g_iOpenMenu = -1;
 Handle g_hCvarEnable = INVALID_HANDLE;
 Handle g_hCvarStripWeapon = INVALID_HANDLE;
+Handle g_hCvarGravity = INVALID_HANDLE;
 bool g_bPluginEnabled;
+int g_iGravity;
 
 int g_iDoingDV = -1;
 int g_iCurrentTeam[4][MAX_PLAYERS], g_iCurrentTeamCount[4], g_iInitialTeam[4][MAX_PLAYERS], g_iInitialTeamCount[4];
@@ -44,9 +46,12 @@ Handle g_hBDD = INVALID_HANDLE;
 public void OnPluginStart() {
 	g_hCvarEnable = CreateConVar("sm_hosties_lr", "1");
 	g_hCvarStripWeapon = CreateConVar("sm_hosties_strip_weapons", "1");
+	g_hCvarGravity = FindConVar("sv_gravity");
 	
 	g_bPluginEnabled = GetConVarInt(g_hCvarEnable) == 1;
+	g_iGravity = GetConVarInt(g_hCvarGravity);
 	HookConVarChange(g_hCvarEnable, OnConVarChange);
+	HookConVarChange(g_hCvarGravity, OnConVarChange);
 	
 	RegConsoleCmd("sm_dv", 			cmd_DV);
 	RegConsoleCmd("sm_lr", 			cmd_DV);
@@ -60,12 +65,19 @@ public void OnPluginStart() {
 	HookEvent("round_end",			EventRoundEnd,		EventHookMode_Post);
 	
 	CreateTimer(1.0, EventSecondElapsed, _, TIMER_REPEAT);
-}
-public void OnConVarChange(Handle cvar, const char[] oldVal, const char[] newVal) {
-	if( cvar == g_hCvarEnable ) {
-		g_bPluginEnabled = StringToInt(newVal) == 1;
+	
+	for (int i = 1; i < MaxClients; i++) {
+		if( IsClientInGame(i) )
+			OnClientPutInServer(i);
 	}
 }
+public void OnConVarChange(Handle cvar, const char[] oldVal, const char[] newVal) {
+	if( cvar == g_hCvarEnable )
+		g_bPluginEnabled = StringToInt(newVal) == 1;
+	if( cvar == g_hCvarGravity )
+		g_iGravity = GetConVarInt(g_hCvarGravity);
+}
+
 public void OnMapStart() {
 	if( g_iDoingDV >= 0 )
 		DV_Stop(g_iDoingDV);
@@ -103,6 +115,7 @@ public void OnMapStart() {
 }
 public void OnClientPutInServer(int client) {
 	SDKHook(client, SDKHook_OnTakeDamage, EventTakeDamage);
+	SDKHook(client, SDKHook_WeaponDrop, OnWeaponDrop);
 }
 public void OnClientDisconnect(int client) {
 	if( g_iDoingDV == -1 )
@@ -179,6 +192,12 @@ public Action EventTakeDamage(int victim, int& attacker, int& inflictor, float& 
 		return Plugin_Stop;
 	}
 	
+	return Plugin_Continue;
+}
+public Action OnWeaponDrop(int client, int wpnid) {
+	if( g_iGravity <= 0 ) {
+		return Plugin_Handled;
+	}
 	return Plugin_Continue;
 }
 public Action EventSecondElapsed(Handle timer, any none) {
