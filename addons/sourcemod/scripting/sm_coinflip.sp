@@ -35,6 +35,10 @@ public Action Cmd_CoinFlip(int client, int args) {
 	for (int i = 1; i < MaxClients; i++) {
 		if( !IsClientInGame(i) )
 			continue;
+		if( i == client )
+			continue;
+		if( IsClientSourceTV(i) || IsFakeClient(i) )
+			continue;
 		if( Gang_GetClientCash(i, WhiteCash) < money )
 			continue;
 		
