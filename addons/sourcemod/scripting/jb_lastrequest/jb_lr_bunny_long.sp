@@ -27,7 +27,7 @@ public void OnPluginInit() {
 		g_hTeleport = DHookCreate(iOffset, HookType_Entity, ReturnType_Void, ThisPointer_CBaseEntity, DHooks_OnTeleport);
 		if(g_hTeleport != INVALID_HANDLE) {
 			DHookAddParam(g_hTeleport, HookParamType_VectorPtr);
-			DHookAddParam(g_hTeleport, HookParamType_VectorPtr);
+			DHookAddParam(g_hTeleport, HookParamType_ObjectPtr);
 			DHookAddParam(g_hTeleport, HookParamType_VectorPtr);
 			DHookAddParam(g_hTeleport, HookParamType_Bool);
 		}
