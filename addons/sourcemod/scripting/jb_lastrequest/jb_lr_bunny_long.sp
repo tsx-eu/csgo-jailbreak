@@ -17,7 +17,8 @@ float g_flJumpStart[65][3], g_flJumpEnd[65][3], g_flDistance[65];
 
 Handle g_hTeleport;
 
-public void OnPluginInit() {
+public void OnPluginStart() {
+	
 	Handle hGameData = LoadGameConfigFile("sdktools.games");
 	if(hGameData == INVALID_HANDLE)
 		return;
