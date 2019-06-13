@@ -20,12 +20,15 @@ Handle g_hBDD;
 #define SCORE		20
 
 int g_iHidingPosition;
-float g_flHidingPosition[256][3];
+float g_flHidingPosition[1024][3];
 int g_iClient, g_iTarget;
 int g_iScore[65];
 
+public void OnPluginStart() {	
+	AddNormalSoundHook(OnSoundPlayed);
+}
 public void JB_OnPluginReady() {
-	JB_CreateLastRequest("Sonic - SOON", 	JB_SELECT_CT_UNTIL_DEAD|JB_ONLY_VIP, DV_CAN, DV_Start, DV_Stop);
+	JB_CreateLastRequest("Sonic - BETA", 	JB_SELECT_CT_UNTIL_DEAD|JB_ONLY_VIP, DV_CAN, DV_Start, DV_Stop);
 }
 stock bool DV_CAN(int client) {
 	return false && g_bMapIsCompatible && g_iHidingPosition >= MIN_COIN && CountEntity() < ENTITY_SAFE-MAX_COIN;
@@ -46,8 +49,8 @@ public void DV_Start(int client, int target) {
 		int ent = CreateEntityByName("item_coop_coin");
 		DispatchSpawn(ent);
 		SDKHook(ent, SDKHook_Touch, OnTouch);
-		
 		pos[2] += 32.0;
+		TeleportEntity(ent, pos, NULL_VECTOR, NULL_VECTOR);
 		
 		entityCount++;
 		if( entityCount > ENTITY_SAFE ) {
@@ -84,6 +87,14 @@ int CountEntity() {
 		cpt++;
 	}
 	return cpt;
+}
+
+public Action OnSoundPlayed(int clients[64], int &numClients, char sample[PLATFORM_MAX_PATH], int &entity, int &channel, float &volume, int &level, int &pitch, int &flags) {
+	if( StrContains(sample, "coin_pickup_") >= 0 ) {
+		volume = 0.1;
+		return Plugin_Changed;
+	}
+	return Plugin_Continue;
 }
 
 public void OnMapStart() {
@@ -151,7 +162,6 @@ public void OnMapStart() {
 			g_flHidingPosition[cpt][2] = hiding[cpt * 3 + 2];
 		}
 		
-		//for (int i = 0; i < cpt; i++) {
 		for (int i = cpt-1; i > 0; i--) {
 			int j = Math_GetRandomInt(0, i);
 			mid = g_flHidingPosition[j];
@@ -176,6 +186,7 @@ public void OnMapStart() {
 	
 	SQL_TQuery(g_hBDD, SQL_QueryCallBack, error);
 }
+
 public void OnMapEnd() {
 	delete g_hBDD;
 }
