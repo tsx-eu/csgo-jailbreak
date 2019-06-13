@@ -28,7 +28,7 @@ public void OnPluginStart() {
 	AddNormalSoundHook(OnSoundPlayed);
 }
 public void JB_OnPluginReady() {
-	JB_CreateLastRequest("Sonic - BETA", 	JB_SELECT_CT_UNTIL_DEAD|JB_ONLY_VIP, DV_CAN, DV_Start, DV_Stop);
+	JB_CreateLastRequest("Sonic - BETA", 	JB_SELECT_CT_UNTIL_DEAD, DV_CAN, DV_Start, DV_Stop);
 }
 stock bool DV_CAN(int client) {
 	return g_bMapIsCompatible && g_iHidingPosition >= MIN_COIN && CountEntity() < ENTITY_SAFE-MAX_COIN;
@@ -40,12 +40,15 @@ public void DV_Start(int client, int target) {
 	g_iClient = client;
 	g_iTarget = target;
 	
+	SetEntPropFloat(client, Prop_Send, "m_flLaggedMovementValue", 2.0);
+	SetEntPropFloat(target, Prop_Send, "m_flLaggedMovementValue", 2.0);
+	
 	g_iScore[client] = g_iScore[target] = 0;
 	
 	for (int i = 0; i < MAX_COIN; i++) {
 		
 		pos = g_flHidingPosition[i];
-		
+	
 		int ent = CreateEntityByName("item_coop_coin");
 		DispatchSpawn(ent);
 		SDKHook(ent, SDKHook_Touch, OnTouch);
@@ -77,6 +80,11 @@ public void DV_Stop(int client, int target) {
 			AcceptEntityInput(ent, "Kill");
 		}
 	}
+	
+	if( client )
+		SetEntPropFloat(client, Prop_Send, "m_flLaggedMovementValue", 1.0);
+	if( target )
+		SetEntPropFloat(target, Prop_Send, "m_flLaggedMovementValue", 1.0);
 }
 
 int CountEntity() {
@@ -156,17 +164,16 @@ public void OnMapStart() {
 		}
 		
 		
-		for (int i = (cpt * 3); i > 0; i -= 3) {
-			int b = i / 3;
-			int a = GetRandomInt(1, b) * 3 - 1;
+		for (int i = (cpt * 3) -1; i > 0; i -= 3) {
+			int b = (i+1) / 3;
+			int a = GetRandomInt(1, b) * 3 -1;
 			
 			for (int j = 0; j < 3; j++) {
 				mid[j] 						= hiding[i-j];
 				hiding[i - j] 				= hiding[a-j];
 				hiding[a - j] 				= mid[j];
-				g_flHidingPosition[b][j] 	= hiding[i-(2-j)];
+				g_flHidingPosition[b-1][2-j]= hiding[i-j];
 			}
-			
 		}
 		
 		g_iHidingPosition = cpt;
