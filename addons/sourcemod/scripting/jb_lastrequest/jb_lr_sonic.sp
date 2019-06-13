@@ -31,7 +31,7 @@ public void JB_OnPluginReady() {
 	JB_CreateLastRequest("Sonic - BETA", 	JB_SELECT_CT_UNTIL_DEAD|JB_ONLY_VIP, DV_CAN, DV_Start, DV_Stop);
 }
 stock bool DV_CAN(int client) {
-	return false && g_bMapIsCompatible && g_iHidingPosition >= MIN_COIN && CountEntity() < ENTITY_SAFE-MAX_COIN;
+	return g_bMapIsCompatible && g_iHidingPosition >= MIN_COIN && CountEntity() < ENTITY_SAFE-MAX_COIN;
 }
 public void DV_Start(int client, int target) {
 	int entityCount = CountEntity();
@@ -151,22 +151,22 @@ public void OnMapStart() {
 			}
 		}
 		
-		if( cpt >= 128 ) {
+		if( cpt >= MIN_COIN ) {
 			g_bMapIsCompatible = true;
+		}
+		
+		
+		for (int i = (cpt * 3); i > 0; i -= 3) {
+			int b = i / 3;
+			int a = GetRandomInt(1, b) * 3 - 1;
 			
-		}
-		
-		for (int i = 0; i < cpt; i++) {
-			g_flHidingPosition[cpt][0] = hiding[cpt * 3 + 0];
-			g_flHidingPosition[cpt][1] = hiding[cpt * 3 + 1];
-			g_flHidingPosition[cpt][2] = hiding[cpt * 3 + 2];
-		}
-		
-		for (int i = cpt-1; i > 0; i--) {
-			int j = Math_GetRandomInt(0, i);
-			mid = g_flHidingPosition[j];
-			g_flHidingPosition[j] = g_flHidingPosition[i];
-			g_flHidingPosition[i] = mid;
+			for (int j = 0; j < 3; j++) {
+				mid[j] 						= hiding[i-j];
+				hiding[i - j] 				= hiding[a-j];
+				hiding[a - j] 				= mid[j];
+				g_flHidingPosition[b][j] 	= hiding[i-(2-j)];
+			}
+			
 		}
 		
 		g_iHidingPosition = cpt;
