@@ -19,16 +19,18 @@ Handle g_hBDD;
 #define ENTITY_SAFE	1950
 #define SCORE		20
 
+int g_cLaser;
 int g_iHidingPosition;
 float g_flHidingPosition[1024][3];
 int g_iClient, g_iTarget;
 int g_iScore[65];
+Handle g_hMain = INVALID_HANDLE;
 
 public void OnPluginStart() {	
 	AddNormalSoundHook(OnSoundPlayed);
 }
 public void JB_OnPluginReady() {
-	JB_CreateLastRequest("Sonic - BETA", 	JB_SELECT_CT_UNTIL_DEAD, DV_CAN, DV_Start, DV_Stop);
+	JB_CreateLastRequest("Sonic - BETA", 	JB_SELECT_CT_UNTIL_DEAD|JB_ONLY_VIP, DV_CAN, DV_Start, DV_Stop);
 }
 stock bool DV_CAN(int client) {
 	return g_bMapIsCompatible && g_iHidingPosition >= MIN_COIN && CountEntity() < ENTITY_SAFE-MAX_COIN;
@@ -60,6 +62,17 @@ public void DV_Start(int client, int target) {
 			break;
 		}
 	}
+	
+	g_hMain = CreateTimer(0.25, OnFrame);
+}
+public Action OnFrame(Handle timer, any none) {	
+	g_hMain = CreateTimer(0.25, OnFrame);
+	
+	TE_SetupBeamFollow(g_iClient, g_cLaser, g_cLaser, 1.0, 16.0, 0.5, 1, {255, 0, 0, 200});
+	TE_SendToAll();
+	
+	TE_SetupBeamFollow(g_iTarget, g_cLaser, g_cLaser, 1.0, 16.0, 0.5, 1, {0, 0, 255, 200});
+	TE_SendToAll();
 }
 public void OnTouch(int entity, int client) {
 	if( client == g_iClient || client == g_iTarget ) {
@@ -67,6 +80,8 @@ public void OnTouch(int entity, int client) {
 		
 		g_iScore[client]++;
 		PrintHintTextToAll("%N: %d/%d\n%N: %d/%d", g_iClient, g_iScore[g_iClient], SCORE, g_iTarget, g_iScore[g_iTarget], SCORE);
+		
+		SetEntPropFloat(client, Prop_Send, "m_flLaggedMovementValue", 2.0 + g_iScore[g_iClient]/10.0);
 		
 		if( g_iScore[client] >= SCORE ) {
 			ForcePlayerSuicide(client==g_iClient?g_iTarget:g_iClient);
@@ -85,6 +100,10 @@ public void DV_Stop(int client, int target) {
 		SetEntPropFloat(client, Prop_Send, "m_flLaggedMovementValue", 1.0);
 	if( target )
 		SetEntPropFloat(target, Prop_Send, "m_flLaggedMovementValue", 1.0);
+	
+	if( IsValidHandle(g_hMain) )
+		KillTimer(g_hMain);
+	g_hMain = null;
 }
 
 int CountEntity() {
@@ -107,6 +126,7 @@ public Action OnSoundPlayed(int clients[64], int &numClients, char sample[PLATFO
 
 public void OnMapStart() {
 	g_bMapIsCompatible = false;
+	g_cLaser = PrecacheModel("materials/sprites/laserbeam.vmt", true);
 	
 	float min[3], max[3], pos[3], mid[3];
 	char map[64];
