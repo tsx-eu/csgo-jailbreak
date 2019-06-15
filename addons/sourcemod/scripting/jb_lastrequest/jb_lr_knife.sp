@@ -39,6 +39,7 @@ public void DV_Start(int client, int target) {
 	menu.AddItem("normal", 	"Normal");
 	menu.AddItem("bunny", 	"Bunny");
 	menu.AddItem("lowgrav",	"Lowgrav");
+	menu.AddItem("drug",	"Drogué");
 	menu.AddItem("slide",	"Slide");
 	
 	menu.ExitButton = false;
@@ -107,6 +108,10 @@ public int selectWeapon(SmartMenu menu, MenuAction action, int client, int param
 			Entity_SetCollisionGroup(client, COLLISION_GROUP_DEBRIS_TRIGGER);
 			Entity_SetCollisionGroup(target, COLLISION_GROUP_DEBRIS_TRIGGER);
 		}
+		if( StrEqual(g_szOptions, "drug") ) {
+			ServerCommand("sm_drug #%d 1", GetClientUserId(client));
+			ServerCommand("sm_drug #%d 1", GetClientUserId(target));
+		}
 		
 		if( StrEqual(g_szOptions, "slide") ) {
 			
@@ -159,6 +164,12 @@ public void DV_Stop(int client, int target) {
 			Entity_SetCollisionGroup(client, COLLISION_GROUP_PLAYER);
 		if( target > 0 )
 			Entity_SetCollisionGroup(target, COLLISION_GROUP_PLAYER);
+	}
+	if( StrEqual(g_szOptions, "drug") ) {
+		if( client > 0 )
+			ServerCommand("sm_drug #%d 0", GetClientUserId(client));
+		if( target > 0 )
+			ServerCommand("sm_drug #%d 0", GetClientUserId(target));
 	}
 	if( StrEqual(g_szOptions, "slide") ) {
 		g_flDisabledDamage = GetGameTime() + 5.0;
