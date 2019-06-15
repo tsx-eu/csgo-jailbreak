@@ -36,6 +36,9 @@ public void OnPluginStart() {
 	AutoExecConfig();
 }
 public Action Cmd_Passive(int client, int args) {
+        if(!g_bEnable) 
+                return Plugin_Handled;
+
 	g_bInPassive[client] = !g_bInPassive[client];
 	
 	if( g_bInPassive[client] )
@@ -43,6 +46,7 @@ public Action Cmd_Passive(int client, int args) {
 	else
 		ReplyToCommand(client, "Le GODMOD est déactivé.");
 	
+        return Plugin_Handled;
 }
 public void OnConVarChange(Handle cvar, const char[] oldVal, const char[] newVal) {
 	if( g_hCvarBunnyHop == cvar && StringToInt(oldVal) == 1 && StringToInt(newVal) == 0 && g_bEnable ) {
