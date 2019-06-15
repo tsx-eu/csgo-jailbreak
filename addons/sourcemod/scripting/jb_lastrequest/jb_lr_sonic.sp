@@ -30,7 +30,7 @@ public void OnPluginStart() {
 	AddNormalSoundHook(OnSoundPlayed);
 }
 public void JB_OnPluginReady() {
-	JB_CreateLastRequest("Sonic - BETA", 	JB_SELECT_CT_UNTIL_DEAD|JB_ONLY_VIP, DV_CAN, DV_Start, DV_Stop);
+	JB_CreateLastRequest("Sonic", 	JB_SELECT_CT_UNTIL_DEAD|JB_ONLY_VIP, DV_CAN, DV_Start, DV_Stop);
 }
 stock bool DV_CAN(int client) {
 	return g_bMapIsCompatible && g_iHidingPosition >= MIN_COIN && CountEntity() < ENTITY_SAFE-MAX_COIN;
@@ -64,6 +64,7 @@ public void DV_Start(int client, int target) {
 	}
 	
 	g_hMain = CreateTimer(0.25, OnFrame);
+	JB_ShowHUDMessage("Des pièces sont apparues partout sur la map, trouvez en 20.﻿﻿﻿﻿");
 }
 public Action OnFrame(Handle timer, any none) {	
 	g_hMain = CreateTimer(0.25, OnFrame);
