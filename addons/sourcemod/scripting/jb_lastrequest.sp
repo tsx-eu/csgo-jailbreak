@@ -221,8 +221,6 @@ public Action EventSecondElapsed(Handle timer, any none) {
 			GetClientAbsOrigin(client, src);
 			src[2] += 16.0;
 			
-			
-			
 			for (int j = 0; j < g_iCurrentTeamCount[CS_TEAM_CT]; j++) {
 				target = g_iCurrentTeam[CS_TEAM_CT][j];
 				GetClientAbsOrigin(target, dst);
@@ -237,7 +235,6 @@ public Action EventSecondElapsed(Handle timer, any none) {
 				}
 			}
 		}
-		
 	}
 	
 	return Plugin_Continue;

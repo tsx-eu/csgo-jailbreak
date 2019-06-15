@@ -17,6 +17,7 @@ public Plugin myinfo = {
 };
 
 float g_flLastPosition[65][3];
+int g_iLastTeam[65];
 bool g_bLastPosition[65];
 
 public void OnPluginStart() {
@@ -26,6 +27,7 @@ public void OnPluginStart() {
 	RegAdminCmd("sm_hrespawn", Cmd_Respawn, ADMFLAG_KICK);
 	
 	HookEvent("player_death", 		EventDeath, 		EventHookMode_Pre);
+	HookEvent("player_team", 		EventPlayerTeam, 		EventHookMode_Pre);
 	HookEvent("player_team", 		EventPlayerTeam, 		EventHookMode_Post);
 }
 public Action EventPlayerTeam(Handle ev, const char[] name, bool broadcast) {
@@ -43,6 +45,7 @@ public Action EventDeath(Handle ev, const char[] name, bool broadcast) {
 	GetGroundOrigin(g_flLastPosition[client], g_flLastPosition[client]);
 	
 	g_bLastPosition[client] = true;
+	g_iLastTeam[client] = GetClientTeam(client);
 }
 public Action Cmd_Respawn(int client, int args) {
 	char arg[MAX_TARGET_LENGTH];
@@ -58,7 +61,7 @@ public Action Cmd_Respawn(int client, int args) {
 	for (int i = 0; i < target_count; i++) {
 		int target = target_list[i];
 		CS_RespawnPlayer(target);
-		if( g_bLastPosition[target] )
+		if( g_bLastPosition[target] && g_iLastTeam[target] == GetClientTeam(target) )
 			TeleportEntity(target, g_flLastPosition[target], NULL_VECTOR, NULL_VECTOR);
 		CPrintToChatAll("{default}[ {green}1UP {default}] {green}%N{default} a respawn {green}%N{default}.", client, target);
 	}

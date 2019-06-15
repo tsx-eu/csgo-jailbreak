@@ -97,7 +97,7 @@ int Effect(int client, float origin[3], float angle[3], float offset[3], int col
 	if( TR_DidHit(tr) ) {
 		TR_GetEndPosition(dst, tr);
 		
-		TE_SetupBeamPoints(src, dst, g_cLaser, g_cLaser, 0, 0, 1.0, size, size, 0, amplitude, color, 0);
+		TE_SetupBeamPoints(src, dst, g_cLaser, g_cLaser, 0, 0, 0.5, size, size, 0, amplitude, color, 0);
 		TE_SendToAll();
 		
 		int tmp = TR_GetEntityIndex(tr);

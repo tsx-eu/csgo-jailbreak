@@ -92,7 +92,7 @@ public void DV_StartMulti(int[] clients, int clientCount, int[] targets, int tar
 		g_iWeaponToThrow++;
 	}	
 	
-	g_hMain = CreateTimer(0.1, DV_TASK, _, TIMER_REPEAT);
+	g_hMain = CreateTimer(0.1, DV_TASK);
 }
 public void DV_Start(int client, int target) {
 	 int clients[1], targets[1];
@@ -101,6 +101,8 @@ public void DV_Start(int client, int target) {
 	 DV_StartMulti(clients, 1, targets, 1);
 }
 public Action DV_TASK(Handle timer, Handle dp) {
+	g_hMain = CreateTimer(0.1, DV_TASK);
+	
 	float vecEnd[3];
 	vecEnd = g_flTarget;
 	vecEnd[2] += 64.0;
@@ -228,7 +230,8 @@ public void DV_StopMulti(int[] clients, int clientCount, int[] targets, int targ
 		g_iWeapons[i] = 0;
 	}
 	
-	KillTimer(g_hMain);
+	if( IsValidHandle(g_hMain) )
+		KillTimer(g_hMain);
 	g_hMain = null;
 	
 	for (int i = 0; i < clientCount; i++)
