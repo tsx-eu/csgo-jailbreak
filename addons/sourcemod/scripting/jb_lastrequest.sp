@@ -205,7 +205,7 @@ public Action OnWeaponDrop(int client, int wpnid) {
 public Action EventSecondElapsed(Handle timer, any none) {
 	static bool lastWasAvailable = false;
 	
-	bool now = (DV_CanBeStarted() != -1);
+	bool now = (DV_CanBeStarted() > 0);
 	
 	if( g_iDoingDV == -1 && now && !lastWasAvailable )
 		EmitSoundToAllAny("rsc/jailbreak/lr1.mp3");
