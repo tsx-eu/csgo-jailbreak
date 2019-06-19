@@ -76,10 +76,18 @@ public void WeaponList() {
 	
 	CreateWeapon("AK47", "weapon_ak47", CAT_PRIMARY);
 	CreateWeapon("M4A1", "weapon_m4a1", CAT_PRIMARY);
+	CreateWeapon("M4A1-S", "weapon_m4a1_silencer", CAT_PRIMARY);
+	CreateWeapon("Aug", "weapon_aug", CAT_PRIMARY);
+	CreateWeapon("SG556", "weapon_sg556", CAT_PRIMARY);
+	CreateWeapon("SSG08", "weapon_ssg08", CAT_PRIMARY);
 	
+	CreateWeapon("Elite", "weapon_elite", CAT_SECONDARY);
+	CreateWeapon("FiveSeven", "weapon_fiveseven", CAT_SECONDARY);
 	CreateWeapon("Deagle", "weapon_deagle", CAT_SECONDARY);
 	CreateWeapon("Glock", "weapon_glock", CAT_SECONDARY);
-	CreateWeapon("P228", "weapon_p228", CAT_SECONDARY);
+	CreateWeapon("P2000", "weapon_p2000", CAT_SECONDARY);
+	CreateWeapon("USP", "weapon_usp_silencer", CAT_SECONDARY);
+	CreateWeapon("Tec9", "weapon_tec9", CAT_SECONDARY);
 }
 
 public void CreateWeapon(char[] name, char[] classname, int cat) {
