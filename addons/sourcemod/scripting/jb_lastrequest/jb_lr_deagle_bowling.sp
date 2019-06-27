@@ -204,10 +204,12 @@ void DV_CheckWinner() {
 		}
 	}
 	
+	int winnerTeam = GetClientTeam(winner);
+	
 	for (int i = 1; i < MaxClients; i++) {
 		if( !g_bTossed[i] )
 			continue;
-		if( i == winner )
+		if( GetClientTeam(i) == winnerTeam )
 			continue;
 		ForcePlayerSuicide(i);
 	}

@@ -28,9 +28,29 @@ Handle g_hMain = INVALID_HANDLE;
 
 public void OnPluginStart() {	
 	AddNormalSoundHook(OnSoundPlayed);
+	
+	RegAdminCmd("sm_spawn_chicken", Cmd_Chicken, ADMFLAG_ROOT);
+}
+public Action Cmd_Chicken(int client, int args) {
+	int entityCount = CountEntity();
+	float pos[3];
+	for (int i = 0; i < MAX_COIN; i++) {
+		
+		pos = g_flHidingPosition[i];
+	
+		int ent = CreateEntityByName("chicken");
+		DispatchSpawn(ent);
+		pos[2] += 16.0;
+		TeleportEntity(ent, pos, NULL_VECTOR, NULL_VECTOR);
+		
+		entityCount++;
+		if( entityCount > ENTITY_SAFE || (i+1) >= g_iHidingPosition ) {
+			break;
+		}
+	}
 }
 public void JB_OnPluginReady() {
-	JB_CreateLastRequest("Sonic", 	JB_SELECT_CT_UNTIL_DEAD|JB_ONLY_VIP, DV_CAN, DV_Start, DV_Stop);
+	JB_CreateLastRequest("Sonic", 	JB_SELECT_CT_UNTIL_DEAD|JB_NODAMAGE, DV_CAN, DV_Start, DV_Stop);
 }
 stock bool DV_CAN(int client) {
 	return g_bMapIsCompatible && g_iHidingPosition >= MIN_COIN && CountEntity() < ENTITY_SAFE-MAX_COIN;
@@ -58,7 +78,7 @@ public void DV_Start(int client, int target) {
 		TeleportEntity(ent, pos, NULL_VECTOR, NULL_VECTOR);
 		
 		entityCount++;
-		if( entityCount > ENTITY_SAFE ) {
+		if( entityCount > ENTITY_SAFE || (i+1) >= g_iHidingPosition ) {
 			break;
 		}
 	}
@@ -202,7 +222,7 @@ public void OnMapStart() {
 	
 	Handle KV = CreateKeyValues("sql");
 	KvSetString(KV, "driver",	"mysql");
-	KvSetString(KV, "host",		"localhost");
+	KvSetString(KV, "host",		"dbgame.rebels-corp.net");
 	KvSetString(KV, "database",	"serverother");
 	KvSetString(KV,	"user",		"serverother");
 	KvSetString(KV,	"pass",		"iBEpewupbB");
