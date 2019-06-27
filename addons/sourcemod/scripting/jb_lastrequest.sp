@@ -102,7 +102,7 @@ public void OnMapStart() {
 	Handle KV = CreateKeyValues("sql");
 	
 	KvSetString(KV, "driver",	"mysql");
-	KvSetString(KV, "host",		"localhost");
+	KvSetString(KV, "host",		"dbgame.rebels-corp.net");
 	KvSetString(KV, "database",	"serverother");
 	KvSetString(KV,	"user",		"serverother");
 	KvSetString(KV,	"pass",		"iBEpewupbB");
@@ -561,7 +561,7 @@ bool DV_CanBePlayed(int id, int targetCount=1) {
 	return can;
 }
 bool DV_Start(int id) {
-	static char query[512];
+	static char query[512], steamid[32];
 	if( !DV_CanBeStarted() ) {
 		CPrintToChatAll("%s La {blue}DV{default} n'est plus disponible.", MOD_TAG);
 		return false;
@@ -603,7 +603,8 @@ bool DV_Start(int id) {
 			Effect_Glow(g_iInitialTeam[CS_TEAM_CT][i], 0, 0, 255, 200);
 	}
 
-	Format(query, sizeof(query), "INSERT INTO `stats_dv` (`id`, `date`, `name`) VALUES (NULL, CURRENT_TIMESTAMP, '%s');", g_cStackName[id]);
+	GetClientAuthId(g_iInitialTeam[CS_TEAM_T][0], AuthId_Engine, steamid, sizeof(steamid));
+	Format(query, sizeof(query), "INSERT INTO `stats_dv` (`id`, `date`, `name`, `steamid`) VALUES (NULL, CURRENT_TIMESTAMP, '%s', '%s');", g_cStackName[id], steamid);
 	SQL_TQuery(g_hBDD, SQL_QueryCallBack, query);
 	return false;
 }
