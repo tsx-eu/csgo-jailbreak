@@ -26,7 +26,7 @@ public void OnPluginStart() {
 	RegAdminCmd("sm_oneup", Cmd_Respawn, ADMFLAG_KICK);
 	RegAdminCmd("sm_hrespawn", Cmd_Respawn, ADMFLAG_KICK);
 	
-	HookEvent("player_death", 		EventDeath, 		EventHookMode_Pre);
+	HookEvent("player_death", 		EventDeath, 			EventHookMode_Pre);
 	HookEvent("player_team", 		EventPlayerTeam, 		EventHookMode_Pre);
 	HookEvent("player_team", 		EventPlayerTeam, 		EventHookMode_Post);
 }
@@ -41,7 +41,7 @@ public void OnClientPostAdminCheck(int client) {
 public Action EventDeath(Handle ev, const char[] name, bool broadcast) {
 	int client = GetClientOfUserId(GetEventInt(ev, "userid"));
 	
-	Entity_GetAbsOrigin(client, g_flLastPosition[client]);
+	GetClientAbsOrigin(client, g_flLastPosition[client]);
 	GetGroundOrigin(g_flLastPosition[client], g_flLastPosition[client]);
 	
 	g_bLastPosition[client] = true;
