@@ -20,6 +20,7 @@ bool g_bEnable = false, g_bPlayerWantedDisable = false;
 Handle g_hCvarPlayerCount, g_hCvarPlayerRatio, g_hCvarBunnyHop, g_hCvarAdvertTime;
 bool g_bFirstSpawner[65];
 bool g_bInPassive[65];
+float g_flCoolDown[65];
 
 public void OnPluginStart() {
 	g_hCvarPlayerCount = CreateConVar("sm_warmup_playercount", "5");
@@ -36,17 +37,23 @@ public void OnPluginStart() {
 	AutoExecConfig();
 }
 public Action Cmd_Passive(int client, int args) {
-        if(!g_bEnable) 
-                return Plugin_Handled;
+	if( !g_bEnable ) 
+		return Plugin_Handled;
 
+	if( g_flCoolDown[client] > GetGameTime() )
+		return Plugin_Handled;
+	
 	g_bInPassive[client] = !g_bInPassive[client];
+	
 	
 	if( g_bInPassive[client] )
 		ReplyToCommand(client, "Le GODMOD est activé.");
 	else
 		ReplyToCommand(client, "Le GODMOD est déactivé.");
 	
-        return Plugin_Handled;
+	
+	g_flCoolDown[client] = GetGameTime() + 30.0;
+	return Plugin_Handled;
 }
 public void OnConVarChange(Handle cvar, const char[] oldVal, const char[] newVal) {
 	if( g_hCvarBunnyHop == cvar && StringToInt(oldVal) == 1 && StringToInt(newVal) == 0 && g_bEnable ) {
@@ -76,6 +83,7 @@ public void OnClientPostAdminCheck(int client) {
 public void OnClientPutInServer(int client) {
 	g_bFirstSpawner[client] = true;
 	g_bInPassive[client] = false;
+	g_flCoolDown[client] = GetGameTime();
 	SDKHook(client, SDKHook_OnTakeDamage, EventTakeDamage);
 }
 public void OnClientDisconnect(int client) {
