@@ -10,14 +10,22 @@
 
 #define TAXE 0.95
 
-//native void 
+float g_flCoolDown[65];
 
 
 public void OnPluginStart() {
 	RegConsoleCmd("sm_coinflip", Cmd_CoinFlip);
 }
+public void OnClientPutInServer(int client) {
+	g_flCoolDown[client] = GetGameTime();
+}
 public Action Cmd_CoinFlip(int client, int args) {
 	char tmp[8], tmp2[128];
+	
+	if( g_flCoolDown[client] > GetGameTime() ) {
+		ReplyToCommand(client, "Veuillez patienter quelques instants");
+		return Plugin_Handled;
+	}
 	
 	GetCmdArg(1, tmp, sizeof(tmp));
 	int money = StringToInt(tmp);
@@ -49,6 +57,8 @@ public Action Cmd_CoinFlip(int client, int args) {
 	}
 	
 	menu.Display(client, MENU_TIME_FOREVER);
+	g_flCoolDown[client] = GetGameTime() + 30.0;
+	
 	return Plugin_Handled;
 }
 public int menu_CoinFLip(Menu menu, MenuAction action, int client, int params) {
