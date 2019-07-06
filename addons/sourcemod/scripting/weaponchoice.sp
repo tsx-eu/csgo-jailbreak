@@ -88,6 +88,7 @@ public void WeaponList() {
 	CreateWeapon("P2000", "weapon_p2000", CAT_SECONDARY);
 	CreateWeapon("USP", "weapon_usp_silencer", CAT_SECONDARY);
 	CreateWeapon("Tec9", "weapon_tec9", CAT_SECONDARY);
+	CreateWeapon("CZ", "weapon_cz75a", CAT_SECONDARY);
 }
 
 public void CreateWeapon(char[] name, char[] classname, int cat) {
