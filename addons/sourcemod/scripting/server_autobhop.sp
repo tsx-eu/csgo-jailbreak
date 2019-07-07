@@ -20,6 +20,9 @@ public void OnPluginStart() {
 	Database.Connect(Timer_Database, "timer");
 	RegAdminCmd("sm_addbutton", Cmd_AddButton, ADMFLAG_ROOT);
 	RegAdminCmd("sm_deletebutton", Cmd_DeleteButton, ADMFLAG_ROOT);
+	RegAdminCmd("sm_addhid", Cmd_AddHId, ADMFLAG_ROOT);
+	RegAdminCmd("sm_deletehid", Cmd_DeleteHId, ADMFLAG_ROOT);
+	RegAdminCmd("sm_hammerid", Cmd_HammerID, ADMFLAG_ROOT);
 }
 
 public void OnMapStart() {
@@ -56,8 +59,15 @@ public Action Cmd_AddButton(int client, int args) {
 			g_hTimerDatabase.Query(T_CheckInsertQuery, buffer, client);
 			return Plugin_Handled;
 		}
+		else {
+			PrintToChat(client, "Cette entité n'est pas un bouton !");
+			return Plugin_Handled;
+		}
 	}
-	return Plugin_Handled;
+	else {
+		PrintToChat(client, "Aucune entité trouvée.");
+		return Plugin_Handled;
+	}
 }
 
 public void T_CheckInsertQuery(Database db, DBResultSet results, const char[] error, any client) {
@@ -88,6 +98,65 @@ public void T_CheckDeleteQuery(Database db, DBResultSet results, const char[] er
 		return;
 	}
 	PrintToChat(client, "Le bouton a été supprimé avec succès !");
+}
+
+public Action Cmd_AddHId(int client, int args) {
+	if(args != 1) {
+		ReplyToCommand(client, "[SM] Usage : sm_addhid <number>");
+		return Plugin_Handled;
+	}
+
+	char arg[65];
+	GetCmdArg(1, arg, sizeof(arg));
+	int hammerID = StringToInt(arg);
+	char buffer[128];
+	FormatEx(buffer, sizeof(buffer), "INSERT INTO `buttons` (`map`, `button_hid`) VALUES ('%s', '%i')", g_szCurrentMap, hammerID);
+	g_hTimerDatabase.Query(T_CheckInsertHIdQuery, buffer, client);
+	return Plugin_Handled;
+}
+
+public void T_CheckInsertHIdQuery(Database db, DBResultSet results, const char[] error, any client) {
+	if(results == null) {
+		LogError("T_CheckInsertQuery failed : %s", error);
+		return;
+	}
+	PrintToChat(client, "L'entité relié à cet HammerID a été ajouté avec succès !");
+}
+
+public Action Cmd_DeleteHId(int client, int args) {
+	if(args != 1) {
+		ReplyToCommand(client, "[SM] Usage : sm_deletehid <number>");
+		return Plugin_Handled;
+	}
+
+	char arg[65];
+	GetCmdArg(1, arg, sizeof(arg));
+	int hammerID = StringToInt(arg);
+	char buffer[128];
+	FormatEx(buffer, sizeof(buffer), "DELETE FROM `buttons` WHERE `map` = '%s' AND `button_hid` = %i", g_szCurrentMap, hammerID);
+	g_hTimerDatabase.Query(T_CheckInsertDeleteHIdQuery, buffer, client);
+	return Plugin_Handled;
+}
+
+public void T_CheckInsertDeleteHIdQuery(Database db, DBResultSet results, const char[] error, any client) {
+	if(results == null) {
+		LogError("T_CheckInsertQuery failed : %s", error);
+		return;
+	}
+	PrintToChat(client, "L'entité relié à cet HammerID a été supprimé avec succès !");
+}
+
+public Action Cmd_HammerID(int client, int args) {
+	int entity = GetClientAimTarget(client, false);
+	if(entity != -1) {
+		int hammerID = GetEntProp(entity, Prop_Data, "m_iHammerID", 32);
+		PrintToChat(client, "HammerID : %i", hammerID);
+		return Plugin_Handled;
+	}
+	else {
+		PrintToChat(client, "Aucune entité trouvée !");
+		return Plugin_Handled;
+	}
 }
 
 public Action Event_OnRoundStart(Event event, const char[] name, bool dontBroadcast) {
@@ -140,7 +209,9 @@ bool IsBlackListedMap() {
 		IsMapNameEqual("mg_oaks_cruiseship_v2_go") ||
 		IsMapNameEqual("mg_jacks_bhop_battle_final_fix") ||
 		IsMapNameEqual("mg_koga73_multigames_e") ||
-		IsMapNameEqual("mg_lt_galaxy_csgo_v1"))
+		IsMapNameEqual("mg_lt_galaxy_csgo_v1") ||
+		IsMapNameEqual("mg_cutie_multigames_v1") ||
+		IsMapNameEqual("mg_copter_tower_v3_beta2"))
 		return true;
 	return false;
 }
