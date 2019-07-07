@@ -84,6 +84,8 @@ public int selectStyle(SmartMenu menu, MenuAction action, int client, int params
 		if( StrEqual(options, "lowgrav") )
 			ServerCommand("sv_airaccelerate 1000;sv_gravity 200");
 		
+		JB_ShowHUDMessage("Cute﻿z le sol pou﻿r choisir un endroit de départ et re-cutez le sol pour choisir l'arrivée. Vous serez tp au start choisi et vous devrez arriver le plus rapidement au point d'arrivée.", CS_TEAM_T);
+		JB_ShowHUDMessage("Le terro va choisir deux points (départ et arrivée), pensez à les repérer. Vous serez tp au start choisi et vous devrez arriver le plus rapidement au point d'arrivée.", CS_TEAM_CT);
 		
 		maxTime = GetGameTime() + 30.0;
 		CPrintToChat(client, "%s Faites un clique gauche pour selectionner le départ et l'arrivée.", MOD_TAG);

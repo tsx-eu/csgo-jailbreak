@@ -11,11 +11,8 @@
 
 #include <jb_lastrequest>
 
-int g_iClient, g_iTarget, g_iWpnClient, g_iWpnTarget;
-
-
 public void JB_OnPluginReady() {
-	JB_CreateLastRequest("Unscope", 	JB_SELECT_CT_UNTIL_DEAD|JB_BEACON, DV_CAN_Always, DV_Start, DV_Stop);	
+	JB_CreateLastRequest("Duel d'armes", 	JB_SELECT_CT_UNTIL_DEAD|JB_BEACON, DV_CAN_Always, DV_Start, DV_Stop);	
 }
 public void DV_Start(int client, int target) {
 	SmartMenu menu = new SmartMenu(selectWeapon);
@@ -23,13 +20,14 @@ public void DV_Start(int client, int target) {
 	menu.SetCell("target", target);
 	
 	menu.AddItem("weapon_awp", 		"AWP");
-	menu.AddItem("weapon_ssg08", 	"Scout");
-	menu.AddItem("weapon_g3sg1", 	"Autonoob");	
+	menu.AddItem("weapon_ak47", 	"AK47");
+	menu.AddItem("weapon_m4a1", 	"M4A1");	
+	menu.AddItem("weapon_deagle", 	"Deagle");	
 	
 	menu.ExitButton = false;
 	menu.Display(client, MENU_TIME_FOREVER);
 	
-	JB_ShowHUDMessage("Vous devez vous affronter avec un sniper sans zoomer.﻿﻿");
+	JB_ShowHUDMessage("Vous devez vous affronter en duel avec une arme.﻿﻿");
 }
 public int selectWeapon(SmartMenu menu, MenuAction action, int client, int params) {
 	static char options[64];
@@ -40,11 +38,11 @@ public int selectWeapon(SmartMenu menu, MenuAction action, int client, int param
 		DV_StripWeapon(client);
 		DV_StripWeapon(target);
 		
-		g_iWpnClient = GivePlayerItem(client, options);
-		g_iWpnTarget = GivePlayerItem(target, options);
+		GivePlayerItem(client, "weapon_knife");
+		GivePlayerItem(target, "weapon_knife");
 		
-		g_iClient = client;
-		g_iTarget = target;
+		GivePlayerItem(client, options);
+		GivePlayerItem(target, options);
 		
 		SetEntProp(client, Prop_Data, "m_takedamage", 0);
 		SetEntProp(target, Prop_Data, "m_takedamage", 0);
@@ -63,33 +61,8 @@ public int selectWeapon(SmartMenu menu, MenuAction action, int client, int param
 	return;
 }
 
-public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3], float angles[3], int &wep) {
-	if( (client == g_iTarget || client == g_iClient) ) {
-		float time = GetGameTime();
-		
-		int weapon = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
-		
-		if( (weapon == g_iWpnClient || weapon == g_iWpnTarget) ) {
-			
-			int zoom = GetEntProp(weapon, Prop_Send, "m_zoomLevel");
-			if( zoom > 0 )
-				SetEntProp(weapon, Prop_Send, "m_zoomLevel", 0);
-			
-			SetEntPropFloat(weapon, Prop_Send, "m_flNextSecondaryAttack", time + 1.0);
-			
-			if( buttons & IN_ATTACK2 ) {
-				buttons = buttons & ~IN_ATTACK2;
-				return Plugin_Changed;
-			}
-		}
-	}
-	
-	return Plugin_Continue;
-}
-
 public void DV_Stop(int client, int target) {
 	CloseMenu(client);
-	g_iClient = g_iTarget = -1;
 }
 public Action TIMER_DisableGodmod(Handle timer, any client) {
 	SetEntProp(client, Prop_Data, "m_takedamage", 2);

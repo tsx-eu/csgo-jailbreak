@@ -51,6 +51,8 @@ public void DV_Start(int client, int target) {
 	g_iDeagleDATA[3] = victim;
 	
 	CreateTimer(0.1, DV_DeagleExplosif_TASK, timeLeft);
+	
+	JB_ShowHUDMessage("Vous avez un deagle qui explosera au bout d'un certain temps, vous devez le jeter à l'adversaire avant qu'il n'explose.");
 }
 public void DV_Stop(int client, int target) {
 	g_iDeagleDATA[0] = g_iDeagleDATA[1] = g_iDeagleDATA[2] = g_iDeagleDATA[3] = -1;

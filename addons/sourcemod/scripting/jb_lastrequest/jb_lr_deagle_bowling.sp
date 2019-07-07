@@ -55,13 +55,17 @@ public void DV_StartMulti(int[] clients, int clientCount, int[] targets, int tar
 	
 	g_iWeaponToThrow = 0;
 	
+	JB_ShowHUDMessage("Cutez le sol pour choisir un endroit, une cible. Vous devrez lancer votre deagle le plus près du centre de la cible verte.", CS_TEAM_T);
+	JB_ShowHUDMessage("Le terro choisis une cible, vous devrez lan﻿cer votre deagle le plus près du centre de la cible verte. Bonne chance !", CS_TEAM_CT);
+	
+	
 	for (int i = 0; i < clientCount; i++) {
 		int client = clients[i];
 		
 		DV_StripWeapon(client);
 		GivePlayerItem(client, "weapon_knife");
 		
-		SDKHook(client, SDKHook_WeaponDropPost, OnWeaponDrop);
+		SDKHook(client, SDKHook_WeaponDrop, OnWeaponDrop);
 		int wpnId = GivePlayerItem(client, "weapon_deagle");
 		SetEntProp(wpnId, Prop_Send, "m_iClip1", 0);
 		SetEntProp(wpnId, Prop_Send, "m_iPrimaryReserveAmmoCount", 0);
@@ -77,7 +81,7 @@ public void DV_StartMulti(int[] clients, int clientCount, int[] targets, int tar
 		DV_StripWeapon(client);
 		GivePlayerItem(client, "weapon_knife");
 		
-		SDKHook(client, SDKHook_WeaponDropPost, OnWeaponDrop);
+		SDKHook(client, SDKHook_WeaponDrop, OnWeaponDrop);
 		int wpnId = GivePlayerItem(client, "weapon_deagle");
 		SetEntProp(wpnId, Prop_Send, "m_iClip1", 0);
 		SetEntProp(wpnId, Prop_Send, "m_iPrimaryReserveAmmoCount", 0);
@@ -88,7 +92,7 @@ public void DV_StartMulti(int[] clients, int clientCount, int[] targets, int tar
 		g_iWeaponToThrow++;
 	}	
 	
-	g_hMain = CreateTimer(0.1, DV_TASK, _, TIMER_REPEAT);
+	g_hMain = CreateTimer(0.1, DV_TASK);
 }
 public void DV_Start(int client, int target) {
 	 int clients[1], targets[1];
@@ -97,6 +101,8 @@ public void DV_Start(int client, int target) {
 	 DV_StartMulti(clients, 1, targets, 1);
 }
 public Action DV_TASK(Handle timer, Handle dp) {
+	g_hMain = CreateTimer(0.1, DV_TASK);
+	
 	float vecEnd[3];
 	vecEnd = g_flTarget;
 	vecEnd[2] += 64.0;
@@ -198,10 +204,12 @@ void DV_CheckWinner() {
 		}
 	}
 	
+	int winnerTeam = GetClientTeam(winner);
+	
 	for (int i = 1; i < MaxClients; i++) {
 		if( !g_bTossed[i] )
 			continue;
-		if( i == winner )
+		if( GetClientTeam(i) == winnerTeam )
 			continue;
 		ForcePlayerSuicide(i);
 	}
@@ -224,11 +232,12 @@ public void DV_StopMulti(int[] clients, int clientCount, int[] targets, int targ
 		g_iWeapons[i] = 0;
 	}
 	
-	KillTimer(g_hMain);
+	if( IsValidHandle(g_hMain) )
+		KillTimer(g_hMain);
 	g_hMain = null;
 	
 	for (int i = 0; i < clientCount; i++)
-		SDKUnhook(clients[i], SDKHook_WeaponDropPost, OnWeaponDrop);
+		SDKUnhook(clients[i], SDKHook_WeaponDrop, OnWeaponDrop);
 	for (int i = 0; i < targetCount; i++)
-		SDKUnhook(targets[i], SDKHook_WeaponDropPost, OnWeaponDrop);
+		SDKUnhook(targets[i], SDKHook_WeaponDrop, OnWeaponDrop);
 }

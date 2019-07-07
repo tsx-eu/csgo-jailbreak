@@ -28,6 +28,8 @@ public void DV_Start(int client, int target) {
 	
 	menu.ExitButton = false;
 	menu.Display(client, MENU_TIME_FOREVER);
+	
+	JB_ShowHUDMessage("Placez vous face à face le long d'une surface et celui qui n'a pas﻿ la balle devra l'éviter en faisant des droites gauches.");
 }
 public int selectWeapon(SmartMenu menu, MenuAction action, int client, int params) {
 	static char options[64];
@@ -46,6 +48,9 @@ public int selectWeapon(SmartMenu menu, MenuAction action, int client, int param
 		g_iTarget = target;
 		SetEntProp(g_iWeaponId, Prop_Send, "m_iClip1", 1);
 		SetEntProp(g_iWeaponId, Prop_Send, "m_iPrimaryReserveAmmoCount", 0);
+		
+		SDKHook(client, SDKHook_WeaponDrop, OnWeaponDrop);
+		SDKHook(target, SDKHook_WeaponDrop, OnWeaponDrop);
 	}
 	else if( action == MenuAction_Cancel && params == MenuCancel_Interrupted ) {
 		JB_DisplayMenu(DV_Start, client, menu.GetCell("target"));
@@ -54,6 +59,12 @@ public int selectWeapon(SmartMenu menu, MenuAction action, int client, int param
 		CloseHandle(menu);
 	}
 	return;
+}
+public Action OnWeaponDrop(int client, int wpnid) {
+	if( client == g_iClient || client == g_iTarget ) {
+		return Plugin_Handled;
+	}
+	return Plugin_Continue;
 }
 public Action EventPlayerShot(Handle ev, const char[] name, bool  bd) {
 	int client = GetClientOfUserId(GetEventInt(ev, "userid"));
@@ -75,4 +86,10 @@ public Action SwitchDeagleTeam(Handle timer, any client) {
 public void DV_Stop(int client, int target) {
 	CloseMenu(client);
 	g_iWeaponId = g_iClient = g_iTarget = -1;
+	
+	if( client > 0 )
+		SDKUnhook(client, SDKHook_WeaponDrop, OnWeaponDrop);
+	if( target > 0 )
+		SDKUnhook(target, SDKHook_WeaponDrop, OnWeaponDrop);
+	
 }

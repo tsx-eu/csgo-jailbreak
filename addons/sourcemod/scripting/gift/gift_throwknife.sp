@@ -20,7 +20,6 @@ int g_iMaxThrow;
 int g_iHealth;
 
 public void OnPluginStart() {
-	HookEvent("weapon_fire",		EventShoot,			EventHookMode_Post);
 	HookEvent("round_start", EventRoundStart);
 }
 
@@ -40,7 +39,7 @@ public Action Gift_OnRandomGift(int client, int gift) {
 	if(gift != g_iGift)
 		return Plugin_Handled;
 	
-	CPrintToChat(client, "{lightgreen}%s {green} Vous pouvez lancer %i couteau%s!", PREFIX, g_iMaxThrow, g_iMaxThrow > 1 ? "x":"");
+	CPrintToChat(client, "{lightgreen}%s {green} Vous pouvez lancer %i couteau%s avec un double clic!", PREFIX, g_iMaxThrow, g_iMaxThrow > 1 ? "x":"");
 	g_iClient[client] = g_iMaxThrow;
 	return Plugin_Continue;
 }
@@ -53,21 +52,35 @@ public Action EventRoundStart(Event event, const char[] name, bool dontbroadcast
 	}
 }
 
-public Action EventShoot(Handle ev, const char[] name, bool broadcast) {
-	int client = GetClientOfUserId(GetEventInt(ev, "userid"));
-	char wepname[32];
-	GetEventString(ev, "weapon", wepname, sizeof(wepname));
+public Action OnPlayerRunCmd(int client, int& button, int& impulse, float vel[3], float angle[3], int& weapon, int& subtype, int& command, int& tick, int& seed, int mouse[2]) {
+	static int lastButton[65];
+	static float lastDouble[65], src[3], ang[3];
+	static char wepname[64];
 	
 	if( g_iClient[client] > 0 ) {
-		if( StrContains(wepname, "knife") >= 0 ) {
-			g_iClient[client]--;
+		if( !(lastButton[client] & IN_ATTACK) && button & IN_ATTACK ) {
+			int wep = Client_GetActiveWeapon(client);
+			if( wep > 0 ) {
+				GetEdictClassname(wep, wepname, sizeof(wepname));
+				
+				if( StrContains(wepname, "knife") >= 0 ) {
+					if( lastDouble[client]+0.5 >= GetGameTime() && lastDouble[client]+0.5 <= GetGameTime() + 0.5 ) {
+						g_iClient[client]--;
 			
-			float src[3], ang[3];
-			GetClientEyePosition(client, src);
-			GetClientEyeAngles(client, ang);
-			
-			Effect(client, src, ang, view_as<float>({ 0.0, 24.0, -8.0 }), GetClientTeam(client) == CS_TEAM_T ? {255, 0, 0, 150} : {0, 0, 255, 150});
+						
+						GetClientEyePosition(client, src);
+						GetClientEyeAngles(client, ang);
+						
+						Effect(client, src, ang, view_as<float>({ 0.0, 24.0, -8.0 }), GetClientTeam(client) == CS_TEAM_T ? {255, 0, 0, 150} : {0, 0, 255, 150});
+					}
+					else {
+						lastDouble[client] = GetGameTime();
+					}
+				}
+			}
 		}
+		
+		lastButton[client] = button;
 	}
 }
 

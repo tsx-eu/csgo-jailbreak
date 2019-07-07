@@ -32,20 +32,26 @@ Handle g_hPluginReady = INVALID_HANDLE, g_hOnStartLR = INVALID_HANDLE, g_hOnStop
 int g_iOpenMenu = -1;
 Handle g_hCvarEnable = INVALID_HANDLE;
 Handle g_hCvarStripWeapon = INVALID_HANDLE;
+Handle g_hCvarGravity = INVALID_HANDLE;
 bool g_bPluginEnabled;
+int g_iGravity;
 
 int g_iDoingDV = -1;
 int g_iCurrentTeam[4][MAX_PLAYERS], g_iCurrentTeamCount[4], g_iInitialTeam[4][MAX_PLAYERS], g_iInitialTeamCount[4];
 
 
 int g_cLaser, g_cArrow;
+Handle g_hBDD = INVALID_HANDLE;
 
 public void OnPluginStart() {
 	g_hCvarEnable = CreateConVar("sm_hosties_lr", "1");
 	g_hCvarStripWeapon = CreateConVar("sm_hosties_strip_weapons", "1");
+	g_hCvarGravity = FindConVar("sv_gravity");
 	
 	g_bPluginEnabled = GetConVarInt(g_hCvarEnable) == 1;
+	g_iGravity = GetConVarInt(g_hCvarGravity);
 	HookConVarChange(g_hCvarEnable, OnConVarChange);
+	HookConVarChange(g_hCvarGravity, OnConVarChange);
 	
 	RegConsoleCmd("sm_dv", 			cmd_DV);
 	RegConsoleCmd("sm_lr", 			cmd_DV);
@@ -59,12 +65,19 @@ public void OnPluginStart() {
 	HookEvent("round_end",			EventRoundEnd,		EventHookMode_Post);
 	
 	CreateTimer(1.0, EventSecondElapsed, _, TIMER_REPEAT);
-}
-public void OnConVarChange(Handle cvar, const char[] oldVal, const char[] newVal) {
-	if( cvar == g_hCvarEnable ) {
-		g_bPluginEnabled = StringToInt(newVal) == 1;
+	
+	for (int i = 1; i < MaxClients; i++) {
+		if( IsClientInGame(i) )
+			OnClientPutInServer(i);
 	}
 }
+public void OnConVarChange(Handle cvar, const char[] oldVal, const char[] newVal) {
+	if( cvar == g_hCvarEnable )
+		g_bPluginEnabled = StringToInt(newVal) == 1;
+	if( cvar == g_hCvarGravity )
+		g_iGravity = GetConVarInt(g_hCvarGravity);
+}
+
 public void OnMapStart() {
 	if( g_iDoingDV >= 0 )
 		DV_Stop(g_iDoingDV);
@@ -77,14 +90,32 @@ public void OnMapStart() {
 	g_cArrow = PrecacheModel("materials/vgui/hud/icon_arrow_up.vmt", true);
 	PrecacheSoundAny("buttons/blip1.wav", true);
 	PrecacheSoundAny("rsc/jailbreak/lr1.mp3", true);
+	PrecacheSoundAny("rsc/jailbreak/taunt_bell.wav");
 	
+	AddFileToDownloadsTable("sound/rsc/jailbreak/taunt_bell.wav");
 	AddFileToDownloadsTable("sound/rsc/jailbreak/lr1.mp3");
 	
 	Call_StartForward(g_hPluginReady);
 	Call_Finish();
+	
+	
+	Handle KV = CreateKeyValues("sql");
+	
+	KvSetString(KV, "driver",	"mysql");
+	KvSetString(KV, "host",		"dbgame.rebels-corp.net");
+	KvSetString(KV, "database",	"serverother");
+	KvSetString(KV,	"user",		"serverother");
+	KvSetString(KV,	"pass",		"iBEpewupbB");
+	KvSetString(KV,	"port",		"3306");
+	
+	char error[1024];
+	g_hBDD = SQL_ConnectCustom(KV, error, sizeof(error), true);
+	
+	SQL_TQuery(g_hBDD, SQL_QueryCallBack, "SET NAMES 'utf8mb4'");
 }
 public void OnClientPutInServer(int client) {
 	SDKHook(client, SDKHook_OnTakeDamage, EventTakeDamage);
+	SDKHook(client, SDKHook_WeaponDrop, OnWeaponDrop);
 }
 public void OnClientDisconnect(int client) {
 	if( g_iDoingDV == -1 )
@@ -101,7 +132,9 @@ public Action EventSpawn(Handle ev, const char[] name, bool broadcast) {
 	int team = GetClientTeam(client);
 	
 	if( GetConVarBool(g_hCvarStripWeapon) ) {
-		DV_CleanClient(client);
+		
+		if( team == CS_TEAM_T )
+			DV_CleanClient(client);
 		
 		if( team == CS_TEAM_CT )
 			Client_SetArmor(client, 100);
@@ -163,10 +196,16 @@ public Action EventTakeDamage(int victim, int& attacker, int& inflictor, float& 
 	
 	return Plugin_Continue;
 }
+public Action OnWeaponDrop(int client, int wpnid) {
+	if( g_iGravity <= 0 ) {
+		return Plugin_Handled;
+	}
+	return Plugin_Continue;
+}
 public Action EventSecondElapsed(Handle timer, any none) {
 	static bool lastWasAvailable = false;
 	
-	bool now = (DV_CanBeStarted() != -1);
+	bool now = (DV_CanBeStarted() > 0);
 	
 	if( g_iDoingDV == -1 && now && !lastWasAvailable )
 		EmitSoundToAllAny("rsc/jailbreak/lr1.mp3");
@@ -182,8 +221,6 @@ public Action EventSecondElapsed(Handle timer, any none) {
 			GetClientAbsOrigin(client, src);
 			src[2] += 16.0;
 			
-			
-			
 			for (int j = 0; j < g_iCurrentTeamCount[CS_TEAM_CT]; j++) {
 				target = g_iCurrentTeam[CS_TEAM_CT][j];
 				GetClientAbsOrigin(target, dst);
@@ -198,7 +235,6 @@ public Action EventSecondElapsed(Handle timer, any none) {
 				}
 			}
 		}
-		
 	}
 	
 	return Plugin_Continue;
@@ -231,7 +267,7 @@ void initTeam(int team) {
 	}
 }
 void displayDV(int client) {
-	static char tmp[8];
+	static char tmp[8], tmp2[128];
 	
 	int t = DV_CanBeStarted();
 	int dv = 0;
@@ -249,9 +285,10 @@ void displayDV(int client) {
 		
 		if( g_iStackTeam[id][CS_TEAM_T] == t ) {
 			Format(tmp, sizeof(tmp), "%d", id);
+			Format(tmp2, sizeof(tmp2), "%s%s", (g_iStackFlag[id] & JB_ONLY_VIP ? "[VIP] " : ""), g_cStackName[id]);
 			
 			bool can = DV_CanBePlayed(id, targetCount);		
-			menu.AddItem(tmp, g_cStackName[id], can ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
+			menu.AddItem(tmp, tmp2, can ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
 			if( can )
 				dv++;
 		}
@@ -513,9 +550,18 @@ bool DV_CanBePlayed(int id, int targetCount=1) {
 			Call_PushCell(g_iCurrentTeam[CS_TEAM_T][0]);
 		Call_Finish(can);
 	}
+	
+	if( can && g_iStackFlag[id] & JB_ONLY_VIP ) {
+		for (int i = 0; i < g_iCurrentTeamCount[CS_TEAM_T]; i++) {
+			if( !DV_CAN_VIP(g_iCurrentTeam[CS_TEAM_T][i]) )
+				can = false;
+		}
+	}
+	
 	return can;
 }
 bool DV_Start(int id) {
+	static char query[512], steamid[32];
 	if( !DV_CanBeStarted() ) {
 		CPrintToChatAll("%s La {blue}DV{default} n'est plus disponible.", MOD_TAG);
 		return false;
@@ -550,11 +596,16 @@ bool DV_Start(int id) {
 	Call_PushCell(g_iInitialTeam[CS_TEAM_CT][0]);	
 	Call_Finish();
 	
-	for (int i = 0; i < g_iInitialTeamCount[CS_TEAM_T]; i++)
-		Effect_Glow(g_iInitialTeam[CS_TEAM_T][i], 255, 0, 0, 200);
-	for (int i = 0; i < g_iInitialTeamCount[CS_TEAM_CT]; i++)
-		Effect_Glow(g_iInitialTeam[CS_TEAM_CT][i], 0, 0, 255, 200);
-	
+	if( g_iStackFlag[g_iDoingDV] & JB_BEACON ) {
+		for (int i = 0; i < g_iInitialTeamCount[CS_TEAM_T]; i++)
+			Effect_Glow(g_iInitialTeam[CS_TEAM_T][i], 255, 0, 0, 200);
+		for (int i = 0; i < g_iInitialTeamCount[CS_TEAM_CT]; i++)
+			Effect_Glow(g_iInitialTeam[CS_TEAM_CT][i], 0, 0, 255, 200);
+	}
+
+	GetClientAuthId(g_iInitialTeam[CS_TEAM_T][0], AuthId_Engine, steamid, sizeof(steamid));
+	Format(query, sizeof(query), "INSERT INTO `stats_dv` (`id`, `date`, `name`, `steamid`) VALUES (NULL, CURRENT_TIMESTAMP, '%s', '%s');", g_cStackName[id], steamid);
+	SQL_TQuery(g_hBDD, SQL_QueryCallBack, query);
 	return false;
 }
 void DV_Stop(int id) {
@@ -568,10 +619,12 @@ void DV_Stop(int id) {
 	Call_PushCell(g_iInitialTeam[CS_TEAM_CT][0]);	
 	Call_Finish();
 	
-	for (int i = 0; i < g_iInitialTeamCount[CS_TEAM_T]; i++)
-		Effect_GlowStop(g_iInitialTeam[CS_TEAM_T][i]);
-	for (int i = 0; i < g_iInitialTeamCount[CS_TEAM_CT]; i++)
-		Effect_GlowStop(g_iInitialTeam[CS_TEAM_CT][i]);
+	if( g_iStackFlag[g_iDoingDV] & JB_BEACON ) {
+		for (int i = 0; i < g_iInitialTeamCount[CS_TEAM_T]; i++)
+			Effect_GlowStop(g_iInitialTeam[CS_TEAM_T][i]);
+		for (int i = 0; i < g_iInitialTeamCount[CS_TEAM_CT]; i++)
+			Effect_GlowStop(g_iInitialTeam[CS_TEAM_CT][i]);
+	}
 	
 	DV_CleanTeams();
 	g_iInitialTeamCount[CS_TEAM_CT] = g_iInitialTeamCount[CS_TEAM_T] = g_iCurrentTeamCount[CS_TEAM_T] = g_iCurrentTeamCount[CS_TEAM_CT] = 0;
@@ -604,6 +657,7 @@ public APLRes AskPluginLoad2(Handle hPlugin, bool isAfterMapLoaded, char[] error
 	CreateNative("JB_CeanTeam", Native_DV_CleanTeam);
 	CreateNative("JB_End", Native_JB_End);
 	CreateNative("JB_IsDvActive", Native_JB_IsDvActive);
+	CreateNative("JB_ShowHUDMessage", Native_JB_ShowHUDMessage);
 	
 	g_hPluginReady = CreateGlobalForward("JB_OnPluginReady", ET_Ignore);
 	g_hOnStartLR = CreateGlobalForward("OnStartLR", ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
@@ -670,7 +724,30 @@ public int Native_JB_IsDvActive(Handle plugin, int numParams) {
 	}
 	return view_as<int>(false);
 }
-
+public int Native_JB_ShowHUDMessage(Handle plugin, int numParams) {
+	static char tmp[1024];
+	static Handle sync = INVALID_HANDLE;
+	if( sync == INVALID_HANDLE )
+		sync = CreateHudSynchronizer();
+	
+	GetNativeString(1, tmp, sizeof(tmp));
+	int team = GetNativeCell(2);
+	float time = view_as<float>(GetNativeCell(3));
+	int warpLine = GetNativeCell(4);
+	
+	String_WordWrap(tmp, warpLine);
+	
+	for (int i = 1; i < MaxClients; i++) {
+		if( !IsClientInGame(i) )
+			continue;
+		
+		int pteam = GetClientTeam(i);
+		if( team == 0 || pteam == team ) {
+			SetHudTextParams(-1.0, 0.9, time, 255, 255, 255, 255, 1, time/25.0, time/25.0, time/25.0);
+			ShowSyncHudText(i, sync, tmp);
+		}
+	}
+}
 
 void Effect_Glow(int client, int r, int g, int b, int a) {
 	static char model[PLATFORM_MAX_PATH];
@@ -690,9 +767,29 @@ void Effect_Glow(int client, int r, int g, int b, int a) {
 	SetEntData(entity, offset + 2, b, _, true);
 	SetEntData(entity, offset + 3, a, _, true);
 }
-
 void Effect_GlowStop(int client) {
 	int entity = CPS_GetSkin(client);
 	if( entity > 0 )
 		CPS_RemoveSkin(client);
+}
+void String_WordWrap(char[] s, int warpLine) {
+	int i, k, wraploc, lastwrap;
+	
+	for (i = 0; s[i] != '\0'; ++i, ++wraploc) {
+		if (wraploc >= warpLine) {
+			for (k = i; k > 0; --k) {
+				if (k - lastwrap <= warpLine && s[k] == ' ') {
+					s[k] = '\n';
+					lastwrap = k + 1;
+					break;
+				}
+			}
+			wraploc = i - lastwrap;
+		}
+	}
+}
+public void SQL_QueryCallBack(Handle owner, Handle handle, const char[] error, any data) {
+	if( handle == INVALID_HANDLE ) {
+		LogError("[SQL] [ERROR] %s", error);
+	}
 }

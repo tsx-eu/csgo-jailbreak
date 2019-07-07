@@ -19,6 +19,7 @@
 #define JB_SHOULD_SELECT_T		(1<<1)			// Not implemented, yet.
 #define JB_RUN_UNTIL_DEAD		(1<<2)
 #define JB_RUN_UNTIL_ROUND_END	(1<<3)
+#define JB_ONLY_VIP				(1<<4)
 #define JB_BEACON				(1<<10)
 #define JB_NODAMAGE				(1<<11)
 #define JB_DONT_HEAL			(1<<12)
@@ -26,6 +27,7 @@
 
 #define JB_DEFAULT				JB_RUN_UNTIL_DEAD
 #define JB_SELECT_CT_UNTIL_DEAD	JB_SHOULD_SELECT_CT|JB_RUN_UNTIL_DEAD
+
 
 typeset JB_Condition {
 	function bool(int client);
@@ -52,13 +54,15 @@ native bool JB_IsDvActive(Handle plugin = INVALID_HANDLE);
 native void JB_End();
 native void DV_CleanTeam(int team = 0);
 
+native void JB_ShowHUDMessage(const char[] message, int team = 0, float time = 30.0, int warpLine = 50);
+
 stock bool DV_CAN_Always(int client) {
 	return true;
 }
 stock bool DV_CAN_Min2CT(int client) {
 	int cpt = 0;
 	for (int i = 1; i <= MaxClients; i++)
-		if( IsClientInGame(i) &&  IsPlayerAlive(i) && GetClientTeam(i) == CS_TEAM_CT )
+		if( IsClientInGame(i) && IsPlayerAlive(i) && GetClientTeam(i) == CS_TEAM_CT )
 			cpt++;
 	
 	return (cpt>=2);
@@ -66,7 +70,7 @@ stock bool DV_CAN_Min2CT(int client) {
 stock bool DV_CAN_Min3CT(int client) {
 	int cpt = 0;
 	for (int i = 1; i <= MaxClients; i++)
-		if( IsClientInGame(i) &&  IsPlayerAlive(i) && GetClientTeam(i) == CS_TEAM_CT )
+		if( IsClientInGame(i) && IsPlayerAlive(i) && GetClientTeam(i) == CS_TEAM_CT )
 			cpt++;
 	
 	return (cpt>=3);
@@ -74,7 +78,7 @@ stock bool DV_CAN_Min3CT(int client) {
 stock bool DV_CAN_Min4CT(int client) {
 	int cpt = 0;
 	for (int i = 1; i <= MaxClients; i++)
-		if( IsClientInGame(i) &&  IsPlayerAlive(i) && GetClientTeam(i) == CS_TEAM_CT )
+		if( IsClientInGame(i) && IsPlayerAlive(i) && GetClientTeam(i) == CS_TEAM_CT )
 			cpt++;
 	
 	return (cpt>=4);
@@ -82,7 +86,7 @@ stock bool DV_CAN_Min4CT(int client) {
 stock bool DV_CAN_Min5CT(int client) {
 	int cpt = 0;
 	for (int i = 1; i <= MaxClients; i++)
-		if( IsClientInGame(i) &&  IsPlayerAlive(i) && GetClientTeam(i) == CS_TEAM_CT )
+		if( IsClientInGame(i) && IsPlayerAlive(i) && GetClientTeam(i) == CS_TEAM_CT )
 			cpt++;
 	
 	return (cpt>=5);

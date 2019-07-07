@@ -36,6 +36,8 @@ public void DV_Start(int client, int target) {
 	
 	GivePlayerItem(client, "weapon_knife");
 	GivePlayerItem(target, "weapon_knife");
+	
+	JB_ShowHUDMessage("C﻿utez dans le ﻿vide pour lancer un éclair qui infligera des dégats. Évitez aussi ceux de votre ad﻿versaire﻿");
 }
 public Action EventShoot(Handle ev, const char[] name, bool broadcast) {
 	int client = GetClientOfUserId(GetEventInt(ev, "userid"));
@@ -95,7 +97,7 @@ int Effect(int client, float origin[3], float angle[3], float offset[3], int col
 	if( TR_DidHit(tr) ) {
 		TR_GetEndPosition(dst, tr);
 		
-		TE_SetupBeamPoints(src, dst, g_cLaser, g_cLaser, 0, 0, 1.0, size, size, 0, amplitude, color, 0);
+		TE_SetupBeamPoints(src, dst, g_cLaser, g_cLaser, 0, 0, 0.5, size, size, 0, amplitude, color, 0);
 		TE_SendToAll();
 		
 		int tmp = TR_GetEntityIndex(tr);

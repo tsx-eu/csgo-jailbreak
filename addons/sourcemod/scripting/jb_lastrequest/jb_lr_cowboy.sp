@@ -35,6 +35,8 @@ public void DV_Start(int client, int target) {
 	CreateTimer(1.0, CheckDistance);
 	SDKHook(client, SDKHook_TraceAttack, OnTraceAttack);
 	SDKHook(target, SDKHook_TraceAttack, OnTraceAttack);
+	
+	JB_ShowHUDMessage("Éloig﻿nez vous pour que la dv se lance, vous devez être à la même hauteur et aucun obstacle ne doit vous séparer. Quand vous entendrez le fameux \"Ding\" retournez vous et tirez.﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿");
 }
 
 public Action CheckDistance(Handle timer, any none) {

@@ -25,4 +25,6 @@ public void DV_Start(int client, int[] targets, int targetCount) {
 		GivePlayerItem(targets[i], "weapon_knife");
 	}
 	
+	JB_ShowHUDMessage("Les ct choisis devront se placer dans le coin que vous définissez, s'accroupir ou non. Votre but est d'éliminer le maximum de ct avec votre balle d'awp puis de tuer les derniers au cut.", CS_TEAM_T);
+	JB_ShowHUDMessage("Placez vous dans le coin défini par le terro et faites ce qu'il vous dit Votre but est de survivre à sa balle et de l'éliminer ensuite au cut.", CS_TEAM_CT);
 }

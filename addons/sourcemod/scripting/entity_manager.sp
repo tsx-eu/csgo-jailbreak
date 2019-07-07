@@ -29,7 +29,7 @@ public void OnMapStart() {
 	Handle KV = CreateKeyValues("sql");
 	
 	KvSetString(KV, "driver",	"mysql");
-	KvSetString(KV, "host",		"localhost");
+	KvSetString(KV, "host",		"dbgame.rebels-corp.net");
 	KvSetString(KV, "database",	"serverother");
 	KvSetString(KV,	"user",		"serverother");
 	KvSetString(KV,	"pass",		"iBEpewupbB");

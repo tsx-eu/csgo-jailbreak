@@ -2,6 +2,7 @@
 
 #include <sourcemod>
 #include <sdktools>
+#include <sdkhooks>
 #include <csgocolors>
 #include <cstrike>
 
@@ -18,6 +19,8 @@ public Plugin myinfo = {
 bool g_bEnable = false, g_bPlayerWantedDisable = false;
 Handle g_hCvarPlayerCount, g_hCvarPlayerRatio, g_hCvarBunnyHop, g_hCvarAdvertTime;
 bool g_bFirstSpawner[65];
+bool g_bInPassive[65];
+float g_flCoolDown[65];
 
 public void OnPluginStart() {
 	g_hCvarPlayerCount = CreateConVar("sm_warmup_playercount", "5");
@@ -29,8 +32,28 @@ public void OnPluginStart() {
 	HookEvent("player_spawn", 		EventSpawn, 		EventHookMode_Post);
 	
 	RegConsoleCmd("sm_warmup", 	Cmd_Warmup);
+	RegConsoleCmd("sm_passif", Cmd_Passive);
 	
 	AutoExecConfig();
+}
+public Action Cmd_Passive(int client, int args) {
+	if( !g_bEnable ) 
+		return Plugin_Handled;
+
+	if( g_flCoolDown[client] > GetGameTime() )
+		return Plugin_Handled;
+	
+	g_bInPassive[client] = !g_bInPassive[client];
+	
+	
+	if( g_bInPassive[client] )
+		ReplyToCommand(client, "Le GODMOD est activé.");
+	else
+		ReplyToCommand(client, "Le GODMOD est déactivé.");
+	
+	
+	g_flCoolDown[client] = GetGameTime() + 30.0;
+	return Plugin_Handled;
 }
 public void OnConVarChange(Handle cvar, const char[] oldVal, const char[] newVal) {
 	if( g_hCvarBunnyHop == cvar && StringToInt(oldVal) == 1 && StringToInt(newVal) == 0 && g_bEnable ) {
@@ -48,6 +71,7 @@ public void OnMapStart() {
 public Action TIMER_Advert(Handle timer, any none) {
 	if( g_bEnable == true ) {
 		CPrintToChatAll("{lightgreen}[ {default}WARMUP {lightgreen}] Le warmup est {default}actif{lightgreen}, tapez {default}!warmup{lightgreen} pour le désactiver.");
+		CPrintToChatAll("{lightgreen}[ {default}WARMUP {lightgreen}] Tapez !passif pour ne plus subir de dégat des autres joueurs.");
 	}
 	
 	CreateTimer(GetConVarFloat(g_hCvarAdvertTime), TIMER_Advert, 0, TIMER_FLAG_NO_MAPCHANGE);
@@ -58,6 +82,9 @@ public void OnClientPostAdminCheck(int client) {
 }
 public void OnClientPutInServer(int client) {
 	g_bFirstSpawner[client] = true;
+	g_bInPassive[client] = false;
+	g_flCoolDown[client] = GetGameTime();
+	SDKHook(client, SDKHook_OnTakeDamage, EventTakeDamage);
 }
 public void OnClientDisconnect(int client) {
 	g_bFirstSpawner[client] = false;
@@ -71,6 +98,7 @@ public Action EventSpawn(Handle ev, const char[] name, bool broadcast) {
 		
 		if( g_bEnable == true ) {
 			CPrintToChat(client, "{lightgreen}[ {default}WARMUP {lightgreen}] Le warmup est {default}actif{lightgreen}!");
+			CPrintToChat(client, "{lightgreen}[ {default}WARMUP {lightgreen}] Tapez !passif pour ne plus subir de dégat des autres joueurs.");
 		}
 	}
 }
@@ -129,6 +157,20 @@ public void Handle_VoteResults_DISABLE(Menu menu, int num_votes, int num_clients
 	}
 }
 
+public Action EventTakeDamage(int victim, int& attacker, int& inflictor, float& damage, int& damagetype, int& weapon, float damageForce[3], float damagePosition[3]) {
+	if( g_bEnable == false )
+		return Plugin_Continue;
+	
+	
+	if( attacker > MaxClients && HasEntProp(attacker, Prop_Data, "m_hOwnerEntity") )
+		attacker = GetEntProp(attacker, Prop_Data, "m_hOwnerEntity");
+	if( attacker > 0 && attacker < MaxClients ) {
+		if( g_bInPassive[victim] || g_bInPassive[attacker] )
+			return Plugin_Handled;
+	}
+	
+	return Plugin_Continue;
+}
 // ------------------------------------------------------
 bool WARMUP_CanBeEnabled() {
 	return GetClientCount() <= GetConVarInt(g_hCvarPlayerCount);
