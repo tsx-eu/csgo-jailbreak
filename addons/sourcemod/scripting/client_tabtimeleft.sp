@@ -11,8 +11,8 @@ public void OnPluginStart() {
 
 public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3], float angles[3], int &weapon, int &subtype, int &cmdnum, int &tickcount, int &seed, int mouse[2]) {
 	static char szNextMap[32], buffer[128];
-	static int lastButton[65];
 	static int lastTime = -1;
+	static int forceClear[65];
 	
 	if(IsFakeClient(client))
 		return Plugin_Continue;
@@ -36,13 +36,13 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 
 		SetHudTextParams(0.01, 0.4, 0.1, 255, 255, 255, 255, 0, 0.0, 0.0, 0.0);
 		ShowSyncHudText(client, g_hHudSync, buffer);
+		forceClear[client] = tickcount + 32;
 		return Plugin_Continue;
 	}
-	
-	if(lastButton[client] & IN_SCORE && !(buttons & IN_SCORE))
+	else if( forceClear[client] >= tickcount ) {
 		ClearSyncHud(client, g_hHudSync);
+	}
 
-	lastButton[client] = buttons;
 	return Plugin_Continue;
 }
 
