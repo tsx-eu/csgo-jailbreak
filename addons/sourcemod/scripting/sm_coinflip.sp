@@ -20,10 +20,10 @@ public void OnClientPutInServer(int client) {
 	g_flCoolDown[client] = GetGameTime();
 }
 public Action Cmd_CoinFlip(int client, int args) {
-	char tmp[8], tmp2[128];
-	
-	if( g_flCoolDown[client] > GetGameTime() ) {
-		ReplyToCommand(client, "Veuillez patienter quelques instants");
+	char tmp[128], tmp2[128];
+
+	if( IsPlayerAlive(client) ) {
+		ReplyToCommand(client, "Cette commande est réservée aux morts.");
 		return Plugin_Handled;
 	}
 	
@@ -47,37 +47,46 @@ public Action Cmd_CoinFlip(int client, int args) {
 			continue;
 		if( IsClientSourceTV(i) || IsFakeClient(i) )
 			continue;
+		if( IsPlayerAlive(i) )
+			continue;
 		if( Gang_GetClientCash(i, WhiteCash) < money )
 			continue;
+		if( g_flCoolDown[i] > GetGameTime() )
+			continue;
 		
-		Format(tmp, sizeof(tmp), "%d %d", money, i);
+		Format(tmp, sizeof(tmp), "%d %d %d", money, client, i);
 		Format(tmp2, sizeof(tmp2), "%N", i);
 		
 		menu.AddItem(tmp, tmp2);
 	}
 	
 	menu.Display(client, MENU_TIME_FOREVER);
-	g_flCoolDown[client] = GetGameTime() + 30.0;
+	g_flCoolDown[client] = GetGameTime();
 	
 	return Plugin_Handled;
 }
-public int menu_CoinFLip(Menu menu, MenuAction action, int client, int params) {
+public int menu_CoinFLip(Menu menu, MenuAction action, int owner, int params) {
 	char options[64];
-	char buffer[2][8];
+	char buffer[3][8];
 	if( action == MenuAction_Select ) {
 		GetMenuItem(menu, params, options, sizeof(options));
+
 		ExplodeString(options, " ", buffer, sizeof(buffer), sizeof(buffer[]));
-		int money = StringToInt(buffer[0]);
-		int target = StringToInt(buffer[1]);
 		
-		Menu submenu = new Menu(menu_CoinFLip_Confirm);
+		int money = StringToInt(buffer[0]);
+		int client = StringToInt(buffer[1]);
+		int target = StringToInt(buffer[2]);
+		
+		Menu submenu = new Menu(menu_CoinFLip_Complete);
 		submenu.SetTitle("%N veut faire un coin flip de %d$\nAcceptez-vous?", client, money);
 		
 		Format(options, sizeof(options), "%d %d %d", money, client, target);
 		submenu.AddItem(options, "Oui");
+
 		submenu.AddItem("no", "Non");
+		submenu.AddItem("never", "Ne plus me demander");
 		
-		submenu.Display(target, MENU_TIME_FOREVER);
+		submenu.Display(target, 15);
 	}
 	else if( action == MenuAction_End ) {
 		CloseHandle(menu);
@@ -88,11 +97,12 @@ public int menu_CoinFLip(Menu menu, MenuAction action, int client, int params) {
 public int menu_CoinFLip_Complete(Menu menu, MenuAction action, int owner, int params) {
 	char options[64];
 	char buffer[3][8];
+			
 	if( action == MenuAction_Select ) {
 		GetMenuItem(menu, params, options, sizeof(options));		
-		if( !StrEqual(options, "no") ) {
+	
+		if( !StrEqual(options, "no") && !StrEqual(options, "never") ) {
 			ExplodeString(options, " ", buffer, sizeof(buffer), sizeof(buffer[]));
-			
 			int money = StringToInt(buffer[0]);
 			int client = StringToInt(buffer[1]);
 			int target = StringToInt(buffer[2]);
@@ -101,10 +111,14 @@ public int menu_CoinFLip_Complete(Menu menu, MenuAction action, int owner, int p
 			submenu.SetTitle("%N veut faire un coin flip de %d$\nÊtes vous sure?", client, money);
 			
 			Format(options, sizeof(options), "%d %d %d", money, client, target);
+
 			submenu.AddItem("no", "Non");
 			submenu.AddItem(options, "Oui");
 			
-			submenu.Display(target, MENU_TIME_FOREVER);
+			submenu.Display(target, 15);
+		}
+		else if(  StrEqual(options, "never") ) {
+			g_flCoolDown[owner] = GetGameTime() + 30.0 * 60.0;
 		}
 	}
 	else if( action == MenuAction_End ) {
@@ -117,14 +131,14 @@ public int menu_CoinFLip_Confirm(Menu menu, MenuAction action, int owner, int pa
 	char options[64];
 	char buffer[3][8];
 	if( action == MenuAction_Select ) {
-		GetMenuItem(menu, params, options, sizeof(options));		
+		GetMenuItem(menu, params, options, sizeof(options));
+		
 		if( !StrEqual(options, "no") ) {
 			ExplodeString(options, " ", buffer, sizeof(buffer), sizeof(buffer[]));
-			
 			int money = StringToInt(buffer[0]);
 			int client = StringToInt(buffer[1]);
-			int target = StringToInt(buffer[2]);
-			
+			int target = StringToInt(buffer[2]);	
+
 			if( Gang_GetClientCash(client, WhiteCash) < money ) {
 				PrintToChat(client, "%N n'a plus assez d'argent.", client);
 				PrintToChat(target, "%N n'a plus assez d'argent.", client);
