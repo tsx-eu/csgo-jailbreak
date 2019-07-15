@@ -94,19 +94,24 @@ public Action OnFrame(Handle timer, any none) {
 	
 	TE_SetupBeamFollow(g_iTarget, g_cLaser, g_cLaser, 1.0, 16.0, 0.5, 1, {0, 0, 255, 200});
 	TE_SendToAll();
+	
+	PrintHintTextToAll("%N: %d/%d\n%N: %d/%d", g_iClient, g_iScore[g_iClient], SCORE, g_iTarget, g_iScore[g_iTarget], SCORE);
 }
-public void OnTouch(int entity, int client) {
+public Action OnTouch(int entity, int client) {
 	if( client == g_iClient || client == g_iTarget ) {
 		SDKUnhook(entity, SDKHook_Touch, OnTouch);
 		
 		g_iScore[client]++;
-		PrintHintTextToAll("%N: %d/%d\n%N: %d/%d", g_iClient, g_iScore[g_iClient], SCORE, g_iTarget, g_iScore[g_iTarget], SCORE);
-		
 		SetEntPropFloat(client, Prop_Send, "m_flLaggedMovementValue", 2.0 + g_iScore[g_iClient]/10.0);
 		
 		if( g_iScore[client] >= SCORE ) {
 			ForcePlayerSuicide(client==g_iClient?g_iTarget:g_iClient);
 		}
+		
+		return Plugin_Continue;
+	}
+	else {
+		return Plugin_Handled;
 	}
 }
 public void DV_Stop(int client, int target) {
