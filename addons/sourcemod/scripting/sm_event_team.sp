@@ -43,6 +43,7 @@ public void Colorize(int client) {
 		SetEntityRenderMode(client, RENDER_TRANSALPHA);
 		SetEntityRenderColor(client, g_szTeamColor[team][0], g_szTeamColor[team][1], g_szTeamColor[team][2], g_szTeamColor[team][3]);
 	}
+	
 }
 public void OnMapStart() {
 	g_hClienTeam.Clear();
@@ -82,6 +83,11 @@ public Action cmd_Bet(int client, int args) {
 	
 	if( g_bCanBet == false ) {
 		ReplyToCommand(client, "Il n'est pas possible de parier maintenant.");
+		return Plugin_Handled;
+	}
+	
+	if( Gang_GetClientCash(client, WhiteCash) < money ) {
+		ReplyToCommand(client, "Vous n'avez pas assez d'argent");
 		return Plugin_Handled;
 	}
 	
@@ -132,6 +138,18 @@ public Action cmd_Event(int client, int args) {
 			Colorize(target);
 		}
 	}
+	else if( StrEqual(tmp, "random") ) {
+		int j = 0;
+		for (int i = 1; i <= MaxClients; i++) {
+			if( !IsClientInGame(i) )
+				continue;
+			
+			GetClientAuthId(i, AuthId_Engine, tmp2, sizeof(tmp2));
+			g_hClienTeam.SetValue(tmp2, j % sizeof(g_szTeamsName), true);
+			Colorize(i);
+			j++;
+		}
+	}
 	else if( StrEqual(tmp, "start") ) {
 		g_bCanBet = true;
 		CreateTimer(30.0, Task_BetStop);
@@ -178,10 +196,6 @@ public Action cmd_Event(int client, int args) {
 	}
 	else if( StrEqual(tmp, "clear") ) {
 		g_hClienTeam.Clear();
-		for (int i = 1; i <= MaxClients; i++) {
-			if( IsClientInGame(i) )
-				Colorize(i);
-		}
 	}
 	else {
 		ReplyToCommand(client, "erreur d'argument.");
