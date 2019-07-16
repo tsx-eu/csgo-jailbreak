@@ -2,22 +2,27 @@
 
 #include <sourcemod>
 #include <sdktools>
+#include <sdkhooks>
 #include <smlib>
 #include <csgocolors>
+#include <cstrike>
 #include <gang>
 
 #pragma newdecls required
 
-char g_szTeamsName[] =  { "rouge", "bleu" };
-int g_szTeamColor[][] = { { 255, 0, 0, 255 }, { 0, 0, 255, 0 } };
+char g_szTeamsName[][] =  { "rouge", "bleu" };
+int g_szTeamColor[][] = { { 255, 0, 0, 255 }, { 0, 0, 255, 255 } };
 int g_iTeamBets[] =  { 0, 0 };
 
+int g_iLastJoinIndex = 0;
 int g_iClientBet[65][2];
 bool g_bCanBet = false;
+bool g_bGroupOveride = false;
 StringMap g_hClienTeam;
 
 
 public void OnPluginStart() {
+	LoadTranslations("common.phrases");
 	g_hClienTeam = new StringMap();
 	
 	RegConsoleCmd("sm_bet", 		cmd_Bet);
@@ -31,7 +36,32 @@ public void OnPluginStart() {
 }
 public void OnClientPostAdminCheck(int client) {
 	g_iClientBet[client][0] = -1;
-	Colorize(client);
+	
+	SDKHook(client, SDKHook_PostThink, OnThink);
+	
+	int team;
+	char tmp[64];
+	GetClientAuthId(client, AuthId_Engine, tmp, sizeof(tmp));
+	
+	if( g_hClienTeam.GetValue(tmp, team) ) {
+		Colorize(client);
+	}
+	else {
+		g_hClienTeam.SetValue(tmp, g_iLastJoinIndex % sizeof(g_szTeamsName), true);
+		g_iLastJoinIndex++;
+	}
+	
+}
+public void OnThink(int client) {
+	int team;
+	static char tmp[64];
+	
+	if( g_bGroupOveride ) {
+		GetClientAuthId(client, AuthId_Engine, tmp, sizeof(tmp));
+		if( g_hClienTeam.GetValue(tmp, team) ) {
+			CS_SetClientClanTag(client, g_szTeamsName[team]);
+		}
+	}
 }
 public void Colorize(int client) {
 	int team;
@@ -42,11 +72,15 @@ public void Colorize(int client) {
 		
 		SetEntityRenderMode(client, RENDER_TRANSALPHA);
 		SetEntityRenderColor(client, g_szTeamColor[team][0], g_szTeamColor[team][1], g_szTeamColor[team][2], g_szTeamColor[team][3]);
+		
+		PrintToChat(client, "Vous êtes dans l'équipe %s.", g_szTeamsName[team]);
 	}
 	
 }
 public void OnMapStart() {
 	g_hClienTeam.Clear();
+	g_bGroupOveride = true;
+	g_iLastJoinIndex = 0;
 }
 public Action EventSpawn(Handle ev, const char[] name, bool broadcast) {
 	int client = GetClientOfUserId(GetEventInt(ev, "userid"));
@@ -97,7 +131,7 @@ public Action cmd_Bet(int client, int args) {
 	
 	Gang_SetClientCash(client, WhiteCash, Gang_GetClientCash(client, WhiteCash)-money, "bet");
 	
-	PrintToChatAll("%N a parié %d$ sur l'équipe %s!", client, money);
+	PrintToChatAll("%N a parié %d$ sur l'équipe %s!", client, money, tmp);
 	
 	return Plugin_Handled;
 }
@@ -124,7 +158,7 @@ public Action cmd_Event(int client, int args) {
 		
 		char target_name[MAX_TARGET_LENGTH];
 		int target_list[MAXPLAYERS], target_count; bool tn_is_ml;
-		if ((target_count = ProcessTargetString(tmp3, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED|COMMAND_FILTER_DEAD, target_name, sizeof(target_name), tn_is_ml)) <= 0) {
+		if ((target_count = ProcessTargetString(tmp3, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED|COMMAND_FILTER_ALIVE, target_name, sizeof(target_name), tn_is_ml)) <= 0) {
 			ReplyToTargetError(client, target_count);
 			return Plugin_Handled;
 		}
@@ -155,6 +189,16 @@ public Action cmd_Event(int client, int args) {
 		CreateTimer(30.0, Task_BetStop);
 		PrintToChatAll("Les parris sont ouvert pour 30 secondes!");
 	}
+	else if( StrEqual(tmp, "clan") ) {
+		g_bGroupOveride = !g_bGroupOveride;
+	}
+	else if( StrEqual(tmp, "color") ) {
+		for (int i = 1; i <= MaxClients; i++) {
+			if( !IsClientInGame(i) )
+				continue;
+			Colorize(i);
+		}
+	}
 	else if( StrEqual(tmp, "stop") ) {
 		GetCmdArg(2, tmp2, sizeof(tmp2));
 		
@@ -172,21 +216,22 @@ public Action cmd_Event(int client, int args) {
 		}
 		
 		int sum = 0;
-		for (int i = 0; i < sizeof(g_szTeamsName); i++)
+		for (int i = 0; i < sizeof(g_szTeamsName); i++) {
 			sum += g_iTeamBets[i];
+		}
 		
 		for (int i = 1; i <= MaxClients; i++) {
 			if( !IsClientInGame(i) )
 				continue;
 			
-			if( g_iClientBet[client][0] == team && g_iClientBet[client][1] > 0 ) {
-				int money = RoundToCeil(float(g_iClientBet[client][1]) * float(sum) / float(g_iTeamBets[team]));
-				Gang_SetClientCash(client, WhiteCash, Gang_GetClientCash(client, WhiteCash)+money, "bet-win");
+			if( g_iClientBet[i][0] == team && g_iClientBet[i][1] > 0 ) {
+				int money = RoundToCeil(float(g_iClientBet[i][1]) * float(sum) / float(g_iTeamBets[team]));
+				Gang_SetClientCash(i, WhiteCash, Gang_GetClientCash(i, WhiteCash)+money, "bet-win");
 				
-				PrintToChat(client, "Vous avez gagné %d$!", money);
+				PrintToChat(i, "Vous avez gagné %d$!", money);
 			}
 			
-			g_iClientBet[client][0] = -1;
+			g_iClientBet[i][0] = -1;
 		}
 		
 		
