@@ -18,6 +18,7 @@ Handle g_hCvarChickenThird;
 Handle g_hCvarRespawnHP;
 Handle g_hCvarRespawnTime;
 Handle g_hCvarRespawnCount;
+Handle g_hCvarChickenCanDiffuse;
 
 int g_iRespawnCount[65];
 float g_flRespawnTime[65], g_flNextSound[65];
@@ -38,13 +39,16 @@ public void OnPluginStart() {
 	g_hCvarRespawnHP = 			CreateConVar("sm_chicken_respawn_hp", 	"25");
 	g_hCvarRespawnTime = 		CreateConVar("sm_chicken_time",			"30");
 	g_hCvarRespawnCount = 		CreateConVar("sm_chicken_respawn", 		"3");
+	g_hCvarChickenCanDiffuse = 	CreateConVar("sm_chicken_diffuse", 		"0");
 	
 	for (int i = 1; i <= MaxClients; i++)
 		if( IsClientInGame(i) )
 			OnClientPostAdminCheck(i);
 	
+	HookEvent("bomb_begindefuse", 	EventOnDefuse, 			EventHookMode_Post);
 	HookEvent("player_death", 		EventDeath, 			EventHookMode_Pre);
 	HookEvent("round_start", 		OnRoundStart, 			EventHookMode_Post);
+	
 	ServerCommand("sv_allow_thirdperson 1");
 	AutoExecConfig();
 }
@@ -86,7 +90,7 @@ public void OnClientPostAdminCheck(int client) {
 	if( !GetConVarBool(g_hCvarEnabled) )
 		return;
 	
-	SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamage);
+	SDKHook(client, SDKHook_OnTakeDamageAlive, OnTakeDamage);
 	SDKHook(client, SDKHook_PostThinkPost, OnPostThinkPost);
 	SDKHook(client, SDKHook_WeaponCanSwitchTo, OnWeaponSwitch);
 	
@@ -100,16 +104,30 @@ public Action OnRoundStart(Handle ev, const char[] name, bool dontBroadcast) {
 		if( IsClientInGame(i) ) {
 			if( g_bIsChicken[i] ) {
 				if( GetConVarBool(g_hCvarChickenThird) )
-					ClientCommand(i, "firstperson");
+					SetClientThirdPerson(i, false);
 			}
 			g_bIsChicken[i] = false;
 			g_iRespawnCount[i] = count;
 		}
 	}
 }
-
+public Action EventOnDefuse(Handle ev, const char[] name, bool dontBroadcast) {
+	int client = GetClientOfUserId(GetEventInt(ev, "userid"));
+	if( g_bIsChicken[client] ) {
+		if( GetConVarInt(g_hCvarChickenCanDiffuse) == 0 ) {
+			int buttons = GetEntProp(client, Prop_Data, "m_nButtons",buttons); 
+			buttons &= ~(IN_USE);
+			SetEntProp(client, Prop_Data, "m_nButtons",buttons); 
+		}
+	}
+}
 public Action OnTakeDamage(int victim, int& attacker, int& inflictor, float& damage, int& damagetype, int& weapon, float damageForce[3], float damagePosition[3]) {
-	if( attacker > 0 ) {
+	if( attacker > 0 && attacker < MaxClients ) {
+		
+		if( GetClientTeam(victim) == GetClientTeam(attacker) ) {
+			if( !(IsFriendlyFireActive() || IsTeammateAreEnnemies()) )
+				return Plugin_Continue;
+		}
 		
 		int health = GetClientHealth(victim) - RoundFloat(damage);
 		if( health <= 1 ) {
@@ -138,11 +156,12 @@ public void OnPostThinkPost(int client) {
 	static char tmp[PLATFORM_MAX_PATH];
 	
 	if( g_bIsChicken[client] ) {
+		float time = GetGameTime();
+		
 		SetEntProp(client, Prop_Send, "m_iAddonBits", 0);
 		SetEntProp(client, Prop_Send, "m_iPrimaryAddon", 0);
 		SetEntProp(client, Prop_Send, "m_iSecondaryAddon", 0);
 		
-		float time = GetGameTime();
 		int wpnid = Client_GetActiveWeapon(client);
 		if( wpnid > 0 ) {
 			SetEntPropFloat(wpnid, Prop_Send, "m_flNextPrimaryAttack", 	time + 1.0);
@@ -184,7 +203,7 @@ public Action EventDeath(Handle ev, const char[] name, bool broadcast) {
 		
 		EmitSoundToAllAny(tmp, client);
 		if( GetConVarBool(g_hCvarChickenThird) )
-			ClientCommand(client, "firstperson");
+			SetClientThirdPerson(client, false);
 	}
 }
 
@@ -195,10 +214,12 @@ void ChickenTransformIntoClient(int client) {
 	SetEntityGravity(client, 1.0);
 	SetEntPropFloat(client, Prop_Send, "m_flLaggedMovementValue", 1.0);
 	
+	LogToGame("[CHICKEN-DEBUG]: %s", g_szOldPlayerSkin[client]);
+	PrecacheModel(g_szOldPlayerSkin[client]);
 	SetEntityModel(client, g_szOldPlayerSkin[client]);
 	
 	if( GetConVarBool(g_hCvarChickenThird) )
-		ClientCommand(client, "firstperson");
+		SetClientThirdPerson(client, false);
 //	if( !GetConVarBool(g_hCvarChickenAreAlive) )
 //		SetEntProp(client, Prop_Send, "m_lifeState", 0);
 	
@@ -222,7 +243,7 @@ void ClientTransformIntoChicken(int client) {
 	FakeClientCommand(client, "use weapon_knife");
 	
 	if( GetConVarBool(g_hCvarChickenThird) )
-		ClientCommand(client, "thirdperson");
+		SetClientThirdPerson(client, true);
 //	if( !GetConVarBool(g_hCvarChickenAreAlive) )
 //		SetEntProp(client, Prop_Send, "m_lifeState", 1);
 
@@ -276,6 +297,22 @@ int CreateParticule(const char[] effet, int parent = 0, float pos[3] = {0.0, 0.0
 	
 	return Entity;
 }
+bool IsFriendlyFireActive() {
+	static Handle cvar = INVALID_HANDLE;
+	if( cvar == INVALID_HANDLE )
+		cvar = FindConVar("mp_friendlyfire");
+	
+	return GetConVarInt(cvar) != 0;
+}
+bool IsTeammateAreEnnemies() {
+	static Handle cvar = INVALID_HANDLE;
+	if( cvar == INVALID_HANDLE )
+		cvar = FindConVar("mp_teammates_are_enemies");
+	
+	return GetConVarInt(cvar) != 0;
+}
+
+
 void SendDeathMessage(int attacker, int victim, const char[] weapon, bool headshot) {
 	Event event = CreateEvent("player_death");
 	event.SetInt("userid", GetClientUserId(victim));
@@ -283,4 +320,23 @@ void SendDeathMessage(int attacker, int victim, const char[] weapon, bool headsh
 	event.SetString("weapon", weapon);
 	event.SetBool("headshot", headshot);
 	event.Fire();
+}
+
+void SetClientThirdPerson(int client, bool enabled) {
+	if( enabled ) {
+		SetEntPropEnt(client, Prop_Send, "m_hObserverTarget", client);
+		SetEntProp(client, Prop_Send, "m_iObserverMode", 0);
+		SetEntProp(client, Prop_Send, "m_bDrawViewmodel", 1);
+		SetEntProp(client, Prop_Send, "m_iFOV", 90);
+		
+		//ClientCommand(client, "thirdperson");
+	}
+	else {
+		SetEntPropEnt(client, Prop_Send, "m_hObserverTarget", 0);
+		SetEntProp(client, Prop_Send, "m_iObserverMode", 1);
+		SetEntProp(client, Prop_Send, "m_bDrawViewmodel", 0);
+		SetEntProp(client, Prop_Send, "m_iFOV", 120);
+		
+		//ClientCommand(client, "firstperson");
+	}
 }
